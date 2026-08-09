@@ -1,4 +1,4 @@
-using BlackoutGuard.Infrastructure.Persistence;
+﻿using BlackoutGuard.Infrastructure.Persistence;
 using BlackoutGuard.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -15,19 +15,48 @@ public class TenantIsolationTests : IAsyncLifetime
         .WithPassword("postgres")
         .Build();
 
-    private string _connectionString = string.Empty;
+    private string _adminConnectionString = string.Empty;
+    private string _appUserConnectionString = string.Empty;
 
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
-        _connectionString = _container.GetConnectionString();
+        _adminConnectionString = _container.GetConnectionString();
 
-        await using var context = CreateDbContext();
-        await context.Database.MigrateAsync();
+        // 1. Migration နှင့် RLS Script ကို Admin (postgres) အကောင့်ဖြင့် Run ပါ
+        await using (var context = CreateDbContext(_adminConnectionString))
+        {
+            await context.Database.MigrateAsync();
+        }
 
-        await using var rlsConnection = new NpgsqlConnection(_connectionString);
-        await rlsConnection.OpenAsync();
-        await RlsScriptRunner.ApplyAsync(rlsConnection);
+        await using (var rlsConnection = new NpgsqlConnection(_adminConnectionString))
+        {
+            await rlsConnection.OpenAsync();
+            await RlsScriptRunner.ApplyAsync(rlsConnection);
+
+            // 2. Superuser မဟုတ်သော App Role သီးသန့်ဆောက်ပြီး Permissions ပေးပါ
+            await using var cmd = rlsConnection.CreateCommand();
+            cmd.CommandText = @"
+                DO $$ 
+                BEGIN
+                    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'app_user') THEN
+                        CREATE ROLE app_user WITH LOGIN PASSWORD 'app_password';
+                    END IF;
+                END $$;
+                GRANT CONNECT ON DATABASE blackoutguard_v2 TO app_user;
+                GRANT USAGE ON SCHEMA public TO app_user;
+                GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+            ";
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Connection string တွင် app_user ကို ပြောင်းသုံးပါ
+        var builder = new NpgsqlConnectionStringBuilder(_adminConnectionString)
+        {
+            Username = "app_user",
+            Password = "app_password"
+        };
+        _appUserConnectionString = builder.ConnectionString;
     }
 
     public async Task DisposeAsync()
@@ -41,17 +70,20 @@ public class TenantIsolationTests : IAsyncLifetime
         var facilityAId = Guid.NewGuid();
         var facilityBId = Guid.NewGuid();
 
-        await SeedIsolationData(facilityAId, facilityBId);
+        // Data ထည့်ခြင်းကို Admin Context ဖြင့် ဆောင်ရွက်ပါ
+        await using (var adminContext = CreateDbContext(_adminConnectionString))
+        {
+            await SeedIsolationData(adminContext, facilityAId, facilityBId);
+        }
 
-        await using var context = CreateDbContext();
-        var connection = (NpgsqlConnection)context.Database.GetDbConnection();
-        await connection.OpenAsync();
+        // Query စစ်ခြင်းကို Non-Superuser (app_user) Context ဖြင့် စစ်ပါ
+        await using var userContext = CreateDbContext(_appUserConnectionString);
+        await userContext.Database.OpenConnectionAsync();
 
-        await using var cmd = new NpgsqlCommand(
-            $"SET app.current_facility_id = '{facilityAId}'", connection);
-        await cmd.ExecuteNonQueryAsync();
+        // Session Variable သတ်မှတ်ပါ
+        await userContext.Database.ExecuteSqlInterpolatedAsync($"SELECT set_config('app.current_facility_id', {facilityAId.ToString()}, false);");
 
-        var loads = await context.Loads.ToListAsync();
+        var loads = await userContext.Loads.AsNoTracking().ToListAsync();
 
         Assert.NotEmpty(loads);
         Assert.All(loads, l => Assert.Equal(facilityAId, l.FacilityId));
@@ -64,29 +96,30 @@ public class TenantIsolationTests : IAsyncLifetime
         var facilityAId = Guid.NewGuid();
         var facilityBId = Guid.NewGuid();
 
-        await SeedIsolationData(facilityAId, facilityBId);
+        // Data ထည့်ခြင်းကို Admin Context ဖြင့် ဆောင်ရွက်ပါ
+        await using (var adminContext = CreateDbContext(_adminConnectionString))
+        {
+            await SeedIsolationData(adminContext, facilityAId, facilityBId);
+        }
 
-        await using var context = CreateDbContext();
-        var connection = (NpgsqlConnection)context.Database.GetDbConnection();
-        await connection.OpenAsync();
+        // Query စစ်ခြင်းကို Non-Superuser (app_user) Context ဖြင့် စစ်ပါ
+        await using var userContext = CreateDbContext(_appUserConnectionString);
+        await userContext.Database.OpenConnectionAsync();
 
-        await using var cmd = new NpgsqlCommand(
-            $"SET app.current_facility_id = '{facilityAId}'", connection);
-        await cmd.ExecuteNonQueryAsync();
+        // Session Variable သတ်မှတ်ပါ
+        await userContext.Database.ExecuteSqlInterpolatedAsync($"SELECT set_config('app.current_facility_id', {facilityAId.ToString()}, false);");
 
-        var zones = await context.Zones.ToListAsync();
+        var zones = await userContext.Zones.AsNoTracking().ToListAsync();
 
         Assert.NotEmpty(zones);
         Assert.All(zones, z => Assert.Equal(facilityAId, z.FacilityId));
         Assert.DoesNotContain(zones, z => z.FacilityId == facilityBId);
     }
 
-    private async Task SeedIsolationData(Guid facilityAId, Guid facilityBId)
+    private async Task SeedIsolationData(BlackoutGuardDbContext context, Guid facilityAId, Guid facilityBId)
     {
         var tenant1Id = Guid.NewGuid();
         var tenant2Id = Guid.NewGuid();
-
-        await using var context = CreateDbContext();
 
         context.Tenants.AddRange(
             new Tenant { Id = tenant1Id, Name = "Tenant One" },
@@ -142,10 +175,10 @@ public class TenantIsolationTests : IAsyncLifetime
         await context.SaveChangesAsync();
     }
 
-    private BlackoutGuardDbContext CreateDbContext()
+    private BlackoutGuardDbContext CreateDbContext(string connectionString)
     {
         var options = new DbContextOptionsBuilder<BlackoutGuardDbContext>()
-            .UseNpgsql(_connectionString)
+            .UseNpgsql(connectionString)
             .Options;
 
         return new BlackoutGuardDbContext(options);

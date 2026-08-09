@@ -62,7 +62,7 @@ namespace BlackoutGuard.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_users", x => x.Id);
-                    table.CheckConstraint("CK_users_role", "role IN ('Admin','Operator','Viewer')");
+                    table.CheckConstraint("CK_users_role", "\"Role\" IN ('Admin','Operator','Viewer')");
                     table.ForeignKey(
                         name: "FK_users_tenants_TenantId",
                         column: x => x.TenantId,
@@ -89,9 +89,9 @@ namespace BlackoutGuard.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_rules", x => x.Id);
-                    table.CheckConstraint("CK_rules_cooldown_seconds", "cooldown_seconds >= 0");
-                    table.CheckConstraint("CK_rules_parameter_key", "parameter_key IN ('FREQ_LOW','FREQ_HIGH','VOLT_LOW','VOLT_HIGH','LOAD_SHED_TIMER')");
-                    table.CheckConstraint("CK_rules_value_order", "min_value <= max_value");
+                    table.CheckConstraint("CK_rules_cooldown_seconds", "\"CooldownSeconds\" >= 0");
+                    table.CheckConstraint("CK_rules_parameter_key", "\"ParameterKey\" IN ('FREQ_LOW','FREQ_HIGH','VOLT_LOW','VOLT_HIGH','LOAD_SHED_TIMER')");
+                    table.CheckConstraint("CK_rules_value_order", "\"MinValue\" <= \"MaxValue\"");
                     table.ForeignKey(
                         name: "FK_rules_facilities_FacilityId",
                         column: x => x.FacilityId,
@@ -116,7 +116,7 @@ namespace BlackoutGuard.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_zones", x => x.Id);
-                    table.CheckConstraint("CK_zones_type", "type IN ('building','floor','room')");
+                    table.CheckConstraint("CK_zones_type", "\"Type\" IN ('building','floor','room')");
                     table.ForeignKey(
                         name: "FK_zones_facilities_FacilityId",
                         column: x => x.FacilityId,
@@ -149,7 +149,7 @@ namespace BlackoutGuard.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_alarm_records", x => x.Id);
-                    table.CheckConstraint("CK_alarm_records_severity", "severity IN ('Info','Warning','Critical')");
+                    table.CheckConstraint("CK_alarm_records_severity", "\"Severity\" IN ('Info','Warning','Critical')");
                     table.ForeignKey(
                         name: "FK_alarm_records_facilities_FacilityId",
                         column: x => x.FacilityId,
@@ -188,13 +188,13 @@ namespace BlackoutGuard.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_loads", x => x.Id);
-                    table.CheckConstraint("CK_loads_criticality_q1", "criticality_q1 BETWEEN 1 AND 10");
-                    table.CheckConstraint("CK_loads_criticality_q2", "criticality_q2 BETWEEN 1 AND 10");
-                    table.CheckConstraint("CK_loads_criticality_q3", "criticality_q3 BETWEEN 1 AND 10");
-                    table.CheckConstraint("CK_loads_criticality_q4", "criticality_q4 BETWEEN 1 AND 10");
-                    table.CheckConstraint("CK_loads_power_rating_kw", "power_rating_kw >= 0");
-                    table.CheckConstraint("CK_loads_priority", "priority IN ('P1','P2','P3')");
-                    table.CheckConstraint("CK_loads_priority_mode", "priority_mode IN ('auto','manual')");
+                    table.CheckConstraint("CK_loads_criticality_q1", "\"CriticalityQ1\" BETWEEN 1 AND 10");
+                    table.CheckConstraint("CK_loads_criticality_q2", "\"CriticalityQ2\" BETWEEN 1 AND 10");
+                    table.CheckConstraint("CK_loads_criticality_q3", "\"CriticalityQ3\" BETWEEN 1 AND 10");
+                    table.CheckConstraint("CK_loads_criticality_q4", "\"CriticalityQ4\" BETWEEN 1 AND 10");
+                    table.CheckConstraint("CK_loads_power_rating_kw", "\"PowerRatingKw\" >= 0");
+                    table.CheckConstraint("CK_loads_priority", "\"Priority\" IN ('P1','P2','P3')");
+                    table.CheckConstraint("CK_loads_priority_mode", "\"PriorityMode\" IN ('auto','manual')");
                     table.ForeignKey(
                         name: "FK_loads_facilities_FacilityId",
                         column: x => x.FacilityId,
@@ -277,7 +277,7 @@ namespace BlackoutGuard.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_time_schedules", x => x.Id);
-                    table.CheckConstraint("CK_time_schedules_target_priority", "target_priority IN ('P1','P2','P3')");
+                    table.CheckConstraint("CK_time_schedules_target_priority", "\"TargetPriority\" IN ('P1','P2','P3')");
                     table.ForeignKey(
                         name: "FK_time_schedules_facilities_FacilityId",
                         column: x => x.FacilityId,
@@ -327,7 +327,7 @@ namespace BlackoutGuard.Infrastructure.Migrations
                 name: "idx_loads_priority",
                 table: "loads",
                 columns: new[] { "FacilityId", "Priority" },
-                filter: "is_active = true");
+                filter: "\"IsActive\" = true");
 
             migrationBuilder.CreateIndex(
                 name: "idx_loads_zone",
