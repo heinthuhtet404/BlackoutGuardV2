@@ -7,6 +7,9 @@
 - Task 1.3: InitialV2Schema migration generated
 - Task 1.4: RLS policies script and runner created
 - Task 1.5: IDataSource extended with actuation and lifecycle methods
+- Task 1.6: SimulatorDataSource implementation with tests
+- Task 1.7: Tenant isolation integration tests
+- Task 2.1: Zone CRUD use cases with tests
 
 ## Next Task
 - TBD
