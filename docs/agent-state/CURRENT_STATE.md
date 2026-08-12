@@ -18,6 +18,7 @@
 - Task 2.7: Schedule use cases (Create, Delete)
 - Task 2.8: ZonesController with JWT-claim facility scoping
 - Task 2.9: LoadsController with 409 conflict mapping
+- Task 2.10: RulesController
 
 ## Next Task
 - TBD
