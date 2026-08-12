@@ -38,6 +38,18 @@ public class LoadRepository : ILoadRepository
         return load is null ? null : MapToDto(load);
     }
 
+    public async Task<List<LoadDto>> GetAllByFacilityAsync(Guid facilityId, Guid? zoneId = null, CancellationToken ct = default)
+    {
+        var query = _context.Loads.Where(l => l.FacilityId == facilityId);
+
+        if (zoneId.HasValue)
+            query = query.Where(l => l.ZoneId == zoneId.Value);
+
+        return await query
+            .Select(l => MapToDto(l))
+            .ToListAsync(ct);
+    }
+
     public async Task<List<LoadDto>> GetP1LoadsAsync(Guid facilityId, Guid? excludeLoadId = null, CancellationToken ct = default)
     {
         var query = _context.Loads

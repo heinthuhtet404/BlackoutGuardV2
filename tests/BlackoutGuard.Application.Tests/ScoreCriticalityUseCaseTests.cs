@@ -379,6 +379,13 @@ public class ScoreCriticalityUseCaseTests
             return Task.FromResult(p1Loads);
         }
 
+        public Task<List<LoadDto>> GetAllByFacilityAsync(Guid facilityId, Guid? zoneId = null, CancellationToken ct = default)
+        {
+            var loads = Loads.Where(l => l.FacilityId == facilityId
+                && (!zoneId.HasValue || l.ZoneId == zoneId.Value)).ToList();
+            return Task.FromResult(loads);
+        }
+
         public Task<Guid> AddAsync(LoadDto load, CancellationToken ct = default)
         {
             Loads.Add(load);
