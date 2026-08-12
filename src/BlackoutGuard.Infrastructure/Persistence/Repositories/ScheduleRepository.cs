@@ -15,6 +15,14 @@ public class ScheduleRepository : IScheduleRepository
         _context = context;
     }
 
+    public async Task<List<ScheduleDto>> GetAllByFacilityAsync(Guid facilityId, CancellationToken ct = default)
+    {
+        return await _context.TimeSchedules
+            .Where(s => s.FacilityId == facilityId)
+            .Select(s => MapToDto(s))
+            .ToListAsync(ct);
+    }
+
     public async Task<ScheduleDto?> GetByIdAsync(Guid scheduleId, Guid facilityId, CancellationToken ct = default)
     {
         var schedule = await _context.TimeSchedules

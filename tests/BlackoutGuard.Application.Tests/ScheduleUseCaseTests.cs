@@ -330,6 +330,12 @@ public class ScheduleUseCaseTests
     {
         public List<ScheduleDto> Schedules { get; } = new();
 
+        public Task<List<ScheduleDto>> GetAllByFacilityAsync(Guid facilityId, CancellationToken ct = default)
+        {
+            var schedules = Schedules.Where(s => s.FacilityId == facilityId).ToList();
+            return Task.FromResult(schedules);
+        }
+
         public Task<ScheduleDto?> GetByIdAsync(Guid scheduleId, Guid facilityId, CancellationToken ct = default)
         {
             var match = Schedules.FirstOrDefault(s => s.Id == scheduleId && s.FacilityId == facilityId);
