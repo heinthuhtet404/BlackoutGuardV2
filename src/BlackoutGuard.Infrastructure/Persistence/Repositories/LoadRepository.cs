@@ -95,6 +95,11 @@ public class LoadRepository : ILoadRepository
         entity.PowerRatingKw = load.PowerRatingKw;
         entity.Priority = load.Priority;
         entity.PriorityMode = load.PriorityMode;
+        entity.CriticalityQ1 = load.CriticalityQ1;
+        entity.CriticalityQ2 = load.CriticalityQ2;
+        entity.CriticalityQ3 = load.CriticalityQ3;
+        entity.CriticalityQ4 = load.CriticalityQ4;
+        entity.CriticalityScore = load.CriticalityScore;
         entity.IsSheddable = load.IsSheddable;
         entity.UpdatedAt = DateTime.UtcNow;
 
@@ -134,6 +139,11 @@ public class LoadRepository : ILoadRepository
             PowerRatingKw = load.PowerRatingKw,
             Priority = load.Priority,
             PriorityMode = load.PriorityMode,
+            CriticalityQ1 = load.CriticalityQ1,
+            CriticalityQ2 = load.CriticalityQ2,
+            CriticalityQ3 = load.CriticalityQ3,
+            CriticalityQ4 = load.CriticalityQ4,
+            CriticalityScore = load.CriticalityScore,
             IsActive = load.IsActive,
             IsSheddable = load.IsSheddable
         };
