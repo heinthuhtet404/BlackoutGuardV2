@@ -17,18 +17,36 @@ public class LoadRepository : ILoadRepository
         _context = context;
     }
 
-    public async Task<LoadDto?> GetByRelayAddressAsync(Guid facilityId, int relayAddress, CancellationToken ct = default)
+    public async Task<LoadDto?> GetByRelayAddressAsync(Guid facilityId, int relayAddress, Guid? excludeLoadId = null, CancellationToken ct = default)
     {
-        var load = await _context.Loads
-            .FirstOrDefaultAsync(l => l.FacilityId == facilityId && l.RelayAddress == relayAddress, ct);
+        var query = _context.Loads
+            .Where(l => l.FacilityId == facilityId && l.RelayAddress == relayAddress);
+
+        if (excludeLoadId.HasValue)
+            query = query.Where(l => l.Id != excludeLoadId.Value);
+
+        var load = await query.FirstOrDefaultAsync(ct);
 
         return load is null ? null : MapToDto(load);
     }
 
-    public async Task<List<LoadDto>> GetP1LoadsAsync(Guid facilityId, CancellationToken ct = default)
+    public async Task<LoadDto?> GetByIdAsync(Guid loadId, Guid facilityId, CancellationToken ct = default)
     {
-        return await _context.Loads
-            .Where(l => l.FacilityId == facilityId && l.Priority == "P1" && l.IsActive)
+        var load = await _context.Loads
+            .FirstOrDefaultAsync(l => l.Id == loadId && l.FacilityId == facilityId, ct);
+
+        return load is null ? null : MapToDto(load);
+    }
+
+    public async Task<List<LoadDto>> GetP1LoadsAsync(Guid facilityId, Guid? excludeLoadId = null, CancellationToken ct = default)
+    {
+        var query = _context.Loads
+            .Where(l => l.FacilityId == facilityId && l.Priority == "P1" && l.IsActive);
+
+        if (excludeLoadId.HasValue)
+            query = query.Where(l => l.Id != excludeLoadId.Value);
+
+        return await query
             .Select(l => MapToDto(l))
             .ToListAsync(ct);
     }
@@ -62,6 +80,34 @@ public class LoadRepository : ILoadRepository
         }
 
         return entity.Id;
+    }
+
+    public async Task UpdateAsync(LoadDto load, CancellationToken ct = default)
+    {
+        var entity = await _context.Loads
+            .FirstOrDefaultAsync(l => l.Id == load.Id && l.FacilityId == load.FacilityId, ct);
+
+        if (entity is null)
+            return;
+
+        entity.Name = load.Name;
+        entity.RelayAddress = load.RelayAddress;
+        entity.PowerRatingKw = load.PowerRatingKw;
+        entity.Priority = load.Priority;
+        entity.PriorityMode = load.PriorityMode;
+        entity.IsSheddable = load.IsSheddable;
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx
+            && pgEx.SqlState == PostgresErrorCodes.UniqueViolation
+            && pgEx.ConstraintName == "uq_relay_per_facility")
+        {
+            throw new RelayConflictException(load.RelayAddress, load.Name);
+        }
     }
 
     private static LoadDto MapToDto(Load load)

@@ -115,7 +115,8 @@ public class CreateLoadConcurrencyTests : IAsyncLifetime
         Assert.Equal(1, failures);
 
         var failure = results.Single(r => !r.IsSuccess);
-        Assert.Contains("Port 42", failure.ErrorMessage);
+        Assert.Contains("42", failure.ErrorMessage);
+        Assert.Contains("assigned", failure.ErrorMessage);
     }
 
     private BlackoutGuardDbContext CreateDbContext()

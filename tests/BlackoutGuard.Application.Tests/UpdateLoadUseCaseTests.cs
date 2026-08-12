@@ -6,43 +6,55 @@ using BlackoutGuard.Application.UseCases.Loads;
 
 namespace BlackoutGuard.Application.Tests.UseCases.Loads;
 
-public class CreateLoadUseCaseTests
+public class UpdateLoadUseCaseTests
 {
     [Fact]
-    public async Task Execute_ShouldCreateLoad_WithValidRequest()
+    public async Task Execute_ShouldSucceed_WhenNoSafetyRelevantFieldsChange()
     {
         var facility = new FacilityDto
         {
             Id = Guid.NewGuid(),
             Name = "Test Facility",
-            GeneratorCapacityKW = 500
+            GeneratorCapacityKW = 100
         };
 
         var fakes = new Fakes(facility);
-        var useCase = fakes.BuildUseCase();
-
-        var request = new CreateLoadRequest
+        var load = new LoadDto
         {
+            Id = Guid.NewGuid(),
             FacilityId = facility.Id,
             ZoneId = Guid.NewGuid(),
-            Name = "Test Load",
+            Name = "Original Name",
             RelayAddress = 1,
-            PowerRatingKw = 100,
-            Priority = "P2"
+            PowerRatingKw = 30,
+            Priority = "P2",
+            PriorityMode = "auto",
+            IsSheddable = true,
+            IsActive = true
+        };
+        fakes.LoadRepo.Loads.Add(load);
+
+        var useCase = fakes.BuildUpdateUseCase();
+
+        var request = new UpdateLoadRequest
+        {
+            LoadId = load.Id,
+            FacilityId = facility.Id,
+            Name = "Renamed Load"
         };
 
         var result = await useCase.ExecuteAsync(request);
 
         Assert.True(result.IsSuccess);
-        Assert.NotEqual(Guid.Empty, result.Value);
-        var saved = fakes.LoadRepo.Loads.Single();
-        Assert.Equal("Test Load", saved.Name);
-        Assert.Equal(1, saved.RelayAddress);
         Assert.True(fakes.TxCommitted);
+        var updated = fakes.LoadRepo.Loads.Single();
+        Assert.Equal("Renamed Load", updated.Name);
+        Assert.Equal(1, updated.RelayAddress);
+        Assert.Equal("P2", updated.Priority);
     }
 
     [Fact]
-    public async Task Execute_ShouldFail_WhenRelayAddressConflicts()
+    public async Task Execute_ShouldFail_WhenRelayAddressConflictsWithAnotherLoad()
     {
         var facility = new FacilityDto
         {
@@ -52,140 +64,253 @@ public class CreateLoadUseCaseTests
         };
 
         var fakes = new Fakes(facility);
-        fakes.LoadRepo.Loads.Add(new LoadDto
+        var targetLoad = new LoadDto
         {
             Id = Guid.NewGuid(),
             FacilityId = facility.Id,
-            Name = "Existing ICU Load",
-            RelayAddress = 3,
-            PowerRatingKw = 50,
-            Priority = "P1"
-        });
-
-        var useCase = fakes.BuildUseCase();
-
-        var request = new CreateLoadRequest
+            ZoneId = Guid.NewGuid(),
+            Name = "Target Load",
+            RelayAddress = 1,
+            PowerRatingKw = 30,
+            Priority = "P2",
+            IsActive = true
+        };
+        var otherLoad = new LoadDto
         {
+            Id = Guid.NewGuid(),
             FacilityId = facility.Id,
             ZoneId = Guid.NewGuid(),
-            Name = "New Load",
+            Name = "ICU Ventilator Bank",
             RelayAddress = 3,
-            PowerRatingKw = 100,
-            Priority = "P2"
+            PowerRatingKw = 50,
+            Priority = "P1",
+            IsActive = true
+        };
+        fakes.LoadRepo.Loads.Add(targetLoad);
+        fakes.LoadRepo.Loads.Add(otherLoad);
+
+        var useCase = fakes.BuildUpdateUseCase();
+
+        var request = new UpdateLoadRequest
+        {
+            LoadId = targetLoad.Id,
+            FacilityId = facility.Id,
+            RelayAddress = 3
         };
 
         var result = await useCase.ExecuteAsync(request);
 
         Assert.False(result.IsSuccess);
         Assert.Contains("Relay address 3", result.ErrorMessage);
-        Assert.Contains("Existing ICU Load", result.ErrorMessage);
+        Assert.Contains("ICU Ventilator Bank", result.ErrorMessage);
         Assert.False(fakes.TxCommitted);
     }
 
     [Fact]
-    public async Task Execute_ShouldFail_WhenP1ExceedsCapacityWithoutForce()
+    public async Task Execute_ShouldNotFlagConflict_WhenAddressIsItsOwnCurrentAddress()
     {
         var facility = new FacilityDto
         {
             Id = Guid.NewGuid(),
             Name = "Test Facility",
-            GeneratorCapacityKW = 100
+            GeneratorCapacityKW = 500
         };
 
         var fakes = new Fakes(facility);
-        fakes.LoadRepo.Loads.Add(new LoadDto
+        var targetLoad = new LoadDto
         {
             Id = Guid.NewGuid(),
-            FacilityId = facility.Id,
-            Name = "Existing P1",
-            RelayAddress = 1,
-            PowerRatingKw = 80,
-            Priority = "P1",
-            IsActive = true
-        });
-
-        var useCase = fakes.BuildUseCase();
-
-        var request = new CreateLoadRequest
-        {
             FacilityId = facility.Id,
             ZoneId = Guid.NewGuid(),
-            Name = "New P1 Load",
-            RelayAddress = 2,
-            PowerRatingKw = 50,
-            Priority = "P1"
-        };
-
-        var result = await useCase.ExecuteAsync(request);
-
-        Assert.False(result.IsSuccess);
-        Assert.Contains("30.0 kW", result.ErrorMessage);
-        Assert.Contains("130.0 kW", result.ErrorMessage);
-        Assert.Contains("100.0 kW", result.ErrorMessage);
-        Assert.False(fakes.TxCommitted);
-    }
-
-    [Fact]
-    public async Task Execute_ShouldSucceed_WhenP1ExceedsCapacityWithForce()
-    {
-        var facility = new FacilityDto
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Facility",
-            GeneratorCapacityKW = 100
-        };
-
-        var fakes = new Fakes(facility);
-        fakes.LoadRepo.Loads.Add(new LoadDto
-        {
-            Id = Guid.NewGuid(),
-            FacilityId = facility.Id,
-            Name = "Existing P1",
+            Name = "Target Load",
             RelayAddress = 1,
-            PowerRatingKw = 80,
-            Priority = "P1",
+            PowerRatingKw = 30,
+            Priority = "P2",
             IsActive = true
-        });
+        };
+        fakes.LoadRepo.Loads.Add(targetLoad);
 
-        var useCase = fakes.BuildUseCase();
+        var useCase = fakes.BuildUpdateUseCase();
 
-        var request = new CreateLoadRequest
+        var request = new UpdateLoadRequest
         {
+            LoadId = targetLoad.Id,
             FacilityId = facility.Id,
-            ZoneId = Guid.NewGuid(),
-            Name = "Forced P1 Load",
-            RelayAddress = 2,
-            PowerRatingKw = 50,
-            Priority = "P1",
-            Force = true
+            Name = "Updated Name",
+            RelayAddress = 1
         };
 
         var result = await useCase.ExecuteAsync(request);
 
         Assert.True(result.IsSuccess);
         Assert.True(fakes.TxCommitted);
-        Assert.Single(fakes.AuditRepo.Entries);
-        var auditEntry = fakes.AuditRepo.Entries[0];
-        Assert.Equal("CAPACITY_OVERRIDE", auditEntry.EventType);
-        Assert.Contains("force=true", auditEntry.Rationale);
-        Assert.Contains("130.0 kW", auditEntry.Rationale);
-        Assert.Equal(result.Value, auditEntry.AffectedLoadId);
     }
 
     [Fact]
-    public async Task Execute_ShouldFail_WhenFacilityNotFound()
+    public async Task Execute_ShouldFail_WhenPriorityUpgradedToP1AndCapacityExceeded()
     {
-        var fakes = new Fakes(null);
-        var useCase = fakes.BuildUseCase();
-
-        var request = new CreateLoadRequest
+        var facility = new FacilityDto
         {
-            FacilityId = Guid.NewGuid(),
+            Id = Guid.NewGuid(),
+            Name = "Test Facility",
+            GeneratorCapacityKW = 100
+        };
+
+        var fakes = new Fakes(facility);
+        var targetLoad = new LoadDto
+        {
+            Id = Guid.NewGuid(),
+            FacilityId = facility.Id,
             ZoneId = Guid.NewGuid(),
-            Name = "Load",
+            Name = "Target Load",
             RelayAddress = 1,
-            PowerRatingKw = 50,
+            PowerRatingKw = 60,
+            Priority = "P2",
+            IsActive = true
+        };
+        var existingP1 = new LoadDto
+        {
+            Id = Guid.NewGuid(),
+            FacilityId = facility.Id,
+            ZoneId = Guid.NewGuid(),
+            Name = "Existing P1",
+            RelayAddress = 2,
+            PowerRatingKw = 80,
+            Priority = "P1",
+            IsActive = true
+        };
+        fakes.LoadRepo.Loads.Add(targetLoad);
+        fakes.LoadRepo.Loads.Add(existingP1);
+
+        var useCase = fakes.BuildUpdateUseCase();
+
+        var request = new UpdateLoadRequest
+        {
+            LoadId = targetLoad.Id,
+            FacilityId = facility.Id,
             Priority = "P1"
+        };
+
+        var result = await useCase.ExecuteAsync(request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("40.0 kW", result.ErrorMessage);
+        Assert.Contains("140.0 kW", result.ErrorMessage);
+        Assert.Contains("100.0 kW", result.ErrorMessage);
+        Assert.False(fakes.TxCommitted);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldFail_WhenP1PowerRatingIncreasedBeyondCapacity()
+    {
+        var facility = new FacilityDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Facility",
+            GeneratorCapacityKW = 100
+        };
+
+        var fakes = new Fakes(facility);
+        var targetLoad = new LoadDto
+        {
+            Id = Guid.NewGuid(),
+            FacilityId = facility.Id,
+            ZoneId = Guid.NewGuid(),
+            Name = "Target P1",
+            RelayAddress = 1,
+            PowerRatingKw = 60,
+            Priority = "P1",
+            IsActive = true
+        };
+        var otherP1 = new LoadDto
+        {
+            Id = Guid.NewGuid(),
+            FacilityId = facility.Id,
+            ZoneId = Guid.NewGuid(),
+            Name = "Other P1",
+            RelayAddress = 2,
+            PowerRatingKw = 20,
+            Priority = "P1",
+            IsActive = true
+        };
+        fakes.LoadRepo.Loads.Add(targetLoad);
+        fakes.LoadRepo.Loads.Add(otherP1);
+
+        var useCase = fakes.BuildUpdateUseCase();
+
+        var request = new UpdateLoadRequest
+        {
+            LoadId = targetLoad.Id,
+            FacilityId = facility.Id,
+            PowerRatingKw = 90
+        };
+
+        var result = await useCase.ExecuteAsync(request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("10.0 kW", result.ErrorMessage);
+        Assert.False(fakes.TxCommitted);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldSkipCapacityCheck_WhenDowngradingFromP1()
+    {
+        var facility = new FacilityDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Facility",
+            GeneratorCapacityKW = 100
+        };
+
+        var fakes = new Fakes(facility);
+        var targetLoad = new LoadDto
+        {
+            Id = Guid.NewGuid(),
+            FacilityId = facility.Id,
+            ZoneId = Guid.NewGuid(),
+            Name = "Target P1",
+            RelayAddress = 1,
+            PowerRatingKw = 80,
+            Priority = "P1",
+            IsActive = true
+        };
+        fakes.LoadRepo.Loads.Add(targetLoad);
+
+        var useCase = fakes.BuildUpdateUseCase();
+
+        var request = new UpdateLoadRequest
+        {
+            LoadId = targetLoad.Id,
+            FacilityId = facility.Id,
+            Priority = "P3"
+        };
+
+        var result = await useCase.ExecuteAsync(request);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(fakes.TxCommitted);
+        var updated = fakes.LoadRepo.Loads.Single();
+        Assert.Equal("P3", updated.Priority);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldFail_WhenLoadNotFound()
+    {
+        var facility = new FacilityDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Facility",
+            GeneratorCapacityKW = 100
+        };
+
+        var fakes = new Fakes(facility);
+        var useCase = fakes.BuildUpdateUseCase();
+
+        var request = new UpdateLoadRequest
+        {
+            LoadId = Guid.NewGuid(),
+            FacilityId = facility.Id,
+            Name = "Ghost"
         };
 
         var result = await useCase.ExecuteAsync(request);
@@ -208,15 +333,13 @@ public class CreateLoadUseCaseTests
             FacilityRepo = new FakeFacilityRepository(facility);
         }
 
-        public CreateLoadUseCase BuildUseCase()
+        public UpdateLoadUseCase BuildUpdateUseCase()
         {
-            // ✅ IExecutionStrategy Mock ကို ဖန်တီးပါ
             var executionStrategy = new FakeExecutionStrategy();
-            return new CreateLoadUseCase(LoadRepo, FacilityRepo, AuditRepo, TxFactory, executionStrategy);
+            return new UpdateLoadUseCase(LoadRepo, FacilityRepo, AuditRepo, TxFactory, executionStrategy);
         }
     }
 
-    // ✅ IExecutionStrategy Implementation (Fake)
     private sealed class FakeExecutionStrategy : IExecutionStrategy
     {
         public async Task<T> ExecuteAsync<T>(Func<Task<T>> operation, CancellationToken ct = default)

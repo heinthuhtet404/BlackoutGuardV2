@@ -10,6 +10,8 @@
 - Task 1.6: SimulatorDataSource implementation with tests
 - Task 1.7: Tenant isolation integration tests
 - Task 2.1: Zone CRUD use cases with tests
+- Task 2.2: CreateLoadUseCase with safety guardrails
+- Task 2.3: UpdateLoadUseCase with shared safety validation
 
 ## Next Task
 - TBD
