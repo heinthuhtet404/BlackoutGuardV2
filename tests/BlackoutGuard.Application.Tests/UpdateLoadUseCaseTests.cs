@@ -414,6 +414,12 @@ public class UpdateLoadUseCaseTests
                 Loads[index] = load;
             return Task.CompletedTask;
         }
+
+        public Task DeleteAsync(Guid loadId, Guid facilityId, CancellationToken ct = default)
+        {
+            Loads.RemoveAll(l => l.Id == loadId && l.FacilityId == facilityId);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeFacilityRepository : IFacilityRepository

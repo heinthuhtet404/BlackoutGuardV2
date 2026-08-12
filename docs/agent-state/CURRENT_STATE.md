@@ -12,6 +12,7 @@
 - Task 2.1: Zone CRUD use cases with tests
 - Task 2.2: CreateLoadUseCase with safety guardrails
 - Task 2.3: UpdateLoadUseCase with shared safety validation
+- Task 2.4: DeleteLoadUseCase with audit trail
 
 ## Next Task
 - TBD

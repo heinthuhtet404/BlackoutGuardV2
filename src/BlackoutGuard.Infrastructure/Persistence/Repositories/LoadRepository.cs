@@ -110,6 +110,18 @@ public class LoadRepository : ILoadRepository
         }
     }
 
+    public async Task DeleteAsync(Guid loadId, Guid facilityId, CancellationToken ct = default)
+    {
+        var entity = await _context.Loads
+            .FirstOrDefaultAsync(l => l.Id == loadId && l.FacilityId == facilityId, ct);
+
+        if (entity is null)
+            return;
+
+        _context.Loads.Remove(entity);
+        await _context.SaveChangesAsync(ct);
+    }
+
     private static LoadDto MapToDto(Load load)
     {
         return new LoadDto
