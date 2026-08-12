@@ -16,6 +16,7 @@
 - Task 2.5: ScoreCriticalityUseCase with weighted formula
 - Task 2.6: Rule use cases (List, Update) with system boundaries
 - Task 2.7: Schedule use cases (Create, Delete)
+- Task 2.8: ZonesController with JWT-claim facility scoping
 
 ## Next Task
 - TBD
