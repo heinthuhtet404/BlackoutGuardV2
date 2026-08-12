@@ -14,6 +14,7 @@
 - Task 2.3: UpdateLoadUseCase with shared safety validation
 - Task 2.4: DeleteLoadUseCase with audit trail
 - Task 2.5: ScoreCriticalityUseCase with weighted formula
+- Task 2.6: Rule use cases (List, Update) with system boundaries
 
 ## Next Task
 - TBD
