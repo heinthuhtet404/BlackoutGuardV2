@@ -25,6 +25,7 @@
 - Task 3.3: AppShell + Sidebar with role-filtered navigation and react-router
 - Task 3.4: ZoneTreeView with React Query, drag-drop reparenting (Admin), Toast on error
 - Task 3.5: LoadForm with distinct 409 relay/capacity error handling + override button
+- Task 3.6: CriticalityWizard with 4 sliders, auto/manual toggle, server-driven priority badge
 
 ## Next Task
 - TBD

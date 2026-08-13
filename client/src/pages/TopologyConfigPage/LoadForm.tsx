@@ -3,6 +3,7 @@ import { useZones } from "../../hooks/useZones";
 import { ApiError, post, put } from "../../api/apiClient";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { CriticalityWizard } from "./CriticalityWizard";
 import type { ZoneTree } from "../../types/zone";
 import styles from "./LoadForm.module.css";
 
@@ -55,6 +56,7 @@ export function LoadForm({ loadId, initialValues, onSaved }: LoadFormProps): Rea
   const [capacityError, setCapacityError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [manualPriority, setManualPriority] = useState<"P1" | "P2" | "P3" | null>(null);
 
   const flatZones = flattenZones(zones ?? []);
   const isEdit = loadId !== undefined;
@@ -71,6 +73,7 @@ export function LoadForm({ loadId, initialValues, onSaved }: LoadFormProps): Rea
       relayAddress: Number(relayAddress),
       powerRatingKw: Number(powerRatingKw),
       isSheddable,
+      ...(manualPriority ? { priority: manualPriority, priorityMode: "manual" } : {}),
     };
 
     try {
@@ -170,10 +173,7 @@ export function LoadForm({ loadId, initialValues, onSaved }: LoadFormProps): Rea
         Sheddable load
       </label>
 
-      {/* CriticalityWizard placeholder — TODO (Task 3.6): implement scoring wizard here */}
-      <div className={styles.criticalityPlaceholder} data-testid="criticality-wizard-placeholder">
-        {/* Criticality wizard coming in Task 3.6 */}
-      </div>
+      <CriticalityWizard loadId={loadId} onManualPriorityChange={setManualPriority} />
 
       {capacityError && (
         <div className={styles.capacityError} role="alert" data-testid="capacity-error">
