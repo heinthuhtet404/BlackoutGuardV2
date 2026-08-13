@@ -1,41 +1,91 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { registerAuthBridge } from "../api/apiClient";
-import { AuthContext } from "./authContext";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  clearTokens,
+  getAccessToken,
+  getCurrentUser,
+  getRefreshToken,
+  initializeTokens,
+  setTokens,
+  subscribeTokenChange,
+  type TokenSet,
+} from "./tokenStore";
+import { AuthContext } from "./authTypes";
+import { post } from "../api/apiClient";
 
-const ACCESS_TOKEN_KEY = "blackoutguard.access_token";
-const REFRESH_TOKEN_KEY = "blackoutguard.refresh_token";
+function readAuthState() {
+  initializeTokens();
+  return {
+    user: getCurrentUser(),
+    accessToken: getAccessToken(),
+    refreshToken: getRefreshToken(),
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem(ACCESS_TOKEN_KEY)
-  );
-
-  const logout = useCallback(() => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    setToken(null);
-  }, []);
+  const [auth, setAuth] = useState(readAuthState);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    registerAuthBridge({
-      getAccessToken: () => localStorage.getItem(ACCESS_TOKEN_KEY),
-      getRefreshToken: () => localStorage.getItem(REFRESH_TOKEN_KEY),
-      setTokens: (accessToken: string, refreshToken: string | null) => {
-        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-        if (refreshToken) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-        }
-        setToken(accessToken);
-      },
-      logout,
+    const unsubscribe = subscribeTokenChange(() => {
+      setAuth(readAuthState());
     });
-  }, [logout]);
+    return unsubscribe;
+  }, []);
 
-  const value = {
-    token,
-    isAuthenticated: token !== null,
-    logout,
-  };
+  const login = useCallback(async (email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const tokens = await post<TokenSet>("/auth/login", { email, password });
+      setTokens(tokens);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Login failed";
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    clearTokens();
+    setError(null);
+  }, []);
+
+  const refresh = useCallback(async () => {
+    const currentRefreshToken = getRefreshToken();
+    if (!currentRefreshToken) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const tokens = await post<TokenSet>("/auth/refresh", {
+        refreshToken: currentRefreshToken,
+      });
+      setTokens(tokens);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Token refresh failed";
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user: auth.user,
+      accessToken: auth.accessToken,
+      refreshToken: auth.refreshToken,
+      isLoading,
+      error,
+      login,
+      logout,
+      refresh,
+    }),
+    [auth, isLoading, error, login, logout, refresh]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

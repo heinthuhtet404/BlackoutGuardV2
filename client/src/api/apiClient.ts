@@ -1,3 +1,12 @@
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+  clearTokens,
+  initializeTokens,
+  type TokenSet,
+} from "../auth/tokenStore";
+
 const API_BASE_URL: string =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000/api/v1";
 
@@ -11,19 +20,6 @@ export class ApiError extends Error {
   }
 }
 
-export interface AuthBridge {
-  getAccessToken(): string | null;
-  getRefreshToken(): string | null;
-  setTokens(accessToken: string, refreshToken: string | null): void;
-  logout(): void;
-}
-
-let authBridge: AuthBridge | null = null;
-
-export function registerAuthBridge(bridge: AuthBridge): void {
-  authBridge = bridge;
-}
-
 function buildHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
 
@@ -31,7 +27,7 @@ function buildHeaders(init?: RequestInit): Headers {
     headers.set("Content-Type", "application/json");
   }
 
-  const token = authBridge?.getAccessToken();
+  const token = getAccessToken();
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -40,9 +36,7 @@ function buildHeaders(init?: RequestInit): Headers {
 }
 
 async function refreshAccessToken(): Promise<boolean> {
-  if (!authBridge) return false;
-
-  const refreshToken = authBridge.getRefreshToken();
+  const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
 
   try {
@@ -54,9 +48,9 @@ async function refreshAccessToken(): Promise<boolean> {
 
     if (!response.ok) return false;
 
-    const data = await response.json();
+    const data = (await response.json()) as TokenSet;
     if (data?.accessToken) {
-      authBridge.setTokens(data.accessToken, data.refreshToken ?? null);
+      setTokens(data);
       return true;
     }
 
@@ -85,6 +79,8 @@ async function request<T>(
   body?: unknown,
   init?: RequestInit
 ): Promise<T> {
+  initializeTokens();
+
   const makeCall = (): Promise<Response> =>
     fetch(`${API_BASE_URL}${path}`, {
       ...init,
@@ -106,7 +102,7 @@ async function request<T>(
   if (response.status === 401) {
     const refreshed = await refreshAccessToken();
     if (!refreshed) {
-      authBridge?.logout();
+      clearTokens();
       throw new ApiError(401, "Session expired. Please sign in again.");
     }
 

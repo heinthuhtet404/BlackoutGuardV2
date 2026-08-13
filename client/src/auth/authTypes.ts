@@ -1,9 +1,17 @@
 import { createContext, useContext } from "react";
+import type { AuthUser } from "./tokenStore";
+
+export type Role = "Admin" | "Operator" | "Viewer";
 
 export interface AuthContextValue {
-  token: string | null;
-  isAuthenticated: boolean;
+  user: AuthUser | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refresh: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
