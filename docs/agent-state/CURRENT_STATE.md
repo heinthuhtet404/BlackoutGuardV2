@@ -20,6 +20,7 @@
 - Task 2.9: LoadsController with 409 conflict mapping
 - Task 2.10: RulesController
 - Task 2.11: SchedulesController
+- Task 3.1: Frontend scaffold (Vite + React + TS) with apiClient.ts and AuthContext placeholder
 
 ## Next Task
 - TBD
