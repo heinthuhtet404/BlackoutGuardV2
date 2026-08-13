@@ -1,0 +1,75 @@
+.treeContainer {
+  font-size: 0.95rem;
+}
+
+.nodeBlock {
+  display: block;
+}
+
+.nodeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.dropTarget {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 1.4rem;
+  font-size: 0.85rem;
+  color: #555;
+  padding: 0;
+}
+
+.dragHandle {
+  cursor: grab;
+  color: #94a3b8;
+  font-size: 1rem;
+  user-select: none;
+}
+
+.zoneName {
+  font-weight: 500;
+}
+
+.badge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badgeBuilding {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badgeFloor {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badgeRoom {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.badgeDefault {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.childCount {
+  color: #9ca3af;
+  font-size: 0.78rem;
+}

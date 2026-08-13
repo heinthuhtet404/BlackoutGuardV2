@@ -23,6 +23,7 @@
 - Task 3.1: Frontend scaffold (Vite + React + TS) with apiClient.ts and AuthContext placeholder
 - Task 3.2: Real AuthContext with login/logout/refresh, useRole hook, apiClient rewired to tokenStore
 - Task 3.3: AppShell + Sidebar with role-filtered navigation and react-router
+- Task 3.4: ZoneTreeView with React Query, drag-drop reparenting (Admin), Toast on error
 
 ## Next Task
 - TBD

@@ -1,0 +1,26 @@
+.container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 1000;
+}
+
+.toast {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  max-width: 380px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.error {
+  background: #dc2626;
+}
+
+.info {
+  background: #2563eb;
+}
