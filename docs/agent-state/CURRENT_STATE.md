@@ -24,6 +24,7 @@
 - Task 3.2: Real AuthContext with login/logout/refresh, useRole hook, apiClient rewired to tokenStore
 - Task 3.3: AppShell + Sidebar with role-filtered navigation and react-router
 - Task 3.4: ZoneTreeView with React Query, drag-drop reparenting (Admin), Toast on error
+- Task 3.5: LoadForm with distinct 409 relay/capacity error handling + override button
 
 ## Next Task
 - TBD
