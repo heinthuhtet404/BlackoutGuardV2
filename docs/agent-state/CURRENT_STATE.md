@@ -22,6 +22,7 @@
 - Task 2.11: SchedulesController
 - Task 3.1: Frontend scaffold (Vite + React + TS) with apiClient.ts and AuthContext placeholder
 - Task 3.2: Real AuthContext with login/logout/refresh, useRole hook, apiClient rewired to tokenStore
+- Task 3.3: AppShell + Sidebar with role-filtered navigation and react-router
 
 ## Next Task
 - TBD
