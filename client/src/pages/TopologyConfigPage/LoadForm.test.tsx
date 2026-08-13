@@ -155,7 +155,7 @@ describe("LoadForm error handling", () => {
 
     await waitFor(() => {
       expect(mockedPost).toHaveBeenLastCalledWith(
-        "/api/v1/loads?force=true",
+        "/loads?force=true",
         expect.objectContaining({ relayAddress: 3 })
       );
     });
@@ -170,7 +170,7 @@ describe("LoadForm error handling", () => {
 
     await waitFor(() => {
       expect(mockedPut).toHaveBeenCalledWith(
-        "/api/v1/loads/load-42?force=false",
+        "/loads/load-42?force=false",
         expect.objectContaining({ name: "New Load" })
       );
     });

@@ -35,7 +35,7 @@ export function useCriticality(loadId: string) {
     setError(null);
     try {
       const result = await post<CriticalityResponse>(
-        `/api/v1/loads/${loadId}/criticality`,
+        `/loads/${loadId}/criticality`,
         input
       );
       setResponse(result);

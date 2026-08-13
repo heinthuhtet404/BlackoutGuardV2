@@ -37,7 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const tokens = await post<TokenSet>("/auth/login", { email, password });
+      const tokens = await post<TokenSet>("/auth/login", { email, password }, {
+        skipAuthRefresh: true,
+      });
       setTokens(tokens);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
@@ -60,9 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const tokens = await post<TokenSet>("/auth/refresh", {
-        refreshToken: currentRefreshToken,
-      });
+      const tokens = await post<TokenSet>(
+        "/auth/refresh",
+        { refreshToken: currentRefreshToken },
+        { skipAuthRefresh: true }
+      );
       setTokens(tokens);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Token refresh failed";

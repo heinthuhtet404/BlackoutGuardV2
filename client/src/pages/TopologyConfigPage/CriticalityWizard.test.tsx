@@ -109,7 +109,7 @@ describe("CriticalityWizard", () => {
 
       expect(mockedPost).toHaveBeenCalledTimes(1);
       expect(mockedPost).toHaveBeenCalledWith(
-        "/api/v1/loads/load-1/criticality",
+        "/loads/load-1/criticality",
         expect.objectContaining({ q1: 7 })
       );
     } finally {

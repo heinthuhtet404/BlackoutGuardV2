@@ -112,7 +112,7 @@ export function ZoneTreeView(): ReactNode {
 
   const reparentMutation = useMutation({
     mutationFn: ({ zoneId, parentId }: { zoneId: string; parentId: string }) =>
-      put(`/api/v1/zones/${zoneId}`, { parentZoneId: parentId }),
+      put(`/zones/${zoneId}`, { parentZoneId: parentId }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["zones"] });
     },
@@ -137,12 +137,9 @@ export function ZoneTreeView(): ReactNode {
 
   const tree = data ?? [];
 
-  if (tree.length === 0) {
-    return <p>No zones configured for this facility.</p>;
-  }
-
   return (
     <div className={styles.treeContainer} role="tree" data-testid="zone-tree">
+      {tree.length === 0 && <p>No zones configured for this facility.</p>}
       {tree.map((zone) => (
         <ZoneNode
           key={zone.id}

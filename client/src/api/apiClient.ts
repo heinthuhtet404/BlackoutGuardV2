@@ -73,11 +73,15 @@ async function readErrorMessage(response: Response): Promise<string> {
   return `Request failed with status ${response.status}`;
 }
 
+export interface ApiInit extends RequestInit {
+  skipAuthRefresh?: boolean;
+}
+
 async function request<T>(
   method: string,
   path: string,
   body?: unknown,
-  init?: RequestInit
+  init?: ApiInit
 ): Promise<T> {
   initializeTokens();
 
@@ -99,7 +103,7 @@ async function request<T>(
     );
   }
 
-  if (response.status === 401) {
+  if (response.status === 401 && !init?.skipAuthRefresh) {
     const refreshed = await refreshAccessToken();
     if (!refreshed) {
       clearTokens();
@@ -128,18 +132,18 @@ async function request<T>(
   return (await response.json()) as T;
 }
 
-export function get<T>(path: string, init?: RequestInit): Promise<T> {
+export function get<T>(path: string, init?: ApiInit): Promise<T> {
   return request<T>("GET", path, undefined, init);
 }
 
-export function post<T>(path: string, body: unknown, init?: RequestInit): Promise<T> {
+export function post<T>(path: string, body: unknown, init?: ApiInit): Promise<T> {
   return request<T>("POST", path, body, init);
 }
 
-export function put<T>(path: string, body: unknown, init?: RequestInit): Promise<T> {
+export function put<T>(path: string, body: unknown, init?: ApiInit): Promise<T> {
   return request<T>("PUT", path, body, init);
 }
 
-export function del<T>(path: string, init?: RequestInit): Promise<T> {
+export function del<T>(path: string, init?: ApiInit): Promise<T> {
   return request<T>("DELETE", path, undefined, init);
 }

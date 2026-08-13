@@ -11,6 +11,7 @@ interface LoadFormProps {
   loadId?: string;
   initialValues?: Partial<LoadFormValues>;
   onSaved?: () => void;
+  onCreated?: (id: string) => void;
 }
 
 export interface LoadFormValues {
@@ -37,13 +38,13 @@ interface FlatZone {
 function flattenZones(zones: ZoneTree[], depth = 0): FlatZone[] {
   const result: FlatZone[] = [];
   for (const zone of zones) {
-    result.push({ id: zone.id, label: `${"\u00A0".repeat(depth * 3)}${zone.name}` });
+    result.push({ id: zone.id, label: zone.name });
     result.push(...flattenZones(zone.children, depth + 1));
   }
   return result;
 }
 
-export function LoadForm({ loadId, initialValues, onSaved }: LoadFormProps): ReactNode {
+export function LoadForm({ loadId, initialValues, onSaved, onCreated }: LoadFormProps): ReactNode {
   const { data: zones, isLoading: zonesLoading } = useZones();
 
   const [name, setName] = useState(initialValues?.name ?? "");
@@ -73,14 +74,19 @@ export function LoadForm({ loadId, initialValues, onSaved }: LoadFormProps): Rea
       relayAddress: Number(relayAddress),
       powerRatingKw: Number(powerRatingKw),
       isSheddable,
-      ...(manualPriority ? { priority: manualPriority, priorityMode: "manual" } : {}),
+      ...(manualPriority
+        ? { priority: manualPriority, priorityMode: "manual" }
+        : isEdit
+          ? {}
+          : { priority: "P3", priorityMode: "auto" }),
     };
 
     try {
       if (isEdit) {
-        await put(`/api/v1/loads/${loadId}?force=${force}`, body);
+        await put(`/loads/${loadId}?force=${force}`, body);
       } else {
-        await post(`/api/v1/loads?force=${force}`, body);
+        const response = await post<{ id: string }>(`/loads?force=${force}`, body);
+        onCreated?.(response.id);
       }
       onSaved?.();
     } catch (err) {

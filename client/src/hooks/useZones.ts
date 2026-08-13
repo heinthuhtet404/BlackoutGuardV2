@@ -7,7 +7,7 @@ const ZONES_QUERY_KEY = ["zones"] as const;
 export function useZones() {
   return useQuery<ZoneTree[]>({
     queryKey: ZONES_QUERY_KEY,
-    queryFn: () => get<ZoneTree[]>("/api/v1/zones"),
+    queryFn: () => get<ZoneTree[]>("/zones"),
   });
 }
 

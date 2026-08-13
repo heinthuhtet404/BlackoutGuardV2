@@ -1,0 +1,32 @@
+using System.Security.Claims;
+using BlackoutGuard.Infrastructure.Persistence;
+
+namespace BlackoutGuard.Api.Middleware;
+
+public class FacilityIdMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public FacilityIdMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var claim = context.User.FindFirstValue("facility_id");
+        if (Guid.TryParse(claim, out var facilityId))
+        {
+            FacilityIdContext.FacilityId = facilityId;
+        }
+
+        try
+        {
+            await _next(context);
+        }
+        finally
+        {
+            FacilityIdContext.FacilityId = null;
+        }
+    }
+}

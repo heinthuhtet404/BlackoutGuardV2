@@ -26,6 +26,7 @@
 - Task 3.4: ZoneTreeView with React Query, drag-drop reparenting (Admin), Toast on error
 - Task 3.5: LoadForm with distinct 409 relay/capacity error handling + override button
 - Task 3.6: CriticalityWizard with 4 sliders, auto/manual toggle, server-driven priority badge
+- Task 3.7: E2E topology build test (Playwright) — PASSES in 10.9s
 
 ## Next Task
 - TBD
