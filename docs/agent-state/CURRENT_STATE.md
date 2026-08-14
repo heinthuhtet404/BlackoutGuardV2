@@ -30,6 +30,7 @@
 - Task 4.0: SPIKE — ImmutableSnapshotSpike (30/30 green)
 - Task 4.1: EngineState immutable record + LoadCooldownInfo + Domain.Tests project (6/6)
 - Task 4.2: PendingConfigChangeQueue with atomic drain (5/5 runs green)
+- Task 4.3: EngineBackgroundService with 100ms tick loop, config folding, snapshot publication
 
 ## Next Task
 - TBD
