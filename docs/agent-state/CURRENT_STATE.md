@@ -29,6 +29,7 @@
 - Task 3.7: E2E topology build test (Playwright) — PASSES in 10.9s
 - Task 4.0: SPIKE — ImmutableSnapshotSpike (30/30 green)
 - Task 4.1: EngineState immutable record + LoadCooldownInfo + Domain.Tests project (6/6)
+- Task 4.2: PendingConfigChangeQueue with atomic drain (5/5 runs green)
 
 ## Next Task
 - TBD
