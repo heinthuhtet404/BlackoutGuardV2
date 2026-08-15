@@ -1,4 +1,5 @@
 using System.Text;
+using BlackoutGuard.Api.Engine;
 using BlackoutGuard.Api.Hubs;
 using BlackoutGuard.Api.Middleware;
 using BlackoutGuard.Api.Services;
@@ -53,12 +54,14 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// ✅ SignalR အတွက် CORS ကို ပြင်ပါ
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+              .AllowCredentials());
 });
 
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -79,6 +82,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.FromSeconds(30)
+        };
+
+        // ✅ SignalR အတွက် JWT ကို Query String ကနေ ဖတ်ပါ
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/telemetry"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 builder.Services.AddAuthorization();
@@ -111,6 +129,7 @@ builder.Services.AddScoped<DeleteScheduleUseCase>();
 builder.Services.AddSingleton<JwtTokenService>();
 
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<ITelemetryBroadcaster, SignalRTelemetryBroadcaster>();
 
 var app = builder.Build();
 

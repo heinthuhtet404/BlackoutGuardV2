@@ -34,6 +34,7 @@
 - Task 4.4: HysteresisManager with per-load cooldown, locked state, threshold gap + debounce
 - Task 4.5: Engine concurrency stress test (Category=Slow, 3/3 consecutive green)
 - Task 5.1: TelemetryHub (SignalR) with facility-group isolation + live-channel isolation tests (3/3)
+- Task 5.2: ITelemetryBroadcaster + SignalRTelemetryBroadcaster wired into EngineBackgroundService
 
 ## Next Task
 - TBD

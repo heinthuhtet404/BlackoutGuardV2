@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using BlackoutGuard.Application.Services;
 using BlackoutGuard.Domain.Entities;
 using BlackoutGuard.Domain.Services;
 using BlackoutGuard.Domain.ValueObjects;
@@ -13,6 +15,7 @@ public sealed class EngineBackgroundService : BackgroundService
     private readonly IDataSource _dataSource;
     private readonly IDecisionStrategy _decisionStrategy;
     private readonly IAlarmGenerator _alarmGenerator;
+    private readonly ITelemetryBroadcaster _telemetryBroadcaster;
     private readonly PendingConfigChangeQueue _configQueue;
     private readonly ILogger<EngineBackgroundService> _logger;
 
@@ -28,12 +31,14 @@ public sealed class EngineBackgroundService : BackgroundService
         IDataSource dataSource,
         IDecisionStrategy decisionStrategy,
         IAlarmGenerator alarmGenerator,
+        ITelemetryBroadcaster telemetryBroadcaster,
         PendingConfigChangeQueue configQueue,
         ILogger<EngineBackgroundService> logger)
     {
         _dataSource = dataSource;
         _decisionStrategy = decisionStrategy;
         _alarmGenerator = alarmGenerator;
+        _telemetryBroadcaster = telemetryBroadcaster;
         _configQueue = configQueue;
         _logger = logger;
     }
@@ -110,13 +115,20 @@ public sealed class EngineBackgroundService : BackgroundService
         }
 
         // 6. Audit/alarm events — enqueue to BatchedEventPublisher.
-        // TODO (Phase 4/5): `_batchedEventPublisher.Enqueue(snapshot.FacilityId, decisions, alarms);`
+        // TODO (Phase 5): `_batchedEventPublisher.Enqueue(snapshot.FacilityId, decisions, alarms);`
         // BatchedEventPublisher is ported from V1 in a later task.
 
-        // 7. SignalR broadcast.
-        // TODO: `await _telemetryBroadcaster.BroadcastTickAsync(facilityId, gridState, decision, alarms);`
-        // SignalR hub is wired in Phase 5 — intentionally left as a marker.
-        _ = alarms;
+        // 7. SignalR broadcast — real broadcaster wired in Task 5.2.
+        var decisionPayload = decisions.Count > 0
+            ? LoadSheddingDecision.Create(decisions)
+            : LoadSheddingDecision.None;
+
+        await _telemetryBroadcaster.BroadcastTickAsync(
+            snapshot.FacilityId,
+            telemetry,
+            decisionPayload,
+            alarms,
+            ct);
     }
 
     private void ApplyConfigChanges()
