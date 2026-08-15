@@ -32,6 +32,8 @@
 - Task 4.2: PendingConfigChangeQueue with atomic drain (5/5 runs green)
 - Task 4.3: EngineBackgroundService with 100ms tick loop, config folding, snapshot publication
 - Task 4.4: HysteresisManager with per-load cooldown, locked state, threshold gap + debounce
+- Task 4.5: Engine concurrency stress test (Category=Slow, 3/3 consecutive green)
+- Task 5.1: TelemetryHub (SignalR) with facility-group isolation + live-channel isolation tests (3/3)
 
 ## Next Task
 - TBD

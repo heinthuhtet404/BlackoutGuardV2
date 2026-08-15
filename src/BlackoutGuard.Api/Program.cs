@@ -1,4 +1,5 @@
 using System.Text;
+using BlackoutGuard.Api.Hubs;
 using BlackoutGuard.Api.Middleware;
 using BlackoutGuard.Api.Services;
 using BlackoutGuard.Application.Services;
@@ -109,6 +110,8 @@ builder.Services.AddScoped<DeleteScheduleUseCase>();
 
 builder.Services.AddSingleton<JwtTokenService>();
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -135,6 +138,8 @@ app.UseAuthorization();
 app.UseMiddleware<FacilityIdMiddleware>();
 
 app.MapControllers();
+
+app.MapHub<TelemetryHub>("/hubs/telemetry");
 
 app.MapGet("/api/health", () => Results.Ok("Healthy"))
    .WithName("HealthCheck");
