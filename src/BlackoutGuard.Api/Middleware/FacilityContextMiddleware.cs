@@ -15,6 +15,13 @@ public class FacilityContextMiddleware
 
     public async Task InvokeAsync(HttpContext context, BlackoutGuardDbContext dbContext)
     {
+        // SignalR Hub endpoints (/hubs) များကို DB Context locking နှင့် WebSocket handshake နှောင့်နှေးမှု မဖြစ်စေရန် Bypass လုပ်သည်
+        if (context.Request.Path.StartsWithSegments("/hubs"))
+        {
+            await _next(context);
+            return;
+        }
+
         // Only enforce facility scoping for authenticated requests.
         // Anonymous endpoints (login, health, swagger) pass through untouched.
         if (context.User.Identity?.IsAuthenticated == true)

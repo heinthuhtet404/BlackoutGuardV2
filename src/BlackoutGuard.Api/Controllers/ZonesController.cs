@@ -18,17 +18,20 @@ public class ZonesController : ControllerBase
     private readonly CreateZoneUseCase _createZoneUseCase;
     private readonly UpdateZoneUseCase _updateZoneUseCase;
     private readonly DeleteZoneUseCase _deleteZoneUseCase;
+    private readonly GetZoneUseCase _getZoneUseCase;  // ✅ ဒါကို ထည့်ပါ
 
     public ZonesController(
         ListZonesUseCase listZonesUseCase,
         CreateZoneUseCase createZoneUseCase,
         UpdateZoneUseCase updateZoneUseCase,
-        DeleteZoneUseCase deleteZoneUseCase)
+        DeleteZoneUseCase deleteZoneUseCase,
+        GetZoneUseCase getZoneUseCase)  // ✅ ဒါကို ထည့်ပါ
     {
         _listZonesUseCase = listZonesUseCase;
         _createZoneUseCase = createZoneUseCase;
         _updateZoneUseCase = updateZoneUseCase;
         _deleteZoneUseCase = deleteZoneUseCase;
+        _getZoneUseCase = getZoneUseCase;  // ✅ ဒါကို ထည့်ပါ
     }
 
     [HttpGet]
@@ -39,6 +42,20 @@ public class ZonesController : ControllerBase
             return Unauthorized(new { error = "Missing or invalid facility_id claim." });
 
         var result = await _listZonesUseCase.ExecuteAsync(facilityId.Value, ct);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : MapFailure(result);
+    }
+
+    [HttpGet("{id:guid}")]  // ✅ ဒီ Endpoint ကို ထည့်ပါ
+    [Authorize]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    {
+        var facilityId = GetFacilityIdFromClaims();
+        if (facilityId is null)
+            return Unauthorized(new { error = "Missing or invalid facility_id claim." });
+
+        var result = await _getZoneUseCase.ExecuteAsync(id, facilityId.Value, ct);
         return result.IsSuccess
             ? Ok(result.Value)
             : MapFailure(result);

@@ -14,6 +14,13 @@ public class FacilityIdMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // SignalR Hub requests များကို Bypass ပြုလုပ်သည်
+        if (context.Request.Path.StartsWithSegments("/hubs"))
+        {
+            await _next(context);
+            return;
+        }
+
         var claim = context.User.FindFirstValue("facility_id");
         if (Guid.TryParse(claim, out var facilityId))
         {

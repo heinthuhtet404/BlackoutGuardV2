@@ -43,6 +43,22 @@ public class SimulatorDataSource : IDataSource
         }
     }
 
+    // ✅ ဒီ Method ကို ထည့်ပါ
+    public void UpdateTelemetry(double frequency, double voltage, double totalLoad, bool generatorOn)
+    {
+        lock (_lock)
+        {
+            _currentState = new GridState
+            {
+                Frequency = frequency,
+                Voltage = voltage,
+                TotalLoad = totalLoad,
+                GeneratorOn = generatorOn,
+                TimestampUtc = DateTime.UtcNow
+            };
+        }
+    }
+
     public Task<GridState?> GetCurrentStateAsync()
     {
         lock (_lock)

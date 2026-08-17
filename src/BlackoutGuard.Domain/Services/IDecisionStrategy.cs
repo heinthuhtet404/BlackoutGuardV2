@@ -5,5 +5,5 @@ namespace BlackoutGuard.Domain.Services;
 
 public interface IDecisionStrategy
 {
-    IReadOnlyList<RelayDecision> Evaluate(EngineState snapshot, GridState telemetry);
+    LoadSheddingDecision Evaluate(GridState gridState, IEnumerable<Load> loads);
 }

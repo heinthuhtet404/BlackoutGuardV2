@@ -92,42 +92,39 @@ public sealed class EngineBackgroundService : BackgroundService
     }
 
     private async Task EvaluateFacilityAsync(
-        FacilityEngineSlot slot,
-        GridState telemetry,
-        CancellationToken ct)
+    FacilityEngineSlot slot,
+    GridState telemetry,
+    CancellationToken ct)
     {
         var snapshot = slot.ReadState();
 
-        // 4. Decision engine + alarms (pure Domain logic).
-        var decisions = _decisionStrategy.Evaluate(snapshot, telemetry);
-        var alarms = _alarmGenerator.Evaluate(snapshot, telemetry);
+        var decision = _decisionStrategy.Evaluate(telemetry, snapshot.Loads);
+        var alarms = _alarmGenerator.GenerateAlarms(telemetry);
 
-        // 5. Relay writes — the ONLY place WriteRelayAsync is permitted.
-        foreach (var decision in decisions)
+        foreach (var action in decision.RelayDecisions)
         {
             _logger.LogDebug(
                 "Relay {Relay} -> {Action} ({Reason})",
-                decision.RelayAddress,
-                decision.Energize ? "energize" : "de-energize",
-                decision.Reason);
+                action.RelayAddress,
+                action.Energize ? "energize" : "de-energize",
+                action.Reason);
 
-            await _dataSource.WriteRelayAsync(decision.RelayAddress, decision.Energize);
+            await _dataSource.WriteRelayAsync(action.RelayAddress, action.Energize);
         }
 
-        // 6. Audit/alarm events — enqueue to BatchedEventPublisher.
-        // TODO (Phase 5): `_batchedEventPublisher.Enqueue(snapshot.FacilityId, decisions, alarms);`
-        // BatchedEventPublisher is ported from V1 in a later task.
-
-        // 7. SignalR broadcast — real broadcaster wired in Task 5.2.
-        var decisionPayload = decisions.Count > 0
-            ? LoadSheddingDecision.Create(decisions)
-            : LoadSheddingDecision.None;
+        // Alarm (Entity) မှ AlarmEvent (Value Object) သို့ 4-parameter mapping
+        var alarmEvents = alarms.Select(a => new AlarmEvent(
+            a.AlarmCode,
+            a.Severity,
+            a.Message,
+            a.CreatedAtUtc
+        ));
 
         await _telemetryBroadcaster.BroadcastTickAsync(
             snapshot.FacilityId,
             telemetry,
-            decisionPayload,
-            alarms,
+            decision,
+            alarmEvents,
             ct);
     }
 
@@ -192,7 +189,8 @@ public sealed class EngineBackgroundService : BackgroundService
 
 internal sealed class FacilityEngineSlot
 {
-    private volatile EngineState _currentState;
+    // 'volatile' ကို ဖြုတ်ပေးပါ (CS0420 Warning ပျောက်စေရန်)
+    private EngineState _currentState;
 
     public FacilityEngineSlot(Guid facilityId)
     {

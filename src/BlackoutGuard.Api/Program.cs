@@ -1,4 +1,3 @@
-using System.Text;
 using BlackoutGuard.Api.Engine;
 using BlackoutGuard.Api.Hubs;
 using BlackoutGuard.Api.Middleware;
@@ -8,13 +7,18 @@ using BlackoutGuard.Application.UseCases.Loads;
 using BlackoutGuard.Application.UseCases.Rules;
 using BlackoutGuard.Application.UseCases.Schedules;
 using BlackoutGuard.Application.UseCases.Zones;
+using BlackoutGuard.Domain.BusinessRules;
+using BlackoutGuard.Domain.Services;
+using BlackoutGuard.Infrastructure.Engine;
 using BlackoutGuard.Infrastructure.Persistence;
 using BlackoutGuard.Infrastructure.Persistence.Repositories;
+using BlackoutGuard.Infrastructure.Simulation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +58,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// ✅ SignalR အတွက် CORS ကို ပြင်ပါ
+// ✅ SignalR အတွက် CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -84,14 +88,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.FromSeconds(30)
         };
 
-        // ✅ SignalR အတွက် JWT ကို Query String ကနေ ဖတ်ပါ
+        // ✅ SignalR WebSocket/SSE Connect မီ Query String မှ access_token Extract ပြုလုပ်ခြင်း
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/telemetry"))
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                 {
                     context.Token = accessToken;
                 }
@@ -99,8 +103,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
+
 builder.Services.AddAuthorization();
 
+// Repositories
 builder.Services.AddScoped<IZoneRepository, ZoneRepository>();
 builder.Services.AddScoped<ILoadRepository, LoadRepository>();
 builder.Services.AddScoped<IFacilityRepository, FacilityRepository>();
@@ -112,10 +118,20 @@ builder.Services.AddScoped<IAuditExportRepository, AuditExportRepository>();
 builder.Services.AddScoped<IDbTransactionFactory, DbTransactionFactory>();
 builder.Services.AddScoped<IExecutionStrategy, ExecutionStrategy>();
 
+// Domain Services & Engine
+builder.Services.AddSingleton<IDecisionStrategy, PriorityBasedLoadSheddingStrategy>();
+builder.Services.AddSingleton<IAlarmGenerator, AlarmRuleEngine>();
+
+// Hosted Services
+builder.Services.AddSingleton<PendingConfigChangeQueue>();
+builder.Services.AddHostedService<EngineBackgroundService>();
+
+// Use Cases
 builder.Services.AddScoped<ListZonesUseCase>();
 builder.Services.AddScoped<CreateZoneUseCase>();
 builder.Services.AddScoped<UpdateZoneUseCase>();
 builder.Services.AddScoped<DeleteZoneUseCase>();
+builder.Services.AddScoped<GetZoneUseCase>();
 builder.Services.AddScoped<ListLoadsUseCase>();
 builder.Services.AddScoped<CreateLoadUseCase>();
 builder.Services.AddScoped<UpdateLoadUseCase>();
@@ -128,7 +144,10 @@ builder.Services.AddScoped<CreateScheduleUseCase>();
 builder.Services.AddScoped<DeleteScheduleUseCase>();
 
 builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddSingleton<SimulatorDataSource>();
+builder.Services.AddSingleton<IDataSource>(sp => sp.GetRequiredService<SimulatorDataSource>());
 
+// SignalR Service
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ITelemetryBroadcaster, SignalRTelemetryBroadcaster>();
 
@@ -150,18 +169,18 @@ using (var scope = app.Services.CreateScope())
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+// ✅ Pipeline Order: Cors -> Auth -> Custom Middlewares -> Endpoints
 app.UseCors();
 
 app.UseAuthentication();
-app.UseMiddleware<FacilityContextMiddleware>();
 app.UseAuthorization();
 
+app.UseMiddleware<FacilityContextMiddleware>();
 app.UseMiddleware<FacilityIdMiddleware>();
 
 app.MapControllers();
-
 app.MapHub<TelemetryHub>("/hubs/telemetry");
-
 app.MapGet("/api/health", () => Results.Ok("Healthy"))
    .WithName("HealthCheck");
 
