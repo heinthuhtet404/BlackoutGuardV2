@@ -36,6 +36,7 @@
 - Task 5.1: TelemetryHub (SignalR) with facility-group isolation + live-channel isolation tests (3/3)
 - Task 5.2: ITelemetryBroadcaster + SignalRTelemetryBroadcaster wired into EngineBackgroundService
 - Task 5.3: SimulatorPanel with admin guard, debounced sliders, fault injection, live SignalR telemetry
+- Task 5.4: AuditTable with paginated history + live DecisionExecuted prepend + reconnect gap-fill
 
 ## Next Task
 - TBD
