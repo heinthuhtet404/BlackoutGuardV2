@@ -39,6 +39,7 @@
 - Task 5.4: AuditTable with paginated history + live DecisionExecuted prepend + reconnect gap-fill
 - Task 5.5: AuditExportController (CSV/PDF via QuestPDF) + role-hidden ExportButtons
 - Task 5.6: Live demo scenario script (docs/DEMO_SCENARIO_SCRIPT.md)
+- Task 6.1: FacilityContextMiddleware with explicit 403 + real-DB session variable test (2/2)
 
 ## Next Task
 - TBD

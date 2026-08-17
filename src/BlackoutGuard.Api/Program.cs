@@ -153,6 +153,7 @@ app.UseSwaggerUI();
 app.UseCors();
 
 app.UseAuthentication();
+app.UseMiddleware<FacilityContextMiddleware>();
 app.UseAuthorization();
 
 app.UseMiddleware<FacilityIdMiddleware>();
