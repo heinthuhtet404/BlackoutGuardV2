@@ -1,0 +1,133 @@
+.page {
+  padding: 0.5rem;
+  max-width: 720px;
+}
+
+.heading {
+  font-size: 1.4rem;
+  margin: 0 0 0.75rem;
+  color: #111827;
+}
+
+.statusRow {
+  margin-bottom: 1rem;
+}
+
+.connected {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+}
+
+.disconnected {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  margin: 0 0 1rem;
+  color: #1f2937;
+}
+
+.telemetryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.metricLabel {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.metricValue {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.1rem;
+}
+
+.controlLabel {
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.control input[type="range"] {
+  width: 100%;
+  accent-color: #2563eb;
+}
+
+.rangeLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.1rem;
+}
+
+.toggle {
+  padding: 0.45rem 1.1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  color: #ffffff;
+}
+
+.toggleOn {
+  background: #16a34a;
+}
+
+.toggleOff {
+  background: #6b7280;
+}
+
+.faultButton {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.faultButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
