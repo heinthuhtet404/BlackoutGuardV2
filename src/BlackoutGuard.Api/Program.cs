@@ -108,6 +108,7 @@ builder.Services.AddScoped<IDecisionAuditLogRepository, DecisionAuditLogReposito
 builder.Services.AddScoped<IRuleRepository, RuleRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuditExportRepository, AuditExportRepository>();
 builder.Services.AddScoped<IDbTransactionFactory, DbTransactionFactory>();
 builder.Services.AddScoped<IExecutionStrategy, ExecutionStrategy>();
 

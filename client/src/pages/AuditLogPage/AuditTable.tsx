@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuditLog, type AuditEntry } from "../../hooks/useAuditLog";
 import { useAuditHub, type DecisionExecutedPayload } from "../../hooks/useAuditHub";
+import { ExportButtons } from "./ExportButtons";
 import styles from "./AuditTable.module.css";
 
 const PAGE_SIZE = 20;
@@ -86,6 +87,8 @@ export function AuditTable() {
 
   return (
     <div className={styles.page} data-testid="audit-table">
+      <ExportButtons />
+
       <table className={styles.table}>
         <thead>
           <tr>

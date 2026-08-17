@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "../../auth/AuthContext";
+import { resetTokenStoreForTests, setTokens } from "../../auth/tokenStore";
 import { get } from "../../api/apiClient";
 import { AuditTable } from "./AuditTable";
 import type { AuditPage } from "../../hooks/useAuditLog";
@@ -49,12 +51,25 @@ const initialPage: AuditPage = {
 };
 
 function renderAuditTable() {
+  setTokens({
+    accessToken: "access-token-123",
+    refreshToken: "refresh-token-456",
+    user: {
+      id: "user-1",
+      email: "admin@test.com",
+      role: "Admin",
+      facilityId: "facility-1",
+    },
+  });
+
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <AuditTable />
+      <AuthProvider>
+        <AuditTable />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
@@ -62,6 +77,8 @@ function renderAuditTable() {
 beforeEach(() => {
   emitDecision = null;
   emitReconnect = null;
+  localStorage.clear();
+  resetTokenStoreForTests();
   vi.clearAllMocks();
 });
 

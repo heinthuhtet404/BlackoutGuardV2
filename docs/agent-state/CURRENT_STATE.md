@@ -37,6 +37,7 @@
 - Task 5.2: ITelemetryBroadcaster + SignalRTelemetryBroadcaster wired into EngineBackgroundService
 - Task 5.3: SimulatorPanel with admin guard, debounced sliders, fault injection, live SignalR telemetry
 - Task 5.4: AuditTable with paginated history + live DecisionExecuted prepend + reconnect gap-fill
+- Task 5.5: AuditExportController (CSV/PDF via QuestPDF) + role-hidden ExportButtons
 
 ## Next Task
 - TBD
