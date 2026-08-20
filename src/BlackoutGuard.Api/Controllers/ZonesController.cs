@@ -18,20 +18,20 @@ public class ZonesController : ControllerBase
     private readonly CreateZoneUseCase _createZoneUseCase;
     private readonly UpdateZoneUseCase _updateZoneUseCase;
     private readonly DeleteZoneUseCase _deleteZoneUseCase;
-    private readonly GetZoneUseCase _getZoneUseCase;  // ✅ ဒါကို ထည့်ပါ
+    private readonly GetZoneUseCase _getZoneUseCase;
 
     public ZonesController(
         ListZonesUseCase listZonesUseCase,
         CreateZoneUseCase createZoneUseCase,
         UpdateZoneUseCase updateZoneUseCase,
         DeleteZoneUseCase deleteZoneUseCase,
-        GetZoneUseCase getZoneUseCase)  // ✅ ဒါကို ထည့်ပါ
+        GetZoneUseCase getZoneUseCase)
     {
         _listZonesUseCase = listZonesUseCase;
         _createZoneUseCase = createZoneUseCase;
         _updateZoneUseCase = updateZoneUseCase;
         _deleteZoneUseCase = deleteZoneUseCase;
-        _getZoneUseCase = getZoneUseCase;  // ✅ ဒါကို ထည့်ပါ
+        _getZoneUseCase = getZoneUseCase;
     }
 
     [HttpGet]
@@ -47,10 +47,12 @@ public class ZonesController : ControllerBase
             : MapFailure(result);
     }
 
-    [HttpGet("{id:guid}")]  // ✅ ဒီ Endpoint ကို ထည့်ပါ
-    [Authorize]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
+        if (id == Guid.Empty)
+            return BadRequest(new { error = "Zone ID cannot be empty." });
+
         var facilityId = GetFacilityIdFromClaims();
         if (facilityId is null)
             return Unauthorized(new { error = "Missing or invalid facility_id claim." });
@@ -82,6 +84,9 @@ public class ZonesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateZoneRequest request, CancellationToken ct)
     {
+        if (id == Guid.Empty)
+            return BadRequest(new { error = "Zone ID cannot be empty." });
+
         var facilityId = GetFacilityIdFromClaims();
         if (facilityId is null)
             return Unauthorized(new { error = "Missing or invalid facility_id claim." });
@@ -98,6 +103,9 @@ public class ZonesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
+        if (id == Guid.Empty)
+            return BadRequest(new { error = "Zone ID cannot be empty." });
+
         var facilityId = GetFacilityIdFromClaims();
         if (facilityId is null)
             return Unauthorized(new { error = "Missing or invalid facility_id claim." });

@@ -27,10 +27,9 @@ export function useTelemetryHub(): UseTelemetryHubResult {
     });
     const connectionRef = useRef<signalR.HubConnection | null>(null);
 
-    // 1. Token Change ကို စောင့်ကြည့်ခြင်း
+    // 1. Token ပြောင်းလဲမှုကို စောင့်ကြည့်ခြင်း
     useEffect(() => {
         const unsubscribe = subscribeTokenChange(() => {
-            initializeTokens();
             setToken(getAccessToken());
         });
         return unsubscribe;
@@ -40,18 +39,20 @@ export function useTelemetryHub(): UseTelemetryHubResult {
     useEffect(() => {
         if (!token) {
             if (connectionRef.current) {
-                void connectionRef.current.stop();
+                const conn = connectionRef.current;
                 connectionRef.current = null;
+                void conn.stop().catch(() => { });
             }
             setConnected(false);
             return;
         }
 
         let isMounted = true;
+        let isCancelled = false;
 
         const apiBase =
             import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000/api/v1";
-        const hubBase = apiBase.replace(/\/api\/v1\/?$/, "");
+        const hubBase = apiBase.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "");
         const hubUrl = `${hubBase}/hubs/telemetry`;
 
         const connection = new signalR.HubConnectionBuilder()
@@ -64,46 +65,62 @@ export function useTelemetryHub(): UseTelemetryHubResult {
         connectionRef.current = connection;
 
         connection.on("TelemetryUpdated", (payload: TelemetryUpdate) => {
-            if (isMounted) setTelemetry(payload);
+            if (isMounted) {
+                setTelemetry(payload);
+            }
         });
 
         connection.onclose(() => {
-            if (isMounted) setConnected(false);
+            if (isMounted) {
+                setConnected(false);
+            }
         });
 
         connection.onreconnecting(() => {
-            if (isMounted) setConnected(false);
+            if (isMounted) {
+                setConnected(false);
+            }
         });
 
         connection.onreconnected(() => {
-            if (isMounted) setConnected(true);
+            if (isMounted) {
+                setConnected(true);
+            }
         });
 
-        // Start connection and handle premature unmount safe cleanup
-        connection
-            .start()
-            .then(() => {
-                if (isMounted) {
-                    setConnected(true);
-                } else {
-                    // If unmounted before start completed, stop cleanly after connection establishes
-                    void connection.stop();
+        // Negotiating ပြုလုပ်နေစဉ် တခြားနေရာမှ ဖြတ်မရပ်စေရန် Safe Promise Wrapping
+        const startPromise = (async () => {
+            try {
+                if (connection.state === signalR.HubConnectionState.Disconnected) {
+                    await connection.start();
                 }
-            })
-            .catch((err) => {
-                if (isMounted) {
+                if (isCancelled) {
+                    await connection.stop();
+                } else if (isMounted) {
+                    setConnected(true);
+                }
+            } catch (err) {
+                if (!isCancelled && isMounted) {
                     console.error("SignalR connection error:", err);
                     setConnected(false);
                 }
-            });
+            }
+        })();
 
         return () => {
             isMounted = false;
-            // Negotiate လုပ်နေတုန်း stop() မခေါ်ဘဲ Connected ဖြစ်ပြီးမှသာ stop() ကို ခေါ်ပါမည်
-            if (connection.state === signalR.HubConnectionState.Connected) {
-                void connection.stop();
+            isCancelled = true;
+
+            if (connectionRef.current === connection) {
+                connectionRef.current = null;
             }
-            connectionRef.current = null;
+
+            // connection.start() ပြီးဆုံးသည်အထိ စောင့်ပြီးမှသာ Safe ဖြစ်စွာ stop() ခေါ်မည်
+            void startPromise.then(async () => {
+                if (connection.state !== signalR.HubConnectionState.Disconnected) {
+                    await connection.stop().catch(() => { });
+                }
+            });
         };
     }, [token]);
 

@@ -25,6 +25,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? "Host=localhost;Database=blackoutguard_v2;Username=postgres;Password=postgres";
 
+// DbContext Registration
 builder.Services.AddDbContext<BlackoutGuardDbContext>(options =>
     options.UseNpgsql(connectionString)
            .AddInterceptors(new FacilityIdDbInterceptor()));
@@ -58,7 +59,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// ✅ SignalR အတွက် CORS Configuration
+// SignalR & Web Client CORS Policy Setup
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -88,7 +89,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.FromSeconds(30)
         };
 
-        // ✅ SignalR WebSocket/SSE Connect မီ Query String မှ access_token Extract ပြုလုပ်ခြင်း
+        // SignalR WebSockets/SSE Request များအတွက် Query String မှ access_token ရယူခြင်း
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -147,12 +148,13 @@ builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<SimulatorDataSource>();
 builder.Services.AddSingleton<IDataSource>(sp => sp.GetRequiredService<SimulatorDataSource>());
 
-// SignalR Service
+// SignalR Hub Registration
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ITelemetryBroadcaster, SignalRTelemetryBroadcaster>();
 
 var app = builder.Build();
 
+// Database Initialization & Migration Scope
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BlackoutGuardDbContext>();
@@ -160,8 +162,11 @@ using (var scope = app.Services.CreateScope())
     await EnsureDatabaseCreatedAsync(connectionString);
     await db.Database.MigrateAsync();
 
-    await using var connection = (NpgsqlConnection)db.Database.GetDbConnection();
-    await connection.OpenAsync();
+    var connection = (NpgsqlConnection)db.Database.GetDbConnection();
+    if (connection.State != System.Data.ConnectionState.Open)
+    {
+        await connection.OpenAsync();
+    }
     await RlsScriptRunner.ApplyAsync(connection);
 
     await DataSeeder.SeedAsync(db);
@@ -170,7 +175,7 @@ using (var scope = app.Services.CreateScope())
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// ✅ Pipeline Order: Cors -> Auth -> Custom Middlewares -> Endpoints
+// Middleware Pipeline
 app.UseCors();
 
 app.UseAuthentication();
