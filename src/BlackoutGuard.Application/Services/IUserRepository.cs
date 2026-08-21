@@ -1,8 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using BlackoutGuard.Domain.Entities;
+
 namespace BlackoutGuard.Application.Services;
 
 public interface IUserRepository
 {
+    Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<UserAuthDto?> GetByEmailAsync(string email, CancellationToken ct = default);
+    Task<IReadOnlyList<User>> GetByTenantIdAsync(Guid tenantId, CancellationToken ct = default);
+    Task<int> CountAdminsInTenantAsync(Guid tenantId, CancellationToken ct = default);
+    Task AddAsync(User user, CancellationToken ct = default);
+    Task UpdateAsync(User user, CancellationToken ct = default);
+    Task DeleteAsync(User user, CancellationToken ct = default);
+    Task SaveChangesAsync(CancellationToken ct = default);
 }
 
 public class UserAuthDto

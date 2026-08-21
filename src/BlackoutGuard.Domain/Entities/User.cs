@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace BlackoutGuard.Infrastructure.Persistence.Models;
+namespace BlackoutGuard.Domain.Entities;
 
 public class User
 {
@@ -10,9 +10,6 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }  // 👈 ဒီ line ကိုထည့်ပါ
-
-    public Tenant Tenant { get; set; } = null!;
-    public ICollection<AlarmRecord> AcknowledgedAlarms { get; set; } = new List<AlarmRecord>();
 }

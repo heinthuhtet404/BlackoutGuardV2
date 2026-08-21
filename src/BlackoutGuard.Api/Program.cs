@@ -6,6 +6,7 @@ using BlackoutGuard.Application.Services;
 using BlackoutGuard.Application.UseCases.Loads;
 using BlackoutGuard.Application.UseCases.Rules;
 using BlackoutGuard.Application.UseCases.Schedules;
+using BlackoutGuard.Application.UseCases.Users;
 using BlackoutGuard.Application.UseCases.Zones;
 using BlackoutGuard.Domain.BusinessRules;
 using BlackoutGuard.Domain.Services;
@@ -119,6 +120,9 @@ builder.Services.AddScoped<IAuditExportRepository, AuditExportRepository>();
 builder.Services.AddScoped<IDbTransactionFactory, DbTransactionFactory>();
 builder.Services.AddScoped<IExecutionStrategy, ExecutionStrategy>();
 
+// Password Hasher
+builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+
 // Domain Services & Engine
 builder.Services.AddSingleton<IDecisionStrategy, PriorityBasedLoadSheddingStrategy>();
 builder.Services.AddSingleton<IAlarmGenerator, AlarmRuleEngine>();
@@ -126,8 +130,9 @@ builder.Services.AddSingleton<IAlarmGenerator, AlarmRuleEngine>();
 // Hosted Services
 builder.Services.AddSingleton<PendingConfigChangeQueue>();
 builder.Services.AddHostedService<EngineBackgroundService>();
+builder.Services.AddHostedService<ScheduleEvaluationBackgroundService>();
 
-// Use Cases
+// Use Cases - Existing
 builder.Services.AddScoped<ListZonesUseCase>();
 builder.Services.AddScoped<CreateZoneUseCase>();
 builder.Services.AddScoped<UpdateZoneUseCase>();
@@ -143,6 +148,12 @@ builder.Services.AddScoped<UpdateRuleUseCase>();
 builder.Services.AddScoped<ListSchedulesUseCase>();
 builder.Services.AddScoped<CreateScheduleUseCase>();
 builder.Services.AddScoped<DeleteScheduleUseCase>();
+
+// Use Cases - Users (Task 6.3)
+builder.Services.AddScoped<ListUsersUseCase>();
+builder.Services.AddScoped<CreateUserUseCase>();
+builder.Services.AddScoped<UpdateUserUseCase>();
+builder.Services.AddScoped<DeleteUserUseCase>();
 
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<SimulatorDataSource>();
