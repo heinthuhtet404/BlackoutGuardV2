@@ -1,3 +1,4 @@
+using System.Text;
 using BlackoutGuard.Api.Engine;
 using BlackoutGuard.Api.Hubs;
 using BlackoutGuard.Api.Middleware;
@@ -19,10 +20,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? "Host=localhost;Database=blackoutguard_v2;Username=postgres;Password=postgres";
 
@@ -149,7 +148,7 @@ builder.Services.AddScoped<ListSchedulesUseCase>();
 builder.Services.AddScoped<CreateScheduleUseCase>();
 builder.Services.AddScoped<DeleteScheduleUseCase>();
 
-// Use Cases - Users (Task 6.3)
+// Use Cases - Users
 builder.Services.AddScoped<ListUsersUseCase>();
 builder.Services.AddScoped<CreateUserUseCase>();
 builder.Services.AddScoped<UpdateUserUseCase>();
@@ -170,15 +169,26 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BlackoutGuardDbContext>();
 
-    await EnsureDatabaseCreatedAsync(connectionString);
-    await db.Database.MigrateAsync();
-
-    var connection = (NpgsqlConnection)db.Database.GetDbConnection();
-    if (connection.State != System.Data.ConnectionState.Open)
+    // Relational Provider (PostgreSQL) ဖြစ်မှသာ Migration နှင့် RLS Script run မည်
+    if (db.Database.IsRelational())
     {
-        await connection.OpenAsync();
+        await EnsureDatabaseCreatedAsync(connectionString);
+        await db.Database.MigrateAsync();
+
+        if (db.Database.GetDbConnection() is NpgsqlConnection connection)
+        {
+            if (connection.State != System.Data.ConnectionState.Open)
+            {
+                await connection.OpenAsync();
+            }
+            await RlsScriptRunner.ApplyAsync(connection);
+        }
     }
-    await RlsScriptRunner.ApplyAsync(connection);
+    else
+    {
+        // InMemory Provider ဖြစ်ပါက Schema ကို တိုက်ရိုက် ဖန်တီးမည်
+        await db.Database.EnsureCreatedAsync();
+    }
 
     await DataSeeder.SeedAsync(db);
 }
@@ -188,10 +198,8 @@ app.UseSwaggerUI();
 
 // Middleware Pipeline
 app.UseCors();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.UseMiddleware<FacilityContextMiddleware>();
 app.UseMiddleware<FacilityIdMiddleware>();
 
@@ -225,3 +233,6 @@ static async Task EnsureDatabaseCreatedAsync(string connectionString)
         connection);
     await createCommand.ExecuteNonQueryAsync();
 }
+
+// Integration Test များမှ Program class ကို Access လုပ်နိုင်ရန် Partial Class ကြေညာခြင်း
+public partial class Program { }
