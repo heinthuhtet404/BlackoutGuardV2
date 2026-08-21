@@ -19,8 +19,14 @@ public class FacilityConfiguration : IEntityTypeConfiguration<Facility>
             .IsRequired()
             .HasMaxLength(128);
 
-        builder.Property(f => f.GeneratorCapacityKW)
+        builder.Property(f => f.GeneratorCapacityKw)
             .IsRequired();
+
+        // 👇 NEW: TimezoneId column
+        builder.Property(f => f.TimezoneId)
+            .IsRequired()
+            .HasMaxLength(64)
+            .HasDefaultValue("UTC");
 
         builder.Property(f => f.CreatedAt)
             .IsRequired()
@@ -33,35 +39,5 @@ public class FacilityConfiguration : IEntityTypeConfiguration<Facility>
 
         builder.HasIndex(f => f.TenantId)
             .HasDatabaseName("idx_facilities_tenant");
-
-        builder.HasMany(f => f.Zones)
-            .WithOne(z => z.Facility)
-            .HasForeignKey(z => z.FacilityId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(f => f.Loads)
-            .WithOne(l => l.Facility)
-            .HasForeignKey(l => l.FacilityId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(f => f.Rules)
-            .WithOne(r => r.Facility)
-            .HasForeignKey(r => r.FacilityId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(f => f.TimeSchedules)
-            .WithOne(ts => ts.Facility)
-            .HasForeignKey(ts => ts.FacilityId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(f => f.DecisionAuditLogs)
-            .WithOne(d => d.Facility)
-            .HasForeignKey(d => d.FacilityId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(f => f.AlarmRecords)
-            .WithOne(a => a.Facility)
-            .HasForeignKey(a => a.FacilityId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

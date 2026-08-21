@@ -48,7 +48,7 @@ public class CreateLoadConcurrencyTests : IAsyncLifetime
             Id = _facilityId,
             TenantId = _tenantId,
             Name = "Test Facility",
-            GeneratorCapacityKW = 500
+            GeneratorCapacityKw = 500
         });
         seedContext.Zones.Add(new Zone
         {

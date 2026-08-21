@@ -3,6 +3,7 @@ using System;
 using BlackoutGuard.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BlackoutGuard.Infrastructure.Migrations
 {
     [DbContext(typeof(BlackoutGuardDbContext))]
-    partial class BlackoutGuardDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260820195922_AddTimezoneIdToFacilities")]
+    partial class AddTimezoneIdToFacilities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -132,7 +135,7 @@ namespace BlackoutGuard.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<double>("GeneratorCapacityKw")
+                    b.Property<double>("GeneratorCapacityKW")
                         .HasColumnType("double precision");
 
                     b.Property<string>("Name")
@@ -142,13 +145,6 @@ namespace BlackoutGuard.Infrastructure.Migrations
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("TimezoneId")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasDefaultValue("UTC");
 
                     b.HasKey("Id");
 

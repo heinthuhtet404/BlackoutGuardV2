@@ -1,220 +1,364 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using BlackoutGuard.Domain.ValueObjects;
 using BlackoutGuard.Infrastructure.Engine;
 using BlackoutGuard.Infrastructure.Persistence;
 using BlackoutGuard.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-using Npgsql;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 
 namespace BlackoutGuard.Infrastructure.Tests.Engine;
 
-public class ScheduleEvaluationBackgroundServiceTests : IAsyncLifetime
+public sealed class ScheduleEvaluationBackgroundServiceTests : IDisposable
 {
-    private const string TestDatabase = "blackoutguard_v2_schedule_test";
+    private readonly Mock<ILogger<ScheduleEvaluationBackgroundService>> _loggerMock;
+    private readonly PendingConfigChangeQueue _queue;
+    private readonly BlackoutGuardDbContext _dbContext;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly Guid _facilityId;
+    private readonly Guid _tenantId;
+    private readonly Mock<ITimeProvider> _timeProviderMock;
 
-    private ServiceProvider _services = null!;
-    private BlackoutGuardDbContext _db = null!;
-    private PendingConfigChangeQueue _queue = null!;
-    private FakeTimeProvider _timeProvider = null!;
-    private ScheduleEvaluationBackgroundService _service = null!;
-
-    private Guid _facilityId;
-    private Guid _zoneId;
-    private Guid _loadId;
-
-    public async Task InitializeAsync()
+    public ScheduleEvaluationBackgroundServiceTests()
     {
-        await EnsureTestDatabaseAsync();
-
-        var connectionString =
-            $"Host=localhost;Database={TestDatabase};Username=postgres;Password=postgres";
-
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddDbContext<BlackoutGuardDbContext>(options =>
-            options.UseNpgsql(connectionString));
-        serviceCollection.AddSingleton<PendingConfigChangeQueue>();
-        serviceCollection.AddLogging();
-
-        _services = serviceCollection.BuildServiceProvider();
-        _db = _services.GetRequiredService<BlackoutGuardDbContext>();
-        await _db.Database.MigrateAsync();
-
+        _loggerMock = new Mock<ILogger<ScheduleEvaluationBackgroundService>>();
         _queue = new PendingConfigChangeQueue();
-        _timeProvider = new FakeTimeProvider();
+        _timeProviderMock = new Mock<ITimeProvider>();
+        _tenantId = Guid.NewGuid();
+        _facilityId = Guid.NewGuid();
 
-        _service = new ScheduleEvaluationBackgroundService(
-            _services.GetRequiredService<IServiceScopeFactory>(),
-            _queue,
-            _timeProvider,
-            NullLogger<ScheduleEvaluationBackgroundService>.Instance);
+        var options = new DbContextOptionsBuilder<BlackoutGuardDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
 
-        await SeedAsync();
-    }
+        _dbContext = new BlackoutGuardDbContext(options);
 
-    public async Task DisposeAsync()
-    {
-        await _services.DisposeAsync();
-        await DropTestDatabaseAsync();
+        var services = new ServiceCollection();
+        services.AddSingleton(_dbContext);
+        services.AddSingleton(_loggerMock.Object);
+        services.AddSingleton(_queue);
+        services.AddSingleton(_timeProviderMock.Object);
+
+        _serviceProvider = services.BuildServiceProvider();
     }
 
     [Fact]
-    public async Task ScheduleInWindow_WithDifferentPriority_EnqueuesLoadChanged()
+    public async Task EvaluateSchedulesAsync_ShouldEnqueueLoadChanged_WhenScheduleIsActiveAndInWindow()
     {
-        var now = new DateTime(2026, 8, 17, 12, 0, 0, DateTimeKind.Utc); // Monday noon
-        _timeProvider.UtcNow = now;
+        // Arrange - Fixed time: 10:00 AM (inside 9:00-17:00 window)
+        var fixedTime = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        _timeProviderMock.Setup(tp => tp.UtcNow).Returns(fixedTime);
 
-        _db.TimeSchedules.Add(new TimeSchedule
-        {
-            Id = Guid.NewGuid(),
-            FacilityId = _facilityId,
-            Name = "Afternoon Shed",
-            LoadId = _loadId,
-            TargetPriority = "P1",
-            StartTime = new TimeOnly(9, 0),
-            EndTime = new TimeOnly(17, 0),
-            DaysOfWeek = new short[] { 1 },
-            IsActive = true
-        });
-        await _db.SaveChangesAsync();
+        var facility = CreateFacility("Test Facility", "Asia/Yangon");
+        var load = CreateLoad("Load1", "P2", facility.Id);
+        var schedule = CreateTimeSchedule(load.Id, facility.Id, new TimeOnly(9, 0), new TimeOnly(17, 0), "P1", true);
 
-        await _service.EvaluateAsync();
+        _dbContext.Facilities.Add(facility);
+        _dbContext.Loads.Add(load);
+        _dbContext.TimeSchedules.Add(schedule);
+        await _dbContext.SaveChangesAsync();
 
+        var service = CreateService();
+
+        // Act
+        await service.EvaluateSchedulesAsync(CancellationToken.None);
+
+        // Assert
         var changes = _queue.DrainAll();
-        var change = Assert.Single(changes);
-        var loadChanged = Assert.IsType<LoadChanged>(change);
+        Assert.Single(changes);
+        var loadChanged = Assert.IsType<LoadChanged>(changes[0]);
+        Assert.Equal(load.Id, loadChanged.UpdatedLoad.Id);
+        Assert.Equal("P1", loadChanged.UpdatedLoad.Priority);
         Assert.Equal(_facilityId, loadChanged.FacilityId);
-        Assert.Equal(_loadId, loadChanged.UpdatedLoad.Id);
+    }
+
+    [Fact]
+    public async Task EvaluateSchedulesAsync_ShouldNotEnqueue_WhenScheduleIsInactive()
+    {
+        // Arrange
+        var fixedTime = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        _timeProviderMock.Setup(tp => tp.UtcNow).Returns(fixedTime);
+
+        var facility = CreateFacility("Test Facility", "Asia/Yangon");
+        var load = CreateLoad("Load1", "P2", facility.Id);
+        var schedule = CreateTimeSchedule(load.Id, facility.Id, new TimeOnly(9, 0), new TimeOnly(17, 0), "P1", false);
+
+        _dbContext.Facilities.Add(facility);
+        _dbContext.Loads.Add(load);
+        _dbContext.TimeSchedules.Add(schedule);
+        await _dbContext.SaveChangesAsync();
+
+        var service = CreateService();
+
+        // Act
+        await service.EvaluateSchedulesAsync(CancellationToken.None);
+
+        // Assert
+        var changes = _queue.DrainAll();
+        Assert.Empty(changes);
+    }
+
+    [Fact]
+    public async Task EvaluateSchedulesAsync_ShouldNotEnqueue_WhenPriorityAlreadyMatches()
+    {
+        // Arrange
+        var fixedTime = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        _timeProviderMock.Setup(tp => tp.UtcNow).Returns(fixedTime);
+
+        var facility = CreateFacility("Test Facility", "Asia/Yangon");
+        var load = CreateLoad("Load1", "P1", facility.Id);
+        var schedule = CreateTimeSchedule(load.Id, facility.Id, new TimeOnly(9, 0), new TimeOnly(17, 0), "P1", true);
+
+        _dbContext.Facilities.Add(facility);
+        _dbContext.Loads.Add(load);
+        _dbContext.TimeSchedules.Add(schedule);
+        await _dbContext.SaveChangesAsync();
+
+        var service = CreateService();
+
+        // Act
+        await service.EvaluateSchedulesAsync(CancellationToken.None);
+
+        // Assert
+        var changes = _queue.DrainAll();
+        Assert.Empty(changes);
+    }
+
+    [Fact]
+    public async Task EvaluateSchedulesAsync_ShouldHandleOvernightWrap_WhenTimeIsInside()
+    {
+        // Arrange - Overnight window: 22:00-06:00, current time: 23:00 (inside)
+        var fixedTime = new DateTime(2024, 1, 1, 23, 0, 0, DateTimeKind.Utc);
+        _timeProviderMock.Setup(tp => tp.UtcNow).Returns(fixedTime);
+
+        var facility = CreateFacility("Test Facility", "Asia/Yangon");
+        var load = CreateLoad("Load1", "P2", facility.Id);
+        var schedule = CreateTimeSchedule(load.Id, facility.Id, new TimeOnly(22, 0), new TimeOnly(6, 0), "P1", true);
+
+        _dbContext.Facilities.Add(facility);
+        _dbContext.Loads.Add(load);
+        _dbContext.TimeSchedules.Add(schedule);
+        await _dbContext.SaveChangesAsync();
+
+        var service = CreateService();
+
+        // Act
+        await service.EvaluateSchedulesAsync(CancellationToken.None);
+
+        // Assert
+        var changes = _queue.DrainAll();
+        Assert.Single(changes);
+        var loadChanged = Assert.IsType<LoadChanged>(changes[0]);
+        Assert.Equal(load.Id, loadChanged.UpdatedLoad.Id);
         Assert.Equal("P1", loadChanged.UpdatedLoad.Priority);
     }
 
     [Fact]
-    public async Task ScheduleOutOfWindow_EnqueuesNothing()
+    public async Task EvaluateSchedulesAsync_ShouldNotEnqueue_WhenOvernightWrapIsOutside()
     {
-        var now = new DateTime(2026, 8, 17, 8, 30, 0, DateTimeKind.Utc); // Monday before 9am
-        _timeProvider.UtcNow = now;
+        // Arrange - Overnight window: 22:00-06:00, current time: 12:00 (outside)
+        var fixedTime = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+        _timeProviderMock.Setup(tp => tp.UtcNow).Returns(fixedTime);
 
-        _db.TimeSchedules.Add(new TimeSchedule
-        {
-            Id = Guid.NewGuid(),
-            FacilityId = _facilityId,
-            Name = "Afternoon Shed",
-            LoadId = _loadId,
-            TargetPriority = "P1",
-            StartTime = new TimeOnly(9, 0),
-            EndTime = new TimeOnly(17, 0),
-            DaysOfWeek = new short[] { 1 },
-            IsActive = true
-        });
-        await _db.SaveChangesAsync();
+        var facility = CreateFacility("Test Facility", "Asia/Yangon");
+        var load = CreateLoad("Load1", "P2", facility.Id);
+        var schedule = CreateTimeSchedule(load.Id, facility.Id, new TimeOnly(22, 0), new TimeOnly(6, 0), "P1", true);
 
-        await _service.EvaluateAsync();
+        _dbContext.Facilities.Add(facility);
+        _dbContext.Loads.Add(load);
+        _dbContext.TimeSchedules.Add(schedule);
+        await _dbContext.SaveChangesAsync();
 
-        Assert.Empty(_queue.DrainAll());
+        var service = CreateService();
+
+        // Act
+        await service.EvaluateSchedulesAsync(CancellationToken.None);
+
+        // Assert
+        var changes = _queue.DrainAll();
+        Assert.Empty(changes);
     }
 
     [Fact]
-    public async Task ScheduleInWindow_ButPriorityUnchanged_EnqueuesNothing()
+    public void IsTimeInWindow_ShouldReturnTrue_WhenTimeIsInsideNormalWindow()
     {
-        var now = new DateTime(2026, 8, 17, 12, 0, 0, DateTimeKind.Utc);
-        _timeProvider.UtcNow = now;
+        var current = new TimeOnly(12, 0);
+        var start = new TimeOnly(9, 0);
+        var end = new TimeOnly(17, 0);
 
-        _db.TimeSchedules.Add(new TimeSchedule
-        {
-            Id = Guid.NewGuid(),
-            FacilityId = _facilityId,
-            Name = "No-op Schedule",
-            LoadId = _loadId,
-            TargetPriority = "P2", // load is already P2
-            StartTime = new TimeOnly(9, 0),
-            EndTime = new TimeOnly(17, 0),
-            DaysOfWeek = new short[] { 1 },
-            IsActive = true
-        });
-        await _db.SaveChangesAsync();
-
-        await _service.EvaluateAsync();
-
-        Assert.Empty(_queue.DrainAll());
+        var result = IsTimeInWindow(current, start, end);
+        Assert.True(result);
     }
 
-    private async Task SeedAsync()
+    [Fact]
+    public void IsTimeInWindow_ShouldReturnFalse_WhenTimeIsOutsideNormalWindow()
     {
-        var tenant = new Tenant { Id = Guid.NewGuid(), Name = "Schedule Test Tenant" };
-        var facility = new Facility
+        var current = new TimeOnly(8, 0);
+        var start = new TimeOnly(9, 0);
+        var end = new TimeOnly(17, 0);
+
+        var result = IsTimeInWindow(current, start, end);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void IsTimeInWindow_ShouldReturnTrue_WhenTimeIsAtBoundaryStart()
+    {
+        var current = new TimeOnly(9, 0);
+        var start = new TimeOnly(9, 0);
+        var end = new TimeOnly(17, 0);
+
+        var result = IsTimeInWindow(current, start, end);
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void IsTimeInWindow_ShouldReturnTrue_WhenTimeIsAtBoundaryEnd()
+    {
+        var current = new TimeOnly(17, 0);
+        var start = new TimeOnly(9, 0);
+        var end = new TimeOnly(17, 0);
+
+        var result = IsTimeInWindow(current, start, end);
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void IsTimeInWindow_ShouldHandleOvernightWrap_WhenTimeIsInside()
+    {
+        var current = new TimeOnly(23, 0);
+        var start = new TimeOnly(22, 0);
+        var end = new TimeOnly(6, 0);
+
+        var result = IsTimeInWindow(current, start, end);
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void IsTimeInWindow_ShouldHandleOvernightWrap_WhenTimeIsInsideEarlyMorning()
+    {
+        var current = new TimeOnly(1, 0);
+        var start = new TimeOnly(22, 0);
+        var end = new TimeOnly(6, 0);
+
+        var result = IsTimeInWindow(current, start, end);
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void IsTimeInWindow_ShouldHandleOvernightWrap_WhenTimeIsOutside()
+    {
+        var current = new TimeOnly(12, 0);
+        var start = new TimeOnly(22, 0);
+        var end = new TimeOnly(6, 0);
+
+        var result = IsTimeInWindow(current, start, end);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task EvaluateSchedulesAsync_ShouldUseSharedQueue_NotCreateNewPath()
+    {
+        // Arrange
+        var fixedTime = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        _timeProviderMock.Setup(tp => tp.UtcNow).Returns(fixedTime);
+
+        var facility = CreateFacility("Test Facility", "UTC");
+        var load = CreateLoad("Load1", "P2", facility.Id);
+        var schedule = CreateTimeSchedule(load.Id, facility.Id, new TimeOnly(9, 0), new TimeOnly(17, 0), "P1", true);
+
+        _dbContext.Facilities.Add(facility);
+        _dbContext.Loads.Add(load);
+        _dbContext.TimeSchedules.Add(schedule);
+        await _dbContext.SaveChangesAsync();
+
+        var service = CreateService();
+
+        // Act
+        await service.EvaluateSchedulesAsync(CancellationToken.None);
+
+        // Assert
+        var changes = _queue.DrainAll();
+        Assert.Single(changes);
+        Assert.IsType<LoadChanged>(changes[0]);
+    }
+
+    private Facility CreateFacility(string name, string timezoneId)
+    {
+        return new Facility
         {
-            Id = Guid.NewGuid(),
-            TenantId = tenant.Id,
-            Name = "Schedule Test Facility",
-            GeneratorCapacityKW = 500
+            Id = _facilityId,
+            TenantId = _tenantId,
+            Name = name,
+            GeneratorCapacityKw = 100.0,
+            TimezoneId = timezoneId,
+            CreatedAt = DateTime.UtcNow
         };
-        var zone = new Zone
+    }
+
+    private Load CreateLoad(string name, string priority, Guid facilityId)
+    {
+        return new Load
         {
             Id = Guid.NewGuid(),
-            FacilityId = facility.Id,
-            Name = "Test Zone",
-            Type = "building"
-        };
-        var load = new Load
-        {
-            Id = Guid.NewGuid(),
-            FacilityId = facility.Id,
-            ZoneId = zone.Id,
-            Name = "Schedulable Load",
+            FacilityId = facilityId,
+            ZoneId = Guid.NewGuid(),
+            Name = name,
             RelayAddress = 1,
-            PowerRatingKw = 50,
-            Priority = "P2"
+            PowerRatingKw = 10.0,
+            Priority = priority,
+            PriorityMode = "auto",
+            IsActive = true,
+            IsSheddable = true
         };
-
-        _db.Tenants.Add(tenant);
-        _db.Facilities.Add(facility);
-        _db.Zones.Add(zone);
-        _db.Loads.Add(load);
-        await _db.SaveChangesAsync();
-
-        _facilityId = facility.Id;
-        _zoneId = zone.Id;
-        _loadId = load.Id;
     }
 
-    private sealed class FakeTimeProvider : ISystemTimeProvider
+    private TimeSchedule CreateTimeSchedule(
+        Guid loadId,
+        Guid facilityId,
+        TimeOnly startTime,
+        TimeOnly endTime,
+        string targetPriority,
+        bool isActive = true)
     {
-        public DateTime UtcNow { get; set; } = DateTime.UtcNow;
+        return new TimeSchedule
+        {
+            Id = Guid.NewGuid(),
+            FacilityId = facilityId,
+            LoadId = loadId,
+            Name = $"Schedule for Load {loadId}",
+            StartTime = startTime,
+            EndTime = endTime,
+            TargetPriority = targetPriority,
+            DaysOfWeek = new short[] { 1, 2, 3, 4, 5, 6, 7 },
+            IsActive = isActive
+        };
     }
 
-    private static async Task EnsureTestDatabaseAsync()
+    private ScheduleEvaluationBackgroundService CreateService()
     {
-        await using var connection = new NpgsqlConnection(
-            "Host=localhost;Database=postgres;Username=postgres;Password=postgres");
-        await connection.OpenAsync();
-
-        await using (var drop = new NpgsqlCommand(
-            $"DROP DATABASE IF EXISTS \"{TestDatabase}\" WITH (FORCE)", connection))
-        {
-            await drop.ExecuteNonQueryAsync();
-        }
-
-        await using (var create = new NpgsqlCommand(
-            $"CREATE DATABASE \"{TestDatabase}\"", connection))
-        {
-            await create.ExecuteNonQueryAsync();
-        }
+        return new ScheduleEvaluationBackgroundService(
+            _loggerMock.Object,
+            _serviceProvider,
+            _queue);
     }
 
-    private static async Task DropTestDatabaseAsync()
+    private static bool IsTimeInWindow(TimeOnly current, TimeOnly start, TimeOnly end)
     {
-        try
-        {
-            await using var connection = new NpgsqlConnection(
-                "Host=localhost;Database=postgres;Username=postgres;Password=postgres");
-            await connection.OpenAsync();
+        if (start <= end)
+            return current >= start && current <= end;
+        else
+            return current >= start || current <= end;
+    }
 
-            await using var drop = new NpgsqlCommand(
-                $"DROP DATABASE IF EXISTS \"{TestDatabase}\" WITH (FORCE)", connection);
-            await drop.ExecuteNonQueryAsync();
-        }
-        catch
-        {
-            // Best effort cleanup.
-        }
+    public void Dispose()
+    {
+        _dbContext?.Dispose();
     }
 }

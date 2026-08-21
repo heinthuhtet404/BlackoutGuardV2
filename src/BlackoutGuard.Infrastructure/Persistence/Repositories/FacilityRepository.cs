@@ -24,7 +24,7 @@ public class FacilityRepository : IFacilityRepository
             Id = facility.Id,
             TenantId = facility.TenantId,
             Name = facility.Name,
-            GeneratorCapacityKW = facility.GeneratorCapacityKW
+            GeneratorCapacityKW = facility.GeneratorCapacityKw
         };
     }
 }

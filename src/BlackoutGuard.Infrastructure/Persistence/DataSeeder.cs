@@ -27,7 +27,7 @@ public static class DataSeeder
             Id = Guid.NewGuid(),
             TenantId = tenant.Id,
             Name = "E2E Test Facility",
-            GeneratorCapacityKW = 500
+            GeneratorCapacityKw = 500
         };
 
         var admin = new User

@@ -1,5 +1,10 @@
-using System.Data.Common;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BlackoutGuard.Domain.Entities;
+using BlackoutGuard.Domain.ValueObjects;
 using BlackoutGuard.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,34 +15,44 @@ namespace BlackoutGuard.Infrastructure.Engine;
 
 public sealed class ScheduleEvaluationBackgroundService : BackgroundService
 {
-    private static readonly TimeSpan TickInterval = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(1);
 
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly PendingConfigChangeQueue _configQueue;
-    private readonly ISystemTimeProvider _timeProvider;
     private readonly ILogger<ScheduleEvaluationBackgroundService> _logger;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly PendingConfigChangeQueue _configQueue;
+    private readonly ITimeProvider _timeProvider;
 
     public ScheduleEvaluationBackgroundService(
-        IServiceScopeFactory scopeFactory,
-        PendingConfigChangeQueue configQueue,
-        ISystemTimeProvider timeProvider,
-        ILogger<ScheduleEvaluationBackgroundService> logger)
+        ILogger<ScheduleEvaluationBackgroundService> logger,
+        IServiceProvider serviceProvider,
+        PendingConfigChangeQueue configQueue)
+        : this(logger, serviceProvider, configQueue, new SystemTimeProvider())
     {
-        _scopeFactory = scopeFactory;
-        _configQueue = configQueue;
-        _timeProvider = timeProvider;
-        _logger = logger;
+    }
+
+    internal ScheduleEvaluationBackgroundService(
+        ILogger<ScheduleEvaluationBackgroundService> logger,
+        IServiceProvider serviceProvider,
+        PendingConfigChangeQueue configQueue,
+        ITimeProvider timeProvider)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _configQueue = configQueue ?? throw new ArgumentNullException(nameof(configQueue));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(TickInterval);
+        _logger.LogInformation("Schedule Evaluation Background Service is starting.");
+
+        using var timer = new PeriodicTimer(Interval);
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             try
             {
-                await EvaluateAsync(stoppingToken);
+                await EvaluateSchedulesAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -45,93 +60,129 @@ public sealed class ScheduleEvaluationBackgroundService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Schedule evaluation failed");
+                _logger.LogError(ex, "Unhandled exception during schedule evaluation");
             }
         }
+
+        _logger.LogInformation("Schedule Evaluation Background Service is stopping.");
     }
 
-    public async Task EvaluateAsync(CancellationToken ct = default)
+    public async Task EvaluateSchedulesAsync(CancellationToken cancellationToken)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BlackoutGuardDbContext>();
+        using var scope = _serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BlackoutGuardDbContext>();
 
-        var now = _timeProvider.UtcNow;
+        var schedules = await dbContext.TimeSchedules
+            .Where(s => s.IsActive)
+            .Include(s => s.Load)
+            .Include(s => s.Facility)
+            .ToListAsync(cancellationToken);
 
-        var facilityIds = await db.Facilities
-            .Select(f => f.Id)
-            .ToListAsync(ct);
+        if (schedules.Count == 0)
+            return;
 
-        foreach (var facilityId in facilityIds)
-        {
-            await EvaluateFacilityAsync(db, facilityId, now, ct);
-        }
-    }
-
-    private async Task EvaluateFacilityAsync(
-        BlackoutGuardDbContext db,
-        Guid facilityId,
-        DateTime nowUtc,
-        CancellationToken ct)
-    {
-        var connection = db.Database.GetDbConnection();
-        await EnsureOpenAsync(connection, ct);
-        await SetFacilitySessionAsync(connection, facilityId, ct);
-
-        var schedules = await db.TimeSchedules
-            .Where(s => s.FacilityId == facilityId && s.IsActive)
-            .ToListAsync(ct);
+        var nowUtc = _timeProvider.UtcNow;
+        var changesEnqueued = 0;
+        var facilityTimezones = new Dictionary<Guid, TimeZoneInfo>();
 
         foreach (var schedule in schedules)
         {
-            if (!ScheduleWindowEvaluator.IsInWindow(
-                    schedule.StartTime, schedule.EndTime, schedule.DaysOfWeek, nowUtc))
+            try
             {
-                continue;
+                if (schedule.Load == null)
+                {
+                    _logger.LogWarning(
+                        "Schedule {ScheduleId} references a Load that no longer exists. Skipping.",
+                        schedule.Id);
+                    continue;
+                }
+
+                if (!facilityTimezones.TryGetValue(schedule.FacilityId, out var timeZone))
+                {
+                    var timezoneId = schedule.Facility?.TimezoneId ?? "UTC";
+                    try
+                    {
+                        timeZone = TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
+                    }
+                    catch (TimeZoneNotFoundException)
+                    {
+                        _logger.LogWarning(
+                            "Timezone '{TimezoneId}' not found for Facility {FacilityId}. Falling back to UTC.",
+                            timezoneId,
+                            schedule.FacilityId);
+                        timeZone = TimeZoneInfo.Utc;
+                    }
+                    facilityTimezones[schedule.FacilityId] = timeZone;
+                }
+
+                var localNow = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, timeZone);
+                var currentTime = TimeOnly.FromDateTime(localNow);
+
+                bool isInWindow = IsTimeInWindow(currentTime, schedule.StartTime, schedule.EndTime);
+
+                if (!isInWindow)
+                    continue;
+
+                if (schedule.TargetPriority == schedule.Load.Priority)
+                    continue;
+
+                var updatedLoad = new BlackoutGuard.Domain.Entities.Load(
+                    schedule.Load.Id,
+                    schedule.Load.FacilityId,
+                    schedule.Load.ZoneId,
+                    schedule.Load.Name,
+                    schedule.Load.RelayAddress,
+                    schedule.Load.PowerRatingKw,
+                    schedule.TargetPriority,
+                    schedule.Load.PriorityMode,
+                    schedule.Load.IsActive,
+                    schedule.Load.IsSheddable
+                );
+
+                var change = new LoadChanged(
+                    schedule.FacilityId,
+                    DateTime.UtcNow,
+                    updatedLoad);
+
+                _configQueue.Enqueue(change);
+                changesEnqueued++;
+
+                _logger.LogDebug(
+                    "Enqueued priority change for Load {LoadId}: {OldPriority} -> {NewPriority} " +
+                    "due to schedule {ScheduleId} at local time {LocalTime}",
+                    schedule.LoadId,
+                    schedule.Load.Priority,
+                    schedule.TargetPriority,
+                    schedule.Id,
+                    localNow.ToString("HH:mm:ss"));
             }
-
-            var load = await db.Loads
-                .FirstOrDefaultAsync(l => l.Id == schedule.LoadId && l.FacilityId == facilityId, ct);
-
-            if (load is null)
-                continue;
-
-            if (load.Priority == schedule.TargetPriority)
-                continue;
-
-            var updatedLoad = new Domain.Entities.Load(
-                load.Id,
-                load.FacilityId,
-                load.ZoneId,
-                load.Name,
-                load.RelayAddress,
-                load.PowerRatingKw,
-                schedule.TargetPriority,
-                load.PriorityMode,
-                load.IsActive,
-                load.IsSheddable);
-
-            _configQueue.Enqueue(new LoadChanged(facilityId, nowUtc, updatedLoad));
-            _logger.LogInformation(
-                "Schedule '{ScheduleName}' in window: load '{LoadName}' priority -> {Priority}",
-                schedule.Name, load.Name, schedule.TargetPriority);
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error evaluating schedule {ScheduleId} for load {LoadId}",
+                    schedule.Id,
+                    schedule.LoadId);
+            }
         }
-    }
 
-    private static async Task EnsureOpenAsync(DbConnection connection, CancellationToken ct)
-    {
-        if (connection.State != System.Data.ConnectionState.Open)
+        if (changesEnqueued > 0)
         {
-            await connection.OpenAsync(ct);
+            _logger.LogInformation(
+                "Enqueued {Count} priority changes from schedule evaluation",
+                changesEnqueued);
         }
     }
 
-    private static async Task SetFacilitySessionAsync(
-        DbConnection connection,
-        Guid facilityId,
-        CancellationToken ct)
+    private static bool IsTimeInWindow(TimeOnly current, TimeOnly start, TimeOnly end)
     {
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"SET app.current_facility_id = '{facilityId}'";
-        await command.ExecuteNonQueryAsync(ct);
+        if (start <= end)
+        {
+            return current >= start && current <= end;
+        }
+        else
+        {
+            return current >= start || current <= end;
+        }
     }
 }
