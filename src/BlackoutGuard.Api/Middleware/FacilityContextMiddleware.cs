@@ -36,15 +36,19 @@ public class FacilityContextMiddleware
                 return;
             }
 
-            var connection = dbContext.Database.GetDbConnection();
-            if (connection.State != System.Data.ConnectionState.Open)
+            // PostgreSQL ကဲ့သို့ Relational Provider ဖြစ်မှသာ Connection ကို ယူပြီး RLS Session Variable သတ်မှတ်မည်
+            if (dbContext.Database.IsRelational())
             {
-                await connection.OpenAsync(context.RequestAborted);
-            }
+                var connection = dbContext.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync(context.RequestAborted);
+                }
 
-            await using var command = connection.CreateCommand();
-            command.CommandText = $"SET app.current_facility_id = '{facilityId}'";
-            await command.ExecuteNonQueryAsync(context.RequestAborted);
+                await using var command = connection.CreateCommand();
+                command.CommandText = $"SET app.current_facility_id = '{facilityId}'";
+                await command.ExecuteNonQueryAsync(context.RequestAborted);
+            }
         }
 
         await _next(context);

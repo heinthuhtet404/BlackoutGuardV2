@@ -26,9 +26,13 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? "Host=localhost;Database=blackoutguard_v2;Username=postgres;Password=postgres";
 
 // DbContext Registration
-builder.Services.AddDbContext<BlackoutGuardDbContext>(options =>
-    options.UseNpgsql(connectionString)
-           .AddInterceptors(new FacilityIdDbInterceptor()));
+// Test run နေချိန် (Testing environment) မဟုတ်ပါက Npgsql ကို သုံးမည်
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddDbContext<BlackoutGuardDbContext>(options =>
+        options.UseNpgsql(connectionString)
+               .AddInterceptors(new FacilityIdDbInterceptor()));
+}
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

@@ -20,16 +20,23 @@ public class AuditController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> GetAuditLogs(
+        [FromQuery] Guid? facilityId = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
-        var facilityId = GetFacilityIdFromClaims();
-        if (facilityId is null)
+        var userFacilityId = GetFacilityIdFromClaims();
+        if (userFacilityId is null)
             return Unauthorized(new { error = "Missing or invalid facility_id claim." });
 
+        // Security Check: Query Param ထဲမှာ တခြား Facility ID ပေးပြီး တောင်းဆိုပါက Cross-Tenant Leakage မဖြစ်အောင် 403 ငြင်းပစ်မည်
+        if (facilityId.HasValue && facilityId.Value != userFacilityId.Value)
+        {
+            return StatusCode(403, new { error = "Forbidden: Cannot access audit logs of another facility." });
+        }
+
         var query = _dbContext.DecisionAuditLogs
-            .Where(l => l.FacilityId == facilityId.Value)
+            .Where(l => l.FacilityId == userFacilityId.Value)
             .OrderByDescending(l => l.TimestampUtc);
 
         var total = await query.CountAsync(ct);
@@ -57,7 +64,7 @@ public class AuditController : ControllerBase
 
     private Guid? GetFacilityIdFromClaims()
     {
-        var claimValue = User.FindFirstValue("facility_id");
+        var claimValue = User.FindFirstValue("facility_id") ?? User.FindFirstValue("FacilityId");
         return Guid.TryParse(claimValue, out var facilityId) ? facilityId : null;
     }
 }
