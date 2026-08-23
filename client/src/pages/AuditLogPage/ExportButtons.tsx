@@ -42,19 +42,19 @@ export function ExportButtons() {
     <div className={styles.container}>
       <button
         type="button"
-        className={styles.button}
+        className={`${styles.button} ${styles.buttonCsv}`}
         onClick={() => download("csv")}
         data-testid="export-csv"
       >
-        Export CSV
+         Export CSV
       </button>
       <button
         type="button"
-        className={styles.button}
+        className={`${styles.button} ${styles.buttonPdf}`}
         onClick={() => download("pdf")}
         data-testid="export-pdf"
       >
-        Export PDF
+         Export PDF
       </button>
     </div>
   );

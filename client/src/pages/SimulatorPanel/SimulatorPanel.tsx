@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useRole } from "../../auth/useRole";
 import { post } from "../../api/apiClient";
-import { useTelemetryHub } from "../../hooks/useTelemetryHub";
+import { useTelemetry } from "../../context/TelemetryContext";
 import { useToast } from "../../components/ui/toastContext";
 import styles from "./SimulatorPanel.module.css";
 
@@ -23,7 +23,7 @@ export function SimulatorPanel() {
 }
 
 function SimulatorPanelContent() {
-    const { telemetry, connected } = useTelemetryHub();
+    const { telemetry, connected } = useTelemetry();
     const { showToast } = useToast();
 
     const [frequency, setFrequency] = useState(50.0);
@@ -45,10 +45,11 @@ function SimulatorPanelContent() {
         setFrequency(value);
         if (freqTimer.current) clearTimeout(freqTimer.current);
         freqTimer.current = setTimeout(() => {
-            void post("/simulator/telemetry", { frequency: value, totalLoadKw: loadKw, generatorOn })
-                .catch((err: unknown) => {
+            void post("/simulator/telemetry", { frequency: value, totalLoadKw: loadKw, generatorOn }).catch(
+                (err: unknown) => {
                     showToast(err instanceof Error ? err.message : "Failed to set frequency", "error");
-                });
+                }
+            );
         }, DEBOUNCE_MS);
     };
 
@@ -56,19 +57,21 @@ function SimulatorPanelContent() {
         setLoadKw(value);
         if (loadTimer.current) clearTimeout(loadTimer.current);
         loadTimer.current = setTimeout(() => {
-            void post("/simulator/telemetry", { frequency, totalLoadKw: value, generatorOn })
-                .catch((err: unknown) => {
+            void post("/simulator/telemetry", { frequency, totalLoadKw: value, generatorOn }).catch(
+                (err: unknown) => {
                     showToast(err instanceof Error ? err.message : "Failed to set load", "error");
-                });
+                }
+            );
         }, DEBOUNCE_MS);
     };
 
     const handleGeneratorToggle = (value: boolean) => {
         setGeneratorOn(value);
-        void post("/simulator/telemetry", { frequency, totalLoadKw: loadKw, generatorOn: value })
-            .catch((err: unknown) => {
+        void post("/simulator/telemetry", { frequency, totalLoadKw: loadKw, generatorOn: value }).catch(
+            (err: unknown) => {
                 showToast(err instanceof Error ? err.message : "Failed to toggle generator", "error");
-            });
+            }
+        );
     };
 
     const handleInjectFault = () => {
@@ -86,13 +89,13 @@ function SimulatorPanelContent() {
             <h1 className={styles.heading}>Simulator Panel</h1>
 
             <div className={styles.statusRow}>
-                <span className={connected ? styles.connected : styles.disconnected}>
+                <span className={connected ? styles.statusConnected : styles.statusDisconnected}>
                     {connected ? "● Live (Connected)" : "○ Disconnected"}
                 </span>
             </div>
 
             <section className={styles.card}>
-                <h2 className={styles.cardTitle}>Live Telemetry (server-authoritative)</h2>
+                <h2 className={styles.cardTitle}>Live Telemetry</h2>
                 <div className={styles.telemetryGrid}>
                     <div className={styles.metric}>
                         <span className={styles.metricLabel}>Frequency</span>
@@ -124,35 +127,37 @@ function SimulatorPanelContent() {
             <section className={styles.card}>
                 <h2 className={styles.cardTitle}>Controls</h2>
 
-                <label className={styles.control}>
-                    <span className={styles.controlLabel}>
+                <div className={styles.controlGroup}>
+                    <label className={styles.controlLabel}>
                         Target Frequency: <strong data-testid="frequency-value">{frequency.toFixed(1)} Hz</strong>
-                    </span>
+                    </label>
                     <input
                         type="range"
                         min={FREQ_MIN}
                         max={FREQ_MAX}
                         step={0.1}
                         value={frequency}
-                        onChange={(event) => handleFrequencyChange(Number(event.target.value))}
+                        onChange={(e) => handleFrequencyChange(Number(e.target.value))}
+                        className={styles.slider}
                         data-testid="frequency-slider"
                     />
-                </label>
+                </div>
 
-                <label className={styles.control}>
-                    <span className={styles.controlLabel}>
+                <div className={styles.controlGroup}>
+                    <label className={styles.controlLabel}>
                         Target Load: <strong data-testid="load-value">{loadKw} kW</strong>
-                    </span>
+                    </label>
                     <input
                         type="range"
                         min={LOAD_MIN}
                         max={LOAD_MAX}
                         step={1}
                         value={loadKw}
-                        onChange={(event) => handleLoadChange(Number(event.target.value))}
+                        onChange={(e) => handleLoadChange(Number(e.target.value))}
+                        className={styles.slider}
                         data-testid="load-slider"
                     />
-                </label>
+                </div>
 
                 <div className={styles.toggleRow}>
                     <span className={styles.controlLabel}>Generator</span>

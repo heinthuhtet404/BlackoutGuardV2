@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { get, post, del } from "../api/apiClient";
 import { useToast } from "../components/ui/toastContext";
 import { Button } from "../components/ui/Button";
+import styles from "./RulesEnginePage.module.css";
 
 interface Rule {
     id: string;
@@ -60,49 +61,79 @@ export function RulesEnginePage() {
     };
 
     return (
-        <div style={{ padding: "1.5rem", maxWidth: "900px", margin: "0 auto" }}>
-            <h1>Rules Engine</h1>
+        <div className={styles.page}>
+            <h1 className={styles.heading}>Rules Engine</h1>
 
-            {/* New Rule Form */}
-            <form onSubmit={handleCreateRule} style={{ marginBottom: "2rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-                <h3>Create Shedding Rule</h3>
-                <input placeholder="Rule Name" value={name} onChange={(e) => setName(e.target.value)} required />
-                <input placeholder="Trigger Condition (e.g. Frequency < 49.5)" value={triggerCondition} onChange={(e) => setTriggerCondition(e.target.value)} required />
-                <input placeholder="Action (e.g. Shed P3 Loads)" value={action} onChange={(e) => setAction(e.target.value)} required />
-                <Button type="submit">Add Rule</Button>
+            <form className={styles.form} onSubmit={handleCreateRule}>
+                <h3 className={styles.formTitle}>Create Shedding Rule</h3>
+                <div className={styles.formRow}>
+                    <input
+                        className={styles.input}
+                        placeholder="Rule Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                    <input
+                        className={styles.input}
+                        placeholder="Trigger (e.g. Frequency < 49.5)"
+                        value={triggerCondition}
+                        onChange={(e) => setTriggerCondition(e.target.value)}
+                        required
+                    />
+                    <input
+                        className={styles.input}
+                        placeholder="Action (e.g. Shed P3 Loads)"
+                        value={action}
+                        onChange={(e) => setAction(e.target.value)}
+                        required
+                    />
+                    <Button type="submit">Add Rule</Button>
+                </div>
             </form>
 
-            {/* Rules List */}
-            <h3>Configured Rules</h3>
+            <h3 className={styles.sectionTitle}>Configured Rules</h3>
             {loading ? (
-                <p>Loading rules...</p>
+                <p className={styles.loading}>Loading rules...</p>
             ) : rules.length === 0 ? (
-                <p>No rules defined yet.</p>
+                <p className={styles.empty}>No rules defined yet.</p>
             ) : (
-                <table style={{ width: "100%", textAlign: "left", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Trigger</th>
-                            <th>Action</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rules.map((rule) => (
-                            <tr key={rule.id} style={{ borderBottom: "1px solid #333" }}>
-                                <td>{rule.name}</td>
-                                <td>{rule.triggerCondition}</td>
-                                <td>{rule.action}</td>
-                                <td>{rule.enabled ? "Enabled" : "Disabled"}</td>
-                                <td>
-                                    <Button variant="danger" onClick={() => void handleDeleteRule(rule.id)}>Delete</Button>
-                                </td>
+                <div className={styles.tableWrapper}>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Trigger</th>
+                                <th>Action</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {rules.map((rule) => (
+                                <tr key={rule.id}>
+                                    <td>{rule.name}</td>
+                                    <td>{rule.triggerCondition}</td>
+                                    <td>{rule.action}</td>
+                                    <td>
+                                        <span
+                                            className={
+                                                rule.enabled ? styles.badgeEnabled : styles.badgeDisabled
+                                            }
+                                        >
+                                            {rule.enabled ? "Enabled" : "Disabled"}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <Button variant="danger" onClick={() => void handleDeleteRule(rule.id)}>
+                                            Delete
+                                        </Button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );

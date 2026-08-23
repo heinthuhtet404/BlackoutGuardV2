@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { get } from "../api/apiClient";
 import { useToast } from "../components/ui/toastContext";
+import styles from "./UserManagementPage.module.css";
 
 interface User {
     id: string;
@@ -30,30 +31,34 @@ export function UserManagementPage() {
     }, []);
 
     return (
-        <div style={{ padding: "1.5rem", maxWidth: "900px", margin: "0 auto" }}>
-            <h1>User Management</h1>
+        <div className={styles.page}>
+            <h1 className={styles.heading}>User Management</h1>
 
             {loading ? (
-                <p>Loading user list...</p>
+                <p className={styles.loading}>Loading user list...</p>
             ) : (
-                <table style={{ width: "100%", textAlign: "left", borderCollapse: "collapse", marginTop: "1rem" }}>
-                    <thead>
-                        <tr style={{ borderBottom: "2px solid #555" }}>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map((user) => (
-                            <tr key={user.id} style={{ borderBottom: "1px solid #333" }}>
-                                <td>{user.username}</td>
-                                <td>{user.email}</td>
-                                <td>{user.role}</td>
+                <div className={styles.tableWrapper}>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {users.map((user) => (
+                                <tr key={user.id}>
+                                    <td>{user.username}</td>
+                                    <td>{user.email}</td>
+                                    <td>
+                                        <span className={styles.badge}>{user.role}</span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );

@@ -1,31 +1,37 @@
 .page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #0f172a;
+    padding: 1rem;
 }
 
 .card {
-  background: #ffffff;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  width: 100%;
-  max-width: 380px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+    width: 100%;
+    max-width: 380px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
 .title {
-  font-size: 1.4rem;
-  margin: 0 0 1rem;
-  color: #111827;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    text-align: center;
+    margin: 0 0 1.5rem 0;
+    letter-spacing: -0.02em;
 }
 
 .error {
-  color: #b91c1c;
-  font-size: 0.85rem;
-  margin-bottom: 0.5rem;
+    background: #1e293b;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
 }

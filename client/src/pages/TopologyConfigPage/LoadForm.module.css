@@ -1,67 +1,69 @@
 .form {
-  display: flex;
-  flex-direction: column;
-  max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #374151;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .select {
-  padding: 0.5rem 0.6rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background: #ffffff;
+    padding: 0.6rem 0.8rem;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
 }
+
+    .select:focus {
+        border-color: #6366f1;
+    }
 
 .checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.9rem;
-  font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #f1f5f9;
+    cursor: pointer;
 }
 
-.criticalityPlaceholder {
-  border: 1px dashed #d1d5db;
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 0.9rem;
-  color: #9ca3af;
-  font-size: 0.85rem;
+    .checkbox input[type="checkbox"] {
+        width: 1rem;
+        height: 1rem;
+        accent-color: #6366f1;
+    }
+
+.capacityError,
+.generalError {
+    background: #1e293b;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.25rem;
 }
 
-.capacityError {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-  padding: 0.75rem;
-  margin-bottom: 0.9rem;
-  color: #b91c1c;
-  font-size: 0.85rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: flex-start;
-}
+    .capacityError p {
+        margin: 0 0 0.5rem 0;
+        color: #ef4444;
+        font-size: 0.9rem;
+    }
 
 .generalError {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-  padding: 0.75rem;
-  margin-bottom: 0.9rem;
-  color: #b91c1c;
-  font-size: 0.85rem;
+    color: #ef4444;
+    font-size: 0.9rem;
 }
