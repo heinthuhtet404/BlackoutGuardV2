@@ -86,24 +86,36 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 accessTokenFactory: () => getAccessToken() ?? "",
             })
             .withAutomaticReconnect()
-            .configureLogging(signalR.LogLevel.Warning)
+            .configureLogging(signalR.LogLevel.Information)
             .build();
 
         connectionRef.current = connection;
 
-        // Telemetry Update Event Listener
-        connection.on("TelemetryUpdated", (payload: TelemetryUpdate) => {
-            if (isMounted) {
-                setTelemetry(payload);
+        // Telemetry Payload Normalizer (Handles both camelCase and PascalCase payload)
+        const handleTelemetryPayload = (payload: any) => {
+            console.log("📡 SignalR Telemetry Received:", payload);
+            if (isMounted && payload) {
+                const normalized: TelemetryUpdate = {
+                    frequency: payload.frequency ?? payload.Frequency ?? 50.0,
+                    voltage: payload.voltage ?? payload.Voltage ?? 230.0,
+                    totalLoadKw: payload.totalLoadKw ?? payload.TotalLoadKw ?? 0,
+                    generatorOn: payload.generatorOn ?? payload.GeneratorOn ?? false,
+                };
+                setTelemetry(normalized);
             }
-        });
+        };
 
-        // Audit Log Decision Executed Event Listener
-        connection.on("DecisionExecuted", (payload: DecisionExecutedPayload) => {
+        // Decision Payload Handler
+        const handleDecisionPayload = (payload: DecisionExecutedPayload) => {
+            console.log("⚡ SignalR Decision Executed:", payload);
             if (isMounted) {
                 setLatestDecision(payload);
             }
-        });
+        };
+
+        // Single Source Event Listeners (Duplicate naming များကို ရှင်းထုတ်ထားပါသည်)
+        connection.on("TelemetryUpdated", handleTelemetryPayload);
+        connection.on("DecisionExecuted", handleDecisionPayload);
 
         connection.onclose(() => {
             if (isMounted) {
@@ -132,10 +144,11 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     await connection.stop();
                 } else if (isMounted) {
                     setConnected(true);
+                    console.log("✅ SignalR Telemetry Hub Connected Successfully!");
                 }
             } catch (err) {
                 if (!isCancelled && isMounted) {
-                    console.error("SignalR connection error:", err);
+                    console.error("❌ SignalR connection error:", err);
                     setConnected(false);
                 }
             }
@@ -144,6 +157,10 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return () => {
             isMounted = false;
             isCancelled = true;
+
+            // Clean up event listeners before stopping connection
+            connection.off("TelemetryUpdated", handleTelemetryPayload);
+            connection.off("DecisionExecuted", handleDecisionPayload);
 
             if (connectionRef.current === connection) {
                 connectionRef.current = null;

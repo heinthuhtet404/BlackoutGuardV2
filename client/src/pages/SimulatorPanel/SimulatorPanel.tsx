@@ -28,8 +28,24 @@ function SimulatorPanelContent() {
 
     const [frequency, setFrequency] = useState(50.0);
     const [loadKw, setLoadKw] = useState(80);
+    const [voltage, setVoltage] = useState(230.0);
     const [generatorOn, setGeneratorOn] = useState(true);
     const [injectingFault, setInjectingFault] = useState(false);
+
+    // Track component mount state to sync controls only once on initial load/tab switch
+    const isInitialSynced = useRef(false);
+
+    // Tab ပြန်ဖွင့်ချိန် Backend Telemetry ထဲက လက်ရှိ ရောက်နေသော တန်ဖိုးများနှင့် Control Sliders များကို Sync လုပ်ပေးခြင်း
+    useEffect(() => {
+        if (telemetry && !isInitialSynced.current) {
+            setFrequency(telemetry.frequency);
+            setLoadKw(telemetry.totalLoadKw ?? 80);
+            if (telemetry.voltage !== undefined) setVoltage(telemetry.voltage);
+            if (telemetry.generatorOn !== undefined) setGeneratorOn(telemetry.generatorOn);
+
+            isInitialSynced.current = true;
+        }
+    }, [telemetry]);
 
     const freqTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const loadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,11 +57,22 @@ function SimulatorPanelContent() {
         };
     }, []);
 
+    // Helper Payload Generator (Backend DTO / SignalR Property Names များအတိုင်း ကိုက်ညီအောင် ညှိထားပါသည်)
+    const buildTelemetryPayload = (f = frequency, l = loadKw, v = voltage, g = generatorOn) => ({
+        frequency: f,
+        voltage: v,
+        totalLoad: l,
+        totalLoadKw: l,
+        generatorOn: g,
+    });
+
     const handleFrequencyChange = (value: number) => {
         setFrequency(value);
         if (freqTimer.current) clearTimeout(freqTimer.current);
         freqTimer.current = setTimeout(() => {
-            void post("/simulator/telemetry", { frequency: value, totalLoadKw: loadKw, generatorOn }).catch(
+            console.log("Current Access Token:", localStorage.getItem("blackoutguard.access_token"));
+
+            void post("/simulator/telemetry", buildTelemetryPayload(value, loadKw, voltage, generatorOn)).catch(
                 (err: unknown) => {
                     showToast(err instanceof Error ? err.message : "Failed to set frequency", "error");
                 }
@@ -57,7 +84,7 @@ function SimulatorPanelContent() {
         setLoadKw(value);
         if (loadTimer.current) clearTimeout(loadTimer.current);
         loadTimer.current = setTimeout(() => {
-            void post("/simulator/telemetry", { frequency, totalLoadKw: value, generatorOn }).catch(
+            void post("/simulator/telemetry", buildTelemetryPayload(frequency, value, voltage, generatorOn)).catch(
                 (err: unknown) => {
                     showToast(err instanceof Error ? err.message : "Failed to set load", "error");
                 }
@@ -67,7 +94,7 @@ function SimulatorPanelContent() {
 
     const handleGeneratorToggle = (value: boolean) => {
         setGeneratorOn(value);
-        void post("/simulator/telemetry", { frequency, totalLoadKw: loadKw, generatorOn: value }).catch(
+        void post("/simulator/telemetry", buildTelemetryPayload(frequency, loadKw, voltage, value)).catch(
             (err: unknown) => {
                 showToast(err instanceof Error ? err.message : "Failed to toggle generator", "error");
             }

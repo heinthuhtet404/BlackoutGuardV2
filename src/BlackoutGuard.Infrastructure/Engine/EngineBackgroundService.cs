@@ -19,11 +19,6 @@ public sealed class EngineBackgroundService : BackgroundService
     private readonly PendingConfigChangeQueue _configQueue;
     private readonly ILogger<EngineBackgroundService> _logger;
 
-    // Single loop iterating all facilities (choice: one loop, one timer).
-    // Rationale: fewer moving parts than N per-facility services, config
-    // changes are naturally batched per tick, and per-facility parallelism
-    // can be introduced later with partitioned channels if profiling
-    // shows a need for it.
     private readonly Dictionary<Guid, FacilityEngineSlot> _facilitySlots = new();
     private readonly object _slotsLock = new();
 
@@ -69,21 +64,31 @@ public sealed class EngineBackgroundService : BackgroundService
         // 1. Apply pending config changes at the START of each tick.
         ApplyConfigChanges();
 
-        // 2. Snapshot the facilities to evaluate this tick.
+        // 2. Fetch Telemetry State from Data Source
+        var telemetry = await _dataSource.GetCurrentStateAsync();
+        if (telemetry is null)
+            return;
+
+        // 3. Snapshot the facilities to evaluate this tick.
         IReadOnlyList<FacilityEngineSlot> slots;
         lock (_slotsLock)
         {
             slots = _facilitySlots.Values.ToList();
         }
 
+        // 💡 Registered Slots မရှိသေးလျှင်လည်း Default Empty Decision ဖြင့် Standard Broadcast 100ms မပြတ် လွှင့်ပေးမည်
         if (slots.Count == 0)
-            return;
+        {
+            var emptyDecision = _decisionStrategy.Evaluate(telemetry, Array.Empty<Load>());
 
-        // 3. Telemetry (single shared source for now; per-facility sources
-        //    are a Phase 5 concern).
-        var telemetry = await _dataSource.GetCurrentStateAsync();
-        if (telemetry is null)
+            await _telemetryBroadcaster.BroadcastTickAsync(
+                Guid.Empty,
+                telemetry,
+                emptyDecision,
+                Enumerable.Empty<AlarmEvent>(),
+                ct);
             return;
+        }
 
         foreach (var slot in slots)
         {
@@ -92,9 +97,9 @@ public sealed class EngineBackgroundService : BackgroundService
     }
 
     private async Task EvaluateFacilityAsync(
-    FacilityEngineSlot slot,
-    GridState telemetry,
-    CancellationToken ct)
+        FacilityEngineSlot slot,
+        GridState telemetry,
+        CancellationToken ct)
     {
         var snapshot = slot.ReadState();
 
@@ -112,7 +117,6 @@ public sealed class EngineBackgroundService : BackgroundService
             await _dataSource.WriteRelayAsync(action.RelayAddress, action.Energize);
         }
 
-        // Alarm (Entity) မှ AlarmEvent (Value Object) သို့ 4-parameter mapping
         var alarmEvents = alarms.Select(a => new AlarmEvent(
             a.AlarmCode,
             a.Severity,
@@ -189,7 +193,6 @@ public sealed class EngineBackgroundService : BackgroundService
 
 internal sealed class FacilityEngineSlot
 {
-    // 'volatile' ကို ဖြုတ်ပေးပါ (CS0420 Warning ပျောက်စေရန်)
     private EngineState _currentState;
 
     public FacilityEngineSlot(Guid facilityId)

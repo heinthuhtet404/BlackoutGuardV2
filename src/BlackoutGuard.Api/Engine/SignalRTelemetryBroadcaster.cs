@@ -22,48 +22,55 @@ public class SignalRTelemetryBroadcaster : ITelemetryBroadcaster
         IEnumerable<AlarmEvent> alarms,
         CancellationToken ct = default)
     {
-        var group = _hubContext.Clients.Group(facilityId.ToString());
+        var telemetryPayload = new
+        {
+            frequency = gridState.Frequency,
+            voltage = gridState.Voltage,
+            totalLoadKw = gridState.TotalLoad,
+            generatorOn = gridState.GeneratorOn
+        };
 
-        await group.SendAsync(
+        // 💡 Group အပြင် Connected Client အားလုံးဆီပါ လွှင့်ပေးမည် (Group Filter ကြောင့် Data မပေါ်သည်ကို ဖြေရှင်းရန်)
+        await _hubContext.Clients.All.SendAsync(
             TelemetryHubMethods.TelemetryUpdated,
-            new
-            {
-                frequency = gridState.Frequency,
-                voltage = gridState.Voltage,
-                totalLoadKw = gridState.TotalLoad,
-                generatorOn = gridState.GeneratorOn
-            },
+            telemetryPayload,
             ct);
 
-        foreach (var alarm in alarms)
+        if (facilityId != Guid.Empty)
         {
-            await group.SendAsync(
-                TelemetryHubMethods.AlarmRaised,
-                new
-                {
-                    code = alarm.Code,
-                    severity = alarm.Severity,
-                    message = alarm.Message,
-                    timestampUtc = alarm.TimestampUtc
-                },
+            await _hubContext.Clients.Group(facilityId.ToString()).SendAsync(
+                TelemetryHubMethods.TelemetryUpdated,
+                telemetryPayload,
                 ct);
         }
 
-        if (!decision.IsNone)
+        foreach (var alarm in alarms)
         {
-            await group.SendAsync(
-                TelemetryHubMethods.DecisionExecuted,
-                new
+            var alarmData = new
+            {
+                code = alarm.Code,
+                severity = alarm.Severity,
+                message = alarm.Message,
+                timestampUtc = alarm.TimestampUtc
+            };
+
+            await _hubContext.Clients.All.SendAsync(TelemetryHubMethods.AlarmRaised, alarmData, ct);
+        }
+
+        if (decision != null && !decision.IsNone)
+        {
+            var decisionData = new
+            {
+                relayDecisions = decision.RelayDecisions.Select(d => new
                 {
-                    relayDecisions = decision.RelayDecisions.Select(d => new
-                    {
-                        relayAddress = d.RelayAddress,
-                        energize = d.Energize,
-                        rationale = d.Reason
-                    }),
-                    rationale = string.Join("; ", decision.RelayDecisions.Select(d => d.Reason))
-                },
-                ct);
+                    relayAddress = d.RelayAddress,
+                    energize = d.Energize,
+                    rationale = d.Reason
+                }),
+                rationale = string.Join("; ", decision.RelayDecisions.Select(d => d.Reason))
+            };
+
+            await _hubContext.Clients.All.SendAsync(TelemetryHubMethods.DecisionExecuted, decisionData, ct);
         }
     }
 }

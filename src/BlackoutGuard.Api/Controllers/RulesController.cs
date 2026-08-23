@@ -38,6 +38,28 @@ public class RulesController : ControllerBase
             : MapFailure(result);
     }
 
+    // ⚡ Add Rule အတွက် POST Endpoint (Ok() သို့ ပြောင်းလဲထားပါသည်)
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create([FromBody] UpdateRuleRequest request, CancellationToken ct)
+    {
+        var facilityId = GetFacilityIdFromClaims();
+        if (facilityId is null)
+            return Unauthorized(new { error = "Missing or invalid facility_id claim." });
+
+        if (request.RuleId == Guid.Empty)
+        {
+            request.RuleId = Guid.NewGuid();
+        }
+        request.FacilityId = facilityId.Value;
+
+        var result = await _updateRuleUseCase.ExecuteAsync(request, ct);
+
+        return result.IsSuccess
+            ? Ok()
+            : MapFailure(result);
+    }
+
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRuleRequest request, CancellationToken ct)

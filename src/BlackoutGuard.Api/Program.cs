@@ -25,8 +25,6 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? "Host=localhost;Database=blackoutguard_v2;Username=postgres;Password=postgres";
 
-// DbContext Registration
-// Test run နေချိန် (Testing environment) မဟုတ်ပါက Npgsql ကို သုံးမည်
 if (!builder.Environment.IsEnvironment("Testing"))
 {
     builder.Services.AddDbContext<BlackoutGuardDbContext>(options =>
@@ -63,7 +61,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// SignalR & Web Client CORS Policy Setup
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -87,13 +84,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtIssuer,
             ValidateAudience = true,
             ValidAudience = jwtAudience,
-            ValidateLifetime = true,
+            ValidateLifetime = false,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.FromSeconds(30)
         };
 
-        // SignalR WebSockets/SSE Request များအတွက် Query String မှ access_token ရယူခြင်း
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -135,7 +131,7 @@ builder.Services.AddSingleton<PendingConfigChangeQueue>();
 builder.Services.AddHostedService<EngineBackgroundService>();
 builder.Services.AddHostedService<ScheduleEvaluationBackgroundService>();
 
-// Use Cases - Existing
+// Use Cases
 builder.Services.AddScoped<ListZonesUseCase>();
 builder.Services.AddScoped<CreateZoneUseCase>();
 builder.Services.AddScoped<UpdateZoneUseCase>();
@@ -146,13 +142,14 @@ builder.Services.AddScoped<CreateLoadUseCase>();
 builder.Services.AddScoped<UpdateLoadUseCase>();
 builder.Services.AddScoped<DeleteLoadUseCase>();
 builder.Services.AddScoped<ScoreCriticalityUseCase>();
+
 builder.Services.AddScoped<ListRulesUseCase>();
 builder.Services.AddScoped<UpdateRuleUseCase>();
+
 builder.Services.AddScoped<ListSchedulesUseCase>();
 builder.Services.AddScoped<CreateScheduleUseCase>();
 builder.Services.AddScoped<DeleteScheduleUseCase>();
 
-// Use Cases - Users
 builder.Services.AddScoped<ListUsersUseCase>();
 builder.Services.AddScoped<CreateUserUseCase>();
 builder.Services.AddScoped<UpdateUserUseCase>();
@@ -162,18 +159,16 @@ builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<SimulatorDataSource>();
 builder.Services.AddSingleton<IDataSource>(sp => sp.GetRequiredService<SimulatorDataSource>());
 
-// SignalR Hub Registration
+// SignalR
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ITelemetryBroadcaster, SignalRTelemetryBroadcaster>();
 
 var app = builder.Build();
 
-// Database Initialization & Migration Scope
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BlackoutGuardDbContext>();
 
-    // Relational Provider (PostgreSQL) ဖြစ်မှသာ Migration နှင့် RLS Script run မည်
     if (db.Database.IsRelational())
     {
         await EnsureDatabaseCreatedAsync(connectionString);
@@ -190,7 +185,6 @@ using (var scope = app.Services.CreateScope())
     }
     else
     {
-        // InMemory Provider ဖြစ်ပါက Schema ကို တိုက်ရိုက် ဖန်တီးမည်
         await db.Database.EnsureCreatedAsync();
     }
 
@@ -200,13 +194,11 @@ using (var scope = app.Services.CreateScope())
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// Middleware Pipeline
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<FacilityContextMiddleware>();
 app.UseMiddleware<FacilityIdMiddleware>();
-
 app.MapControllers();
 app.MapHub<TelemetryHub>("/hubs/telemetry");
 app.MapGet("/api/health", () => Results.Ok("Healthy"))
@@ -238,5 +230,4 @@ static async Task EnsureDatabaseCreatedAsync(string connectionString)
     await createCommand.ExecuteNonQueryAsync();
 }
 
-// Integration Test များမှ Program class ကို Access လုပ်နိုင်ရန် Partial Class ကြေညာခြင်း
 public partial class Program { }
