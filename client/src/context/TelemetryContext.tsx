@@ -1,29 +1,84 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { getAccessToken } from "../auth/tokenStore";
+import {
+    getAccessToken,
+    initializeTokens,
+    subscribeTokenChange,
+} from "../auth/tokenStore";
 
-interface TelemetryContextType {
+export interface TelemetryUpdate {
+    frequency: number;
+    voltage: number;
+    totalLoadKw: number;
+    generatorOn: boolean;
+}
+
+export interface RelayDecision {
+    relayAddress: number;
+    energize: boolean;
+}
+
+export interface DecisionExecutedPayload {
+    rationale: string;
+    relayDecisions: RelayDecision[];
+}
+
+export interface TelemetryContextType {
+    telemetry: TelemetryUpdate | null;
     connected: boolean;
     connection: signalR.HubConnection | null;
+    latestDecision: DecisionExecutedPayload | null;
 }
 
 const TelemetryContext = createContext<TelemetryContextType>({
+    telemetry: null,
     connected: false,
     connection: null,
+    latestDecision: null,
 });
 
 export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [telemetry, setTelemetry] = useState<TelemetryUpdate | null>(null);
+    const [latestDecision, setLatestDecision] = useState<DecisionExecutedPayload | null>(null);
     const [connected, setConnected] = useState(false);
+    const [token, setToken] = useState<string | null>(() => getAccessToken());
     const connectionRef = useRef<signalR.HubConnection | null>(null);
 
+    // 1. App Startup Token Initialization & Subscription
     useEffect(() => {
+        initializeTokens();
+        setToken(getAccessToken());
+
+        const unsubscribe = subscribeTokenChange(() => {
+            const currentToken = getAccessToken();
+            setToken((prev) => (prev !== currentToken ? currentToken : prev));
+        });
+
+        return () => {
+            if (typeof unsubscribe === "function") {
+                unsubscribe();
+            }
+        };
+    }, []);
+
+    // 2. Stable Singleton SignalR Connection Management
+    useEffect(() => {
+        if (!token) {
+            if (connectionRef.current) {
+                const conn = connectionRef.current;
+                connectionRef.current = null;
+                void conn.stop().catch(() => { });
+            }
+            setConnected(false);
+            return;
+        }
+
         let isMounted = true;
+        let isCancelled = false;
 
-        // Connection ရှိပြီးသားဆိုလျှင် ထပ်မဖွင့်စေရန် စစ်ဆေးခြင်း
-        if (connectionRef.current) return;
-
-        const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000/api/v1";
-        const hubBase = apiBase.replace(/\/api\/v1\/?$/, "");
+        const apiBase =
+            import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000/api/v1";
+        const hubBase = apiBase.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "");
         const hubUrl = `${hubBase}/hubs/telemetry`;
 
         const connection = new signalR.HubConnectionBuilder()
@@ -31,55 +86,86 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 accessTokenFactory: () => getAccessToken() ?? "",
             })
             .withAutomaticReconnect()
+            .configureLogging(signalR.LogLevel.Warning)
             .build();
 
         connectionRef.current = connection;
 
-        connection.onreconnecting(() => {
-            if (isMounted) setConnected(false);
+        // Telemetry Update Event Listener
+        connection.on("TelemetryUpdated", (payload: TelemetryUpdate) => {
+            if (isMounted) {
+                setTelemetry(payload);
+            }
         });
 
-        connection.onreconnected(() => {
-            if (isMounted) setConnected(true);
+        // Audit Log Decision Executed Event Listener
+        connection.on("DecisionExecuted", (payload: DecisionExecutedPayload) => {
+            if (isMounted) {
+                setLatestDecision(payload);
+            }
         });
 
         connection.onclose(() => {
-            if (isMounted) setConnected(false);
+            if (isMounted) {
+                setConnected(false);
+            }
         });
 
-        // Start connection safely
-        connection
-            .start()
-            .then(() => {
-                if (isMounted) {
-                    setConnected(true);
-                } else {
-                    void connection.stop();
+        connection.onreconnecting(() => {
+            if (isMounted) {
+                setConnected(false);
+            }
+        });
+
+        connection.onreconnected(() => {
+            if (isMounted) {
+                setConnected(true);
+            }
+        });
+
+        const startPromise = (async () => {
+            try {
+                if (connection.state === signalR.HubConnectionState.Disconnected) {
+                    await connection.start();
                 }
-            })
-            .catch((err) => {
-                if (isMounted && err.name !== "AbortError") {
-                    console.error("SignalR Connection Error:", err);
+                if (isCancelled) {
+                    await connection.stop();
+                } else if (isMounted) {
+                    setConnected(true);
+                }
+            } catch (err) {
+                if (!isCancelled && isMounted) {
+                    console.error("SignalR connection error:", err);
                     setConnected(false);
                 }
-            });
+            }
+        })();
 
         return () => {
             isMounted = false;
+            isCancelled = true;
 
-            // Connected သို့မဟုတ် Reconnecting ဖြစ်နေချိန်မှသာ safe stop ခေါ်မည်
-            if (
-                connection.state === signalR.HubConnectionState.Connected ||
-                connection.state === signalR.HubConnectionState.Reconnecting
-            ) {
-                void connection.stop();
+            if (connectionRef.current === connection) {
+                connectionRef.current = null;
             }
-            connectionRef.current = null;
+
+            void startPromise.then(async () => {
+                if (connection.state !== signalR.HubConnectionState.Disconnected) {
+                    await connection.stop().catch(() => { });
+                }
+            });
         };
-    }, []); // Empty dependency array - App Component Tree စတင်ချိန်မှသာ ၁ ခေါက်သာ run မည်
+    }, [token]);
 
     return (
-        <TelemetryContext.Provider value={{ connected, connection: connectionRef.current }}>
+        <TelemetryContext.Provider
+            value={{
+                telemetry,
+                connected,
+                connection: connectionRef.current,
+                latestDecision,
+            }}
+        >
             {children}
         </TelemetryContext.Provider>
     );

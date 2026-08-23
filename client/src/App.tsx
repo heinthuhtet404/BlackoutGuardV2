@@ -4,29 +4,31 @@ import { LoginPage } from "./pages/LoginPage/LoginPage";
 import { TopologyConfigPage } from "./pages/TopologyConfigPage/TopologyConfigPage";
 import { SimulatorPanel } from "./pages/SimulatorPanel/SimulatorPanel";
 import { AuditTable } from "./pages/AuditLogPage/AuditTable";
+import { RulesEnginePage } from "./pages/RulesEnginePage";
+import { UserManagementPage } from "./pages/UserManagementPage";
+import { LiveOverviewPage } from "./pages/LiveOverviewPage";
+import { TelemetryProvider } from "./context/TelemetryContext"; // Context ကို Import လုပ်ပါ
 import "./App.css";
 
-function PlaceholderPage({ title }: { title: string }) {
-  return <h1>{title}</h1>;
-}
-
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<AppShell />}>
-          <Route path="/overview" element={<PlaceholderPage title="Live Overview" />} />
-          <Route path="/topology" element={<TopologyConfigPage />} />
-          <Route path="/rules" element={<PlaceholderPage title="Rules Engine" />} />
-          <Route path="/simulator" element={<SimulatorPanel />} />
-          <Route path="/audit" element={<AuditTable />} />
-          <Route path="/users" element={<PlaceholderPage title="User Management" />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/overview" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
+    return (
+        <BrowserRouter>
+            <TelemetryProvider>
+                <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route element={<AppShell />}>
+                        <Route path="/overview" element={<LiveOverviewPage />} />
+                        <Route path="/topology" element={<TopologyConfigPage />} />
+                        <Route path="/rules" element={<RulesEnginePage />} />
+                        <Route path="/simulator" element={<SimulatorPanel />} />
+                        <Route path="/audit" element={<AuditTable />} />
+                        <Route path="/users" element={<UserManagementPage />} />
+                    </Route>
+                    <Route path="*" element={<Navigate to="/overview" replace />} />
+                </Routes>
+            </TelemetryProvider>
+        </BrowserRouter>
+    );
 }
 
 export default App;

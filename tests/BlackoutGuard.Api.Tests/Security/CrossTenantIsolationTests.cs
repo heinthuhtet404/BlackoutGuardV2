@@ -52,11 +52,10 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.UseEnvironment("Testing"); // Program.cs ထဲက Npgsql registration ကို ကျော်သွားစေသည်
+            builder.UseEnvironment("Testing");
 
             builder.ConfigureServices(services =>
             {
-                // Remove background services
                 var hostedServices = services
                     .Where(d => d.ServiceType == typeof(IHostedService))
                     .ToList();
@@ -65,11 +64,16 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
                     services.Remove(service);
                 }
 
-                // InMemory Database ခေါ်ယူခြင်း
+                var dbContextDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(DbContextOptions<BlackoutGuardDbContext>));
+                if (dbContextDescriptor != null)
+                {
+                    services.Remove(dbContextDescriptor);
+                }
+
                 services.AddDbContext<BlackoutGuardDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("CrossTenantTestDb_" + Guid.NewGuid().ToString())
-                           // FIX 1: EF Core InMemory Transactions warning ကို ignore လုပ်ရန်
                            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
                 });
             });
@@ -82,14 +86,12 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
         _output = output;
         _client = factory.CreateClient();
 
-        // Setup two tenants
         (_tenantAId, _facilityAId, _loadAId, _zoneAId, _ruleAId, _scheduleAId, _userAId, _adminAToken) =
             SeedTenant("A", "Test Facility A").GetAwaiter().GetResult();
 
         (_tenantBId, _facilityBId, _loadBId, _zoneBId, _ruleBId, _scheduleBId, _userBId, _adminBToken) =
             SeedTenant("B", "Test Facility B").GetAwaiter().GetResult();
 
-        // Use Tenant A's token for all attacks
         _client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", _adminAToken);
     }
@@ -109,7 +111,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
         var scheduleId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
-        // Create tenant
         var tenant = new Infrastructure.Persistence.Models.Tenant
         {
             Id = tenantId,
@@ -118,7 +119,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
             CreatedAt = DateTime.UtcNow
         };
 
-        // Create facility
         var facility = new Infrastructure.Persistence.Models.Facility
         {
             Id = facilityId,
@@ -129,7 +129,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
             CreatedAt = DateTime.UtcNow
         };
 
-        // Create zone
         var zone = new Infrastructure.Persistence.Models.Zone
         {
             Id = zoneId,
@@ -140,7 +139,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
             UpdatedAt = DateTime.UtcNow
         };
 
-        // Create load
         var load = new Infrastructure.Persistence.Models.Load
         {
             Id = loadId,
@@ -157,7 +155,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
             UpdatedAt = DateTime.UtcNow
         };
 
-        // Create rule
         var rule = new Infrastructure.Persistence.Models.Rule
         {
             Id = ruleId,
@@ -172,7 +169,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
             UpdatedAt = DateTime.UtcNow
         };
 
-        // Create schedule
         var schedule = new Infrastructure.Persistence.Models.TimeSchedule
         {
             Id = scheduleId,
@@ -186,7 +182,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
             IsActive = true
         };
 
-        // Create audit log entry
         var audit = new Infrastructure.Persistence.Models.DecisionAuditLog
         {
             FacilityId = facilityId,
@@ -197,7 +192,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
             TriggeringFrequency = 47.0
         };
 
-        // Create admin user
         var user = new Infrastructure.Persistence.Models.User
         {
             Id = userId,
@@ -219,7 +213,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        // Generate token
         var auth = new UserAuthDto
         {
             Id = userId,
@@ -300,10 +293,8 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
         var responseE = await _client.PostAsync("/api/v1/loads", createContent);
         var statusE = (int)responseE.StatusCode;
 
-        // Any rejection status code (400, 403, 404, 422) is acceptable for isolating cross-tenant creation
         var isPassE = statusE == 403 || statusE == 400 || statusE == 404 || statusE == 422;
 
-        // Verify the load was NOT created in Tenant B
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<BlackoutGuardDbContext>();
@@ -323,13 +314,18 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
         testResults.Add(("Create Load with B facility_id", statusE, isPassE));
         _output.WriteLine($"  Status: {statusE} - {(isPassE ? "✅ PASS" : "❌ FAIL")}");
 
-        // Vector F: SignalR - Tenant A should not receive Tenant B events
+        // Vector F: SignalR - In-Memory TestServer HTTP Handler Integration
         _output.WriteLine("\n[VECTOR F] SignalR - Tenant A receiving Tenant B events:");
         bool isPassF = true;
         try
         {
+            var testServer = _factory.Server;
             var hubConnection = new HubConnectionBuilder()
-                .WithUrl($"http://localhost/_factory/hubs/telemetry?access_token={_adminAToken}")
+                .WithUrl(new Uri(testServer.BaseAddress, "hubs/telemetry"), options =>
+                {
+                    options.HttpMessageHandlerFactory = _ => testServer.CreateHandler();
+                    options.AccessTokenProvider = () => Task.FromResult<string?>(_adminAToken);
+                })
                 .Build();
 
             var receivedEvents = new List<string>();
@@ -340,14 +336,13 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
             });
 
             await hubConnection.StartAsync();
-
-            await Task.Delay(1000);
+            await Task.Delay(500);
 
             isPassF = hubConnection.State == HubConnectionState.Connected;
             testResults.Add(("SignalR Tenant B Events", isPassF ? 200 : 500, isPassF));
             _output.WriteLine($"  SignalR State: {hubConnection.State} - {(isPassF ? "✅ PASS" : "❌ FAIL")}");
-            _output.WriteLine($"  Events received: {receivedEvents.Count} - Events are for Tenant A only");
 
+            await hubConnection.StopAsync();
             await hubConnection.DisposeAsync();
         }
         catch (Exception ex)
@@ -369,7 +364,6 @@ public class CrossTenantIsolationTests : IClassFixture<CrossTenantIsolationTests
         var allPassed = testResults.All(r => r.isSuccess);
         _output.WriteLine($"\nOverall Result: {(allPassed ? "✅ ALL PASSED" : "❌ SOME FAILED")}");
 
-        // Assert all vectors passed
         Assert.All(testResults, r => Assert.True(r.isSuccess, $"Vector '{r.vector}' failed with status {r.statusCode}"));
     }
 
