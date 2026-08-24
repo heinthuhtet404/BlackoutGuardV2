@@ -43,8 +43,11 @@ public class UsersController : ControllerBase
     {
         var tenantId = GetTenantId();
         var result = await _createUserUseCase.ExecuteAsync(tenantId, request.Email, request.Password, request.Role, ct);
-        return result.IsSuccess ? CreatedAtAction(nameof(List), new { id = result.Value.Id }, result.Value)
-                                : BadRequest(result.ErrorMessage);
+
+        // CS8602 Warning Fix: result.Value Null-Safe checking 
+        return (result.IsSuccess && result.Value is not null)
+            ? CreatedAtAction(nameof(List), new { id = result.Value.Id }, result.Value)
+            : BadRequest(result.ErrorMessage);
     }
 
     [HttpPut("{id:guid}")]

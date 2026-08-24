@@ -1,37 +1,143 @@
 .page {
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    background: #0f172a;
+    background-color: #0f172a;
     padding: 1rem;
 }
 
 .card {
     width: 100%;
-    max-width: 380px;
-    background: #1e293b;
+    max-width: 420px;
+    background-color: #1e293b;
     border: 1px solid #334155;
-    border-radius: 16px;
-    padding: 2rem 1.5rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border-radius: 1rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.iconBadge {
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.15);
+    padding: 0.75rem;
+    border-radius: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .title {
-    font-size: 1.8rem;
+    color: #f8fafc;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: #f1f5f9;
-    text-align: center;
-    margin: 0 0 1.5rem 0;
-    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.subtitle {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.passwordWrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.eyeButton {
+    position: absolute;
+    right: 0.75rem;
+    top: 2.25rem;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+    .eyeButton:hover {
+        color: #f1f5f9;
+    }
+
+.rememberRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #cbd5e1;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.checkbox {
+    accent-color: #6366f1;
+    width: 1rem;
+    height: 1rem;
 }
 
 .error {
-    background: #1e293b;
-    border: 1px solid #ef4444;
-    border-radius: 8px;
-    padding: 0.6rem 0.8rem;
-    color: #ef4444;
-    font-size: 0.85rem;
-    margin: 0.5rem 0;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    text-align: center;
 }
+
+.footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #334155;
+}
+
+.adminNotice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 0.625rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.registerButton {
+    width: 100%;
+    padding: 0.625rem;
+    background: rgba(51, 65, 85, 0.5);
+    border: 1px solid #475569;
+    color: #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .registerButton:hover {
+        background: #475569;
+    }

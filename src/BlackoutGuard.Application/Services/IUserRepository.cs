@@ -12,6 +12,7 @@ public interface IUserRepository
     Task<UserAuthDto?> GetByEmailAsync(string email, CancellationToken ct = default);
     Task<IReadOnlyList<User>> GetByTenantIdAsync(Guid tenantId, CancellationToken ct = default);
     Task<int> CountAdminsInTenantAsync(Guid tenantId, CancellationToken ct = default);
+    Task<bool> HasAnyUserAsync(CancellationToken ct = default); // 👈 AUTO-ADMIN စစ်ဆေးရန် ဖြည့်စွက်ထားသည်
     Task AddAsync(User user, CancellationToken ct = default);
     Task UpdateAsync(User user, CancellationToken ct = default);
     Task DeleteAsync(User user, CancellationToken ct = default);

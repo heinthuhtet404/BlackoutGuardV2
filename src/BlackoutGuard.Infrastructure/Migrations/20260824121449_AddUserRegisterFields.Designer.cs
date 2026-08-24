@@ -3,6 +3,7 @@ using System;
 using BlackoutGuard.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BlackoutGuard.Infrastructure.Migrations
 {
     [DbContext(typeof(BlackoutGuardDbContext))]
-    partial class BlackoutGuardDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824121449_AddUserRegisterFields")]
+    partial class AddUserRegisterFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

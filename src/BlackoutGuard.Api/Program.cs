@@ -142,14 +142,11 @@ builder.Services.AddScoped<CreateLoadUseCase>();
 builder.Services.AddScoped<UpdateLoadUseCase>();
 builder.Services.AddScoped<DeleteLoadUseCase>();
 builder.Services.AddScoped<ScoreCriticalityUseCase>();
-
 builder.Services.AddScoped<ListRulesUseCase>();
 builder.Services.AddScoped<UpdateRuleUseCase>();
-
 builder.Services.AddScoped<ListSchedulesUseCase>();
 builder.Services.AddScoped<CreateScheduleUseCase>();
 builder.Services.AddScoped<DeleteScheduleUseCase>();
-
 builder.Services.AddScoped<ListUsersUseCase>();
 builder.Services.AddScoped<CreateUserUseCase>();
 builder.Services.AddScoped<UpdateUserUseCase>();
@@ -193,7 +190,6 @@ using (var scope = app.Services.CreateScope())
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -218,7 +214,9 @@ static async Task EnsureDatabaseCreatedAsync(string connectionString)
     await using var checkCommand = new NpgsqlCommand(
         "SELECT 1 FROM pg_database WHERE datname = @name",
         connection);
-    checkCommand.Parameters.AddWithValue("name", databaseName);
+
+    // CS8604 Warning Fix: databaseName Null ဖြစ်နိုင်ခြေရှိသဖြင့် fallback value ဖြည့်ဆည်းခြင်း
+    checkCommand.Parameters.AddWithValue("name", databaseName ?? string.Empty);
 
     var exists = await checkCommand.ExecuteScalarAsync() is not null;
     if (exists)

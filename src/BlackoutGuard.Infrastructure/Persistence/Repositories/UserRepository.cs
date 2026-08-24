@@ -23,6 +23,7 @@ public class UserRepository : IUserRepository
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == id, ct);
+
         return user is null ? null : MapToDomain(user);
     }
 
@@ -39,9 +40,6 @@ public class UserRepository : IUserRepository
             .Select(f => (Guid?)f.Id)
             .FirstOrDefaultAsync(ct);
 
-        if (facilityId is null)
-            return null;
-
         return new UserAuthDto
         {
             Id = user.Id,
@@ -49,7 +47,7 @@ public class UserRepository : IUserRepository
             Email = user.Email,
             PasswordHash = user.PasswordHash,
             Role = user.Role,
-            FacilityId = facilityId.Value
+            FacilityId = facilityId ?? user.TenantId // Facility မရှိသေးပါက TenantId ကို Fallback ပေးသည်
         };
     }
 
@@ -59,6 +57,7 @@ public class UserRepository : IUserRepository
             .Where(u => u.TenantId == tenantId)
             .OrderBy(u => u.CreatedAt)
             .ToListAsync(ct);
+
         return users.Select(MapToDomain).ToList();
     }
 
@@ -66,6 +65,11 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users
             .CountAsync(u => u.TenantId == tenantId && u.Role == "Admin" && u.IsActive, ct);
+    }
+
+    public async Task<bool> HasAnyUserAsync(CancellationToken ct = default)
+    {
+        return await _context.Users.AnyAsync(ct);
     }
 
     public async Task AddAsync(User user, CancellationToken ct = default)

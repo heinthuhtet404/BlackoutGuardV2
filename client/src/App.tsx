@@ -1,13 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
 import { LoginPage } from "./pages/LoginPage/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage/RegisterPage";
 import { TopologyConfigPage } from "./pages/TopologyConfigPage/TopologyConfigPage";
 import { SimulatorPanel } from "./pages/SimulatorPanel/SimulatorPanel";
 import { AuditTable } from "./pages/AuditLogPage/AuditTable";
 import { RulesEnginePage } from "./pages/RulesEnginePage";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import { LiveOverviewPage } from "./pages/LiveOverviewPage";
-import { TelemetryProvider } from "./context/TelemetryContext"; // Context ကို Import လုပ်ပါ
+import { TelemetryProvider } from "./context/TelemetryContext";
 import "./App.css";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <BrowserRouter>
             <TelemetryProvider>
                 <Routes>
+                    <Route path="/register" element={<RegisterPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route element={<AppShell />}>
                         <Route path="/overview" element={<LiveOverviewPage />} />
@@ -24,7 +26,7 @@ function App() {
                         <Route path="/audit" element={<AuditTable />} />
                         <Route path="/users" element={<UserManagementPage />} />
                     </Route>
-                    <Route path="*" element={<Navigate to="/overview" replace />} />
+                    <Route path="*" element={<Navigate to="/register" replace />} />
                 </Routes>
             </TelemetryProvider>
         </BrowserRouter>

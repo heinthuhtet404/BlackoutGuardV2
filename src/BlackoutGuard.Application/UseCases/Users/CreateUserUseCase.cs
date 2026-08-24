@@ -33,8 +33,21 @@ public sealed class CreateUserUseCase
         if (existing is not null)
             return Result<UserDto>.Failure("User with this email already exists.");
 
-        if (role != "Admin" && role != "Operator" && role != "Viewer")
-            return Result<UserDto>.Failure("Invalid role. Must be Admin, Operator, or Viewer.");
+        // DB ထဲတွင် User မရှိသေးလျှင် (ပထမဆုံး Register လုပ်သူဖြစ်ပါက) Role ကို "Admin" ပေးမည်
+        var hasUsers = await _userRepository.HasAnyUserAsync(ct);
+        string assignedRole;
+
+        if (!hasUsers)
+        {
+            assignedRole = "Admin";
+        }
+        else
+        {
+            if (role != "Admin" && role != "Operator" && role != "Viewer")
+                return Result<UserDto>.Failure("Invalid role. Must be Admin, Operator, or Viewer.");
+
+            assignedRole = role;
+        }
 
         var passwordHash = _passwordHasher.Hash(password);
 
@@ -44,7 +57,7 @@ public sealed class CreateUserUseCase
             TenantId = tenantId,
             Email = email,
             PasswordHash = passwordHash,
-            Role = role,
+            Role = assignedRole,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
