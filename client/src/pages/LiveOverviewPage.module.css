@@ -1,21 +1,55 @@
 .page {
-    padding: 1.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    color: #f1f5f9;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .heading {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #f1f5f9;
-    margin-bottom: 0.5rem;
+    margin: 0;
+}
+
+.systemModeBanner {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.modeSuccess {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid #10b981;
+}
+
+.modeWarning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid #f59e0b;
+}
+
+.modeDanger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.modeOffline {
+    background: rgba(100, 116, 139, 0.15);
+    color: #94a3b8;
+    border: 1px solid #64748b;
 }
 
 .statusRow {
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
-    font-weight: 500;
+    font-size: 0.875rem;
 }
 
 .statusConnected {
@@ -29,15 +63,17 @@
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
+    gap: 16px;
 }
 
 .card {
     background: #1e293b;
+    padding: 16px;
+    border-radius: 8px;
     border: 1px solid #334155;
-    border-radius: 12px;
-    padding: 1.5rem;
-    transition: border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .cardDanger {
@@ -45,18 +81,23 @@
 }
 
 .cardLabel {
-    margin: 0;
-    font-size: 0.8rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.875rem;
     color: #94a3b8;
+    margin: 0;
 }
 
 .cardValue {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
-    margin: 0.5rem 0 0 0;
+    margin: 0;
+}
+
+.valueBlue {
+    color: #3b82f6;
+}
+
+.valueAmber {
+    color: #f59e0b;
 }
 
 .valueSuccess {
@@ -67,21 +108,187 @@
     color: #ef4444;
 }
 
-.valueBlue {
-    color: #60a5fa;
-}
-
-.valueAmber {
-    color: #f59e0b;
-}
-
 .valueMuted {
     color: #64748b;
 }
 
 .warning {
-    display: block;
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
     color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.sectionCard {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+}
+
+.sectionTitle {
+    font-size: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #f8fafc;
+}
+
+.nodeGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.nodeCard {
+    background: #0f172a;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.nodeNormal {
+    border-color: #10b981;
+}
+
+.nodeShedded {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.nodeIcon {
+    font-size: 1.8rem;
+}
+
+.nodeName {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.nodePriority {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.nodeBadge {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    background: #1e293b;
+    margin-top: 4px;
+}
+
+.chartsRow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.chartCard {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.chartTitle {
+    font-size: 1rem;
+    margin: 0 0 12px 0;
+    color: #cbd5e1;
+}
+
+.chartContainer {
+    height: 120px;
+    width: 100%;
+    background: #0f172a;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.chartFooter {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 8px;
+}
+
+.loadBreakdownContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.loadBarRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+}
+
+.progressBg {
+    height: 8px;
+    background: #0f172a;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progressFillP1 {
+    height: 100%;
+    background: #ef4444;
+}
+
+.progressFillP2 {
+    height: 100%;
+    background: #f59e0b;
+}
+
+.progressFillP3 {
+    height: 100%;
+    background: #3b82f6;
+}
+
+.noAlarms {
+    color: #10b981;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.alarmList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.alarmItem {
+    display: flex;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: #0f172a;
+}
+
+.alarmWarning {
+    border-left: 4px solid #f59e0b;
+}
+
+.alarmSuccess {
+    border-left: 4px solid #10b981;
+}
+
+.alarmTime {
+    color: #64748b;
+    font-weight: 500;
+    min-width: 85px;
+}
+
+.alarmMessage {
+    color: #f8fafc;
 }
