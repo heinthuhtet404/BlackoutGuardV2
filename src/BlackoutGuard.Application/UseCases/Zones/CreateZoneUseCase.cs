@@ -6,10 +6,12 @@ namespace BlackoutGuard.Application.UseCases.Zones;
 public class CreateZoneUseCase
 {
     private readonly IZoneRepository _repository;
+    private readonly IFacilityRepository _facilityRepository;
 
-    public CreateZoneUseCase(IZoneRepository repository)
+    public CreateZoneUseCase(IZoneRepository repository, IFacilityRepository facilityRepository)
     {
         _repository = repository;
+        _facilityRepository = facilityRepository;
     }
 
     public async Task<Result<Guid>> ExecuteAsync(
@@ -25,6 +27,14 @@ public class CreateZoneUseCase
         if (string.IsNullOrWhiteSpace(type))
             return Result<Guid>.Failure("Zone type is required.");
 
+        // ၁။ ပေးပို့လိုက်သော facilityId သည် DB ထဲတွင် အမှန်တကယ် ရှိမရှိ စစ်ဆေးခြင်း
+        var facilityExists = await _facilityRepository.ExistsAsync(facilityId, ct);
+        if (!facilityExists)
+        {
+            return Result<Guid>.Failure($"Facility with ID '{facilityId}' does not exist.");
+        }
+
+        // ၂။ Parent Zone ရှိပါက ထို Facility ၏ Zone ဖြစ်မဖြစ် စစ်ဆေးခြင်း
         if (parentZoneId.HasValue)
         {
             var parentExists = await _repository.ExistsInFacilityAsync(parentZoneId.Value, facilityId, ct);

@@ -132,9 +132,13 @@ public class LoadsController : ControllerBase
         if (message.Contains("not found", StringComparison.OrdinalIgnoreCase))
             return NotFound(new { error = message });
 
-        if (message.Contains("assigned to", StringComparison.OrdinalIgnoreCase) ||
-            message.Contains("capacity exceeded", StringComparison.OrdinalIgnoreCase))
-            return Conflict(new { error = message });
+        if (message.Contains("already assigned", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("capacity exceeded", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("assigned to", StringComparison.OrdinalIgnoreCase))
+        {
+            // Frontend LoadForm.tsx မှ 409 Conflict အဖြစ် ဖတ်နိုင်စေရန် HTTP 409 Return ပြန်ပေးသည်
+            return StatusCode(StatusCodes.Status409Conflict, new { error = message });
+        }
 
         return BadRequest(new { error = message });
     }

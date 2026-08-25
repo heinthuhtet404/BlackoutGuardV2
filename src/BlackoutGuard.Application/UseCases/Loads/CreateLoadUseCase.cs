@@ -31,6 +31,7 @@ public class CreateLoadUseCase
 
     public async Task<Result<Guid>> ExecuteAsync(CreateLoadRequest request, CancellationToken ct = default)
     {
+        // 1. Basic Validations
         if (string.IsNullOrWhiteSpace(request.Name))
             return Result<Guid>.Failure("Load name is required.");
 
@@ -46,86 +47,86 @@ public class CreateLoadUseCase
 
             try
             {
+                // 2. Relay Address Conflict Check
                 var conflict = await _safetyGuard.FindRelayConflictAsync(request.FacilityId, request.RelayAddress, null, ct);
                 if (conflict is not null)
                 {
+                    if (!request.Force)
+                    {
+                        return Result<Guid>.Failure(
+                            $"Relay address {request.RelayAddress} is already assigned to '{conflict.Name}'. Use force=true to override.");
+                    }
+
+                    // Audit Log for Relay Override
+                    var overrideAudit = new AuditEntryDto
+                    {
+                        FacilityId = request.FacilityId,
+                        EventType = "RELAY_OVERRIDE",
+                        Rationale = $"Relay address {request.RelayAddress} assigned to '{request.Name}' with force=true (Conflicted with '{conflict.Name}')."
+                    };
+                    await _auditRepo.AddAsync(overrideAudit, ct);
+                }
+
+                // 3. Capacity Evaluation
+                var capacity = await _safetyGuard.EvaluateCapacityAsync(request.FacilityId, request.PowerRatingKw, null, ct);
+                if (capacity.Facility is null)
+                {
+                    return Result<Guid>.Failure($"Facility {request.FacilityId} not found.");
+                }
+
+                bool isCapacityExceeded = request.Priority == "P1" && capacity.Deficit > 0;
+
+                if (isCapacityExceeded && !request.Force)
+                {
                     return Result<Guid>.Failure(
-                        $"Relay address {request.RelayAddress} is already assigned to '{conflict.Name}'");
+                        $"P1 capacity exceeded by {capacity.Deficit:F1} kW. " +
+                        $"Total P1: {capacity.TotalP1Kw:F1} kW, Capacity: {capacity.Facility.GeneratorCapacityKW:F1} kW. " +
+                        $"Use force=true to override.");
                 }
 
-                if (request.Priority == "P1")
+                // 4. Map and Create Load
+                var loadId = Guid.NewGuid();
+                var loadDto = new LoadDto
                 {
-                    var capacity = await _safetyGuard.EvaluateCapacityAsync(request.FacilityId, request.PowerRatingKw, null, ct);
-                    if (capacity.Facility is null)
-                    {
-                        return Result<Guid>.Failure($"Facility {request.FacilityId} not found.");
-                    }
-
-                    if (capacity.Deficit > 0)
-                    {
-                        if (!request.Force)
-                        {
-                            return Result<Guid>.Failure(
-                                $"P1 capacity exceeded by {capacity.Deficit:F1} kW. " +
-                                $"Total P1: {capacity.TotalP1Kw:F1} kW, Capacity: {capacity.Facility.GeneratorCapacityKW:F1} kW. " +
-                                $"Use force=true to override.");
-                        }
-
-                        var loadId = Guid.NewGuid();
-                        var loadDto = new LoadDto
-                        {
-                            Id = loadId,
-                            FacilityId = request.FacilityId,
-                            ZoneId = request.ZoneId,
-                            Name = request.Name,
-                            RelayAddress = request.RelayAddress,
-                            PowerRatingKw = request.PowerRatingKw,
-                            Priority = request.Priority,
-                            PriorityMode = request.PriorityMode ?? "auto",
-                            IsSheddable = request.IsSheddable,
-                            IsActive = true
-                        };
-
-                        await _loadRepo.AddAsync(loadDto, ct);
-
-                        var auditEntry = new AuditEntryDto
-                        {
-                            FacilityId = request.FacilityId,
-                            EventType = "CAPACITY_OVERRIDE",
-                            Rationale = $"P1 load '{request.Name}' created with force=true. " +
-                                       $"Total P1: {capacity.TotalP1Kw:F1} kW exceeds capacity {capacity.Facility.GeneratorCapacityKW:F1} kW by {capacity.Deficit:F1} kW.",
-                            AffectedLoadId = loadId
-                        };
-
-                        await _auditRepo.AddAsync(auditEntry, ct);
-                        await tx.CommitAsync(ct);
-
-                        return Result<Guid>.Success(loadId);
-                    }
-                }
-
-                var newLoadId = Guid.NewGuid();
-                var newLoad = new LoadDto
-                {
-                    Id = newLoadId,
+                    Id = loadId,
                     FacilityId = request.FacilityId,
                     ZoneId = request.ZoneId,
                     Name = request.Name,
                     RelayAddress = request.RelayAddress,
                     PowerRatingKw = request.PowerRatingKw,
-                    Priority = request.Priority,
+                    Priority = string.IsNullOrWhiteSpace(request.Priority) ? "P3" : request.Priority,
                     PriorityMode = request.PriorityMode ?? "auto",
+                    CriticalityQ1 = request.CriticalityQ1,
+                    CriticalityQ2 = request.CriticalityQ2,
+                    CriticalityQ3 = request.CriticalityQ3,
+                    CriticalityQ4 = request.CriticalityQ4,
+                    CriticalityScore = request.CriticalityScore,
                     IsSheddable = request.IsSheddable,
                     IsActive = true
                 };
 
-                await _loadRepo.AddAsync(newLoad, ct);
-                await tx.CommitAsync(ct);
+                await _loadRepo.AddAsync(loadDto, ct);
 
-                return Result<Guid>.Success(newLoadId);
+                // Audit Log for Capacity Override
+                if (isCapacityExceeded && request.Force)
+                {
+                    var auditEntry = new AuditEntryDto
+                    {
+                        FacilityId = request.FacilityId,
+                        EventType = "CAPACITY_OVERRIDE",
+                        Rationale = $"P1 load '{request.Name}' created with force=true. " +
+                                   $"Total P1: {capacity.TotalP1Kw:F1} kW exceeds capacity {capacity.Facility.GeneratorCapacityKW:F1} kW by {capacity.Deficit:F1} kW.",
+                        AffectedLoadId = loadId
+                    };
+                    await _auditRepo.AddAsync(auditEntry, ct);
+                }
+
+                await tx.CommitAsync(ct);
+                return Result<Guid>.Success(loadId);
             }
             catch (RelayConflictException ex)
             {
+                await tx.RollbackAsync(ct);
                 return Result<Guid>.Failure(ex.Message);
             }
             catch (Exception)

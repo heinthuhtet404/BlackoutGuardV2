@@ -1,4 +1,3 @@
-using System.Text;
 using BlackoutGuard.Api.Engine;
 using BlackoutGuard.Api.Hubs;
 using BlackoutGuard.Api.Middleware;
@@ -7,6 +6,7 @@ using BlackoutGuard.Application.Services;
 using BlackoutGuard.Application.UseCases.Loads;
 using BlackoutGuard.Application.UseCases.Rules;
 using BlackoutGuard.Application.UseCases.Schedules;
+using BlackoutGuard.Application.UseCases.Shedding;
 using BlackoutGuard.Application.UseCases.Users;
 using BlackoutGuard.Application.UseCases.Zones;
 using BlackoutGuard.Domain.BusinessRules;
@@ -20,16 +20,26 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using System.Text;
+using System.Threading.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
+
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? "Host=localhost;Database=blackoutguard_v2;Username=postgres;Password=postgres";
 
 if (!builder.Environment.IsEnvironment("Testing"))
 {
     builder.Services.AddDbContext<BlackoutGuardDbContext>(options =>
+    {
         options.UseNpgsql(connectionString)
-               .AddInterceptors(new FacilityIdDbInterceptor()));
+               .AddInterceptors(new FacilityIdDbInterceptor());
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableSensitiveDataLogging(); // Debugging အတွက် Parameter Value များကို ရုပ်လုံးဖော်ပြပေးမည်
+        }
+    });
 }
 
 builder.Services.AddControllers();
@@ -151,6 +161,8 @@ builder.Services.AddScoped<ListUsersUseCase>();
 builder.Services.AddScoped<CreateUserUseCase>();
 builder.Services.AddScoped<UpdateUserUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
+builder.Services.AddScoped<EvaluateSheddingUseCase>();
+builder.Services.AddScoped<ExecuteSheddingUseCase>();
 
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<SimulatorDataSource>();
@@ -215,7 +227,6 @@ static async Task EnsureDatabaseCreatedAsync(string connectionString)
         "SELECT 1 FROM pg_database WHERE datname = @name",
         connection);
 
-    // CS8604 Warning Fix: databaseName Null ဖြစ်နိုင်ခြေရှိသဖြင့် fallback value ဖြည့်ဆည်းခြင်း
     checkCommand.Parameters.AddWithValue("name", databaseName ?? string.Empty);
 
     var exists = await checkCommand.ExecuteScalarAsync() is not null;

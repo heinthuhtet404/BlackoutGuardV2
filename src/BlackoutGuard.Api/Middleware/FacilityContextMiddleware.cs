@@ -15,15 +15,13 @@ public class FacilityContextMiddleware
 
     public async Task InvokeAsync(HttpContext context, BlackoutGuardDbContext dbContext)
     {
-        // SignalR Hub endpoints (/hubs) များကို DB Context locking နှင့် WebSocket handshake နှောင့်နှေးမှု မဖြစ်စေရန် Bypass လုပ်သည်
+        // SignalR Hub endpoints (/hubs) များကို Bypass လုပ်မည်
         if (context.Request.Path.StartsWithSegments("/hubs"))
         {
             await _next(context);
             return;
         }
 
-        // Only enforce facility scoping for authenticated requests.
-        // Anonymous endpoints (login, health, swagger) pass through untouched.
         if (context.User.Identity?.IsAuthenticated == true)
         {
             var claimValue = context.User.FindFirstValue("facility_id");
@@ -36,7 +34,7 @@ public class FacilityContextMiddleware
                 return;
             }
 
-            // PostgreSQL ကဲ့သို့ Relational Provider ဖြစ်မှသာ Connection ကို ယူပြီး RLS Session Variable သတ်မှတ်မည်
+            // PostgreSQL Provider ဖြစ်ပါက Safe SQL Interpolation ဖြင့် RLS Session Variable သတ်မှတ်မည်
             if (dbContext.Database.IsRelational())
             {
                 var connection = dbContext.Database.GetDbConnection();
@@ -46,7 +44,14 @@ public class FacilityContextMiddleware
                 }
 
                 await using var command = connection.CreateCommand();
-                command.CommandText = $"SET app.current_facility_id = '{facilityId}'";
+                command.Connection = connection; // Ensure explicit connection association
+                command.CommandText = "SELECT set_config('app.current_facility_id', @facilityId, false);";
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@facilityId";
+                param.Value = facilityId.ToString();
+                command.Parameters.Add(param);
+
                 await command.ExecuteNonQueryAsync(context.RequestAborted);
             }
         }

@@ -75,7 +75,13 @@ public class LoadRepository : ILoadRepository
             PowerRatingKw = load.PowerRatingKw,
             Priority = load.Priority,
             PriorityMode = load.PriorityMode,
-            IsSheddable = load.IsSheddable
+            CriticalityQ1 = load.CriticalityQ1,
+            CriticalityQ2 = load.CriticalityQ2,
+            CriticalityQ3 = load.CriticalityQ3,
+            CriticalityQ4 = load.CriticalityQ4,
+            CriticalityScore = load.CriticalityScore,
+            IsSheddable = load.IsSheddable,
+            IsActive = load.IsActive
         };
 
         _context.Loads.Add(entity);

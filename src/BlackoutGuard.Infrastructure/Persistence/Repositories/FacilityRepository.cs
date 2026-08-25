@@ -27,4 +27,11 @@ public class FacilityRepository : IFacilityRepository
             GeneratorCapacityKW = facility.GeneratorCapacityKw
         };
     }
+
+    // ဒီ Method ကို ထပ်ဖြည့်ပေးပါ
+    public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Facilities
+            .AnyAsync(f => f.Id == id, cancellationToken);
+    }
 }

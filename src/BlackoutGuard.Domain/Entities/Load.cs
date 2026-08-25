@@ -10,5 +10,12 @@ public sealed record Load(
     string Priority,
     string PriorityMode,
     bool IsActive,
-    bool IsSheddable
+    bool IsSheddable,
+
+    // Phase 1 - Criticality Risk Fields (Default Values သတ်မှတ်ထားသဖြင့် Backward Compatible ဖြစ်သည်)
+    int SafetyRisk = 1,
+    int DataLossRisk = 1,
+    int OperationalRisk = 1,
+    int ComfortRisk = 1,
+    double CriticalityScore = 0
 );

@@ -11,4 +11,11 @@ public class CreateLoadRequest
     public string PriorityMode { get; set; } = "auto";
     public bool IsSheddable { get; set; } = true;
     public bool Force { get; set; }
+
+    // Risk factors & Criticality parameters
+    public short? CriticalityQ1 { get; set; }
+    public short? CriticalityQ2 { get; set; }
+    public short? CriticalityQ3 { get; set; }
+    public short? CriticalityQ4 { get; set; }
+    public double? CriticalityScore { get; set; }
 }

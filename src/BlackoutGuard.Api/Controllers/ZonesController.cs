@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlackoutGuard.Api.Controllers;
 
+public record CreateZoneRequest(string Name, string Type, Guid? ParentZoneId = null);
+public record UpdateZoneRequest(string Name, string Type, Guid? ParentZoneId = null);
+
 [ApiController]
 [Route("api/v1/zones")]
 [Authorize]
