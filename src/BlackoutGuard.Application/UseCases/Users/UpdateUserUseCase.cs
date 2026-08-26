@@ -48,18 +48,19 @@ public sealed class UpdateUserUseCase
         if (request.IsActive.HasValue)
             user.IsActive = request.IsActive.Value;
 
-        // Safe Defaults and Null-Coalescing for Optional Fields
+        // Safe Defaults for Optional Fields
         if (request.FullName is not null)
-            user.FullName = string.IsNullOrWhiteSpace(request.FullName) ? null : request.FullName;
+            user.FullName = string.IsNullOrWhiteSpace(request.FullName) ? string.Empty : request.FullName;
 
         if (request.FacilityLocation is not null)
-            user.FacilityLocation = string.IsNullOrWhiteSpace(request.FacilityLocation) ? null : request.FacilityLocation;
+            user.FacilityLocation = string.IsNullOrWhiteSpace(request.FacilityLocation) ? string.Empty : request.FacilityLocation;
 
         if (request.OrganizationName is not null)
-            user.OrganizationName = string.IsNullOrWhiteSpace(request.OrganizationName) ? null : request.OrganizationName;
+            user.OrganizationName = string.IsNullOrWhiteSpace(request.OrganizationName) ? string.Empty : request.OrganizationName;
 
+        // Convert decimal to double
         if (request.GeneratorCapacity.HasValue)
-            user.GeneratorCapacity = request.GeneratorCapacity.Value;
+            user.GeneratorCapacity = (double)request.GeneratorCapacity.Value;
 
         user.UpdatedAt = DateTime.UtcNow;
 
@@ -69,13 +70,16 @@ public sealed class UpdateUserUseCase
         return Result<UserDto>.Success(new UserDto
         {
             Id = user.Id,
-            Email = user.Email,
-            Role = user.Role,
+            Email = user.Email ?? string.Empty,
+            Role = user.Role ?? string.Empty,
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
             FullName = user.FullName,
             FacilityLocation = user.FacilityLocation,
-            GeneratorCapacity = user.GeneratorCapacity,
+
+            // Fix CS1061: user.GeneratorCapacity က double ဖြစ်နေတဲ့အတွက် (decimal) နဲ့ တိုက်ရိုက် cast လုပ်ပါ
+            GeneratorCapacity = (decimal)user.GeneratorCapacity,
+
             OrganizationName = user.OrganizationName
         });
     }

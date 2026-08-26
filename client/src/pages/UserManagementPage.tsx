@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { get, post, put, del } from "../api/apiClient";
+import { get, post, del } from "../api/apiClient";
 import { useToast } from "../components/ui/toastContext";
+import { useAuth } from "../auth/authTypes";
 import styles from "./UserManagementPage.module.css";
 
 export type UserRole = "Admin" | "Operator" | "Viewer";
@@ -21,57 +22,65 @@ interface UserModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (userData: Partial<User> & { sendWelcomeEmail?: boolean }) => Promise<void>;
-    initialData?: User | null;
-    isLastAdmin?: boolean;
 }
 
-function UserModal({ isOpen, onClose, onSave, initialData, isLastAdmin }: UserModalProps) {
+// Password complexity validation logic
+const validatePassword = (pwd: string) => {
+    return (
+        pwd.length >= 8 &&
+        /[A-Z]/.test(pwd) &&
+        /[a-z]/.test(pwd) &&
+        /[0-9]/.test(pwd) &&
+        /[!@#$%^&*(),.?":{}|<>]/.test(pwd)
+    );
+};
+
+function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState<UserRole>("Operator");
-    const [status, setStatus] = useState<UserStatus>("Active");
     const [showPassword, setShowPassword] = useState(false);
     const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
-            if (initialData) {
-                setFullName(initialData.fullName || initialData.username || "");
-                setEmail(initialData.email || "");
-                setPassword(""); // Keep empty on edit for security
-                setRole(initialData.role || "Operator");
-                setStatus(initialData.status || "Active");
-            } else {
-                setFullName("");
-                setEmail("");
-                setPassword("");
-                setRole("Operator");
-                setStatus("Active");
-                setSendWelcomeEmail(true);
-            }
+            setValidationError(null);
+            setFullName("");
+            setEmail("");
+            setPassword("");
+            setRole("Operator");
+            setSendWelcomeEmail(true);
             setShowPassword(false);
         }
-    }, [initialData, isOpen]);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setValidationError(null);
+
+        // Password validation စစ်ဆေးခြင်း
+        if (!validatePassword(password)) {
+            setValidationError(
+                "Password တွင် အနည်းဆုံး ၈ လုံး၊ စာလုံးကြီး၊ စာလုံးငယ်၊ နံပါတ် နှင့် Special Character ပါဝင်ရပါမည်။"
+            );
+            return;
+        }
+
         setSubmitting(true);
         try {
             const payload: Partial<User> & { sendWelcomeEmail?: boolean } = {
-                fullName,
-                email,
+                fullName: fullName.trim(),
+                email: email.trim(),
+                password,
                 role,
-                status,
-                sendWelcomeEmail: !initialData ? sendWelcomeEmail : undefined,
+                status: "Active",
+                sendWelcomeEmail,
             };
-
-            if (password) {
-                payload.password = password;
-            }
 
             await onSave(payload);
             onClose();
@@ -80,14 +89,10 @@ function UserModal({ isOpen, onClose, onSave, initialData, isLastAdmin }: UserMo
         }
     };
 
-    const isEditing = Boolean(initialData);
-
     return (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
             <div className={styles.modal}>
-                <h2 className={styles.modalHeader}>
-                    {isEditing ? `✏️ Edit User: ${initialData?.email}` : "👤 Create New User"}
-                </h2>
+                <h2 className={styles.modalHeader}>👤 Create New User</h2>
                 <form onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
                         <label htmlFor="fullName">Full Name</label>
@@ -116,18 +121,16 @@ function UserModal({ isOpen, onClose, onSave, initialData, isLastAdmin }: UserMo
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label htmlFor="password">
-                            Password {isEditing && <span style={{ color: "#94a3b8" }}>(Leave blank to keep unchanged)</span>}
-                        </label>
+                        <label htmlFor="password">Password</label>
                         <div className={styles.passwordInputWrapper}>
                             <input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
-                                required={!isEditing}
+                                required
                                 className={styles.formInput}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder={isEditing ? "••••••••" : "Enter temporary password"}
+                                placeholder="Enter secure password"
                             />
                             <button
                                 type="button"
@@ -140,60 +143,41 @@ function UserModal({ isOpen, onClose, onSave, initialData, isLastAdmin }: UserMo
                         </div>
                     </div>
 
+                    {validationError && (
+                        <div style={{ color: "#ef4444", fontSize: "13px", marginBottom: "12px", lineHeight: "1.4" }}>
+                            ⚠️ {validationError}
+                        </div>
+                    )}
+
                     <div className={styles.formGroup}>
                         <label htmlFor="role">Role</label>
                         <select
                             id="role"
                             className={styles.formSelect}
                             value={role}
-                            disabled={isEditing && isLastAdmin && initialData?.role === "Admin"}
                             onChange={(e) => setRole(e.target.value as UserRole)}
                         >
-                            <option value="Admin">🛡️ Admin</option>
                             <option value="Operator">⚙️ Operator</option>
                             <option value="Viewer">👁️ Viewer</option>
                         </select>
-                        {isEditing && isLastAdmin && initialData?.role === "Admin" && (
-                            <p className={styles.warningText}>
-                                ⚠️ Cannot demote or change role of the last remaining Admin.
-                            </p>
-                        )}
                     </div>
 
-                    {isEditing && (
-                        <div className={styles.formGroup}>
-                            <label htmlFor="status">Status</label>
-                            <select
-                                id="status"
-                                className={styles.formSelect}
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value as UserStatus)}
-                            >
-                                <option value="Active">Active</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
-                        </div>
-                    )}
-
-                    {!isEditing && (
-                        <div className={styles.checkboxGroup}>
-                            <input
-                                type="checkbox"
-                                id="welcomeEmail"
-                                checked={sendWelcomeEmail}
-                                onChange={(e) => setSendWelcomeEmail(e.target.checked)}
-                            />
-                            <label htmlFor="welcomeEmail">Send Welcome Email (with credentials)</label>
-                        </div>
-                    )}
+                    <div className={styles.checkboxGroup}>
+                        <input
+                            type="checkbox"
+                            id="welcomeEmail"
+                            checked={sendWelcomeEmail}
+                            onChange={(e) => setSendWelcomeEmail(e.target.checked)}
+                        />
+                        <label htmlFor="welcomeEmail">Send Welcome Email (with credentials)</label>
+                    </div>
 
                     <div className={styles.modalActions}>
                         <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={submitting}>
                             Cancel
                         </button>
                         <button type="submit" disabled={submitting} className={styles.saveBtn}>
-                            {submitting ? "Saving..." : isEditing ? "Save Changes" : "Create User"}
+                            {submitting ? "Creating..." : "Create User"}
                         </button>
                     </div>
                 </form>
@@ -207,14 +191,12 @@ export function UserManagementPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState<string>("All");
-    const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+    const [visiblePasswords, setVisiblePasswords] = useState<{ [key: string]: boolean }>({});
 
-    // Current Logged-in User ID (Matches DB UUID for "heinthuhtet2004@gmail.com")
-    const currentLoggedInUserId = "3681f571-cc9a-4242-a1b9-fc64d911d6a0";
+    const { user: currentUser } = useAuth();
+    const currentLoggedInUserId = currentUser?.id;
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
-
     const { showToast } = useToast();
 
     const fetchUsers = async () => {
@@ -250,23 +232,22 @@ export function UserManagementPage() {
     };
 
     const handleCreateUser = () => {
-        setEditingUser(null);
         setIsModalOpen(true);
     };
 
-    const handleEditUser = (user: User) => {
-        setEditingUser(user);
-        setIsModalOpen(true);
+    const togglePasswordVisibility = (userId: string) => {
+        setVisiblePasswords((prev) => ({
+            ...prev,
+            [userId]: !prev[userId],
+        }));
     };
 
     const handleDeleteUser = async (user: User) => {
-        // Prevent deleting self
         if (user.id === currentLoggedInUserId) {
             showToast("Self-Delete Protection: You cannot delete your own logged-in account.", "error");
             return;
         }
 
-        // Prevent deleting the last remaining admin
         if (user.role === "Admin" && adminCount <= 1) {
             showToast("Last Admin Protection: Cannot delete the remaining active Administrator.", "error");
             return;
@@ -278,7 +259,6 @@ export function UserManagementPage() {
         }
 
         try {
-            // Delete request directly to API endpoint -> PostgreSQL Database
             await del(`/users/${user.id}`);
             setUsers((prev) => prev.filter((u) => u.id !== user.id));
             showToast(`User ${user.email} deleted successfully.`, "success");
@@ -289,43 +269,18 @@ export function UserManagementPage() {
     };
 
     const handleSaveUser = async (userData: Partial<User> & { sendWelcomeEmail?: boolean }) => {
-        if (editingUser) {
-            if (editingUser.role === "Admin" && userData.role !== "Admin" && adminCount <= 1) {
-                showToast("Last Admin Protection: Cannot demote the last remaining Admin.", "error");
-                return;
+        try {
+            const created = await post<User>("/users", userData);
+            if (created) {
+                setUsers((prev) => [...prev, created]);
+                showToast(`New user ${created.email} created successfully.`, "success");
+                await logAuditTrail("CREATE", created.id, `Created account ${created.email} with role ${created.role}`);
+            } else {
+                await fetchUsers();
             }
-
-            try {
-                const updated = await put<User>(`/users/${editingUser.id}`, userData);
-                setUsers((prev) =>
-                    prev.map((u) => (u.id === editingUser.id ? { ...u, ...userData, ...(updated || {}) } : u))
-                );
-                showToast(`User ${userData.email} updated successfully.`, "success");
-                await logAuditTrail("UPDATE", editingUser.id, `Updated details for ${userData.email}`);
-            } catch (err) {
-                showToast(err instanceof Error ? err.message : "Failed to update user", "error");
-            }
-        } else {
-            try {
-                const created = await post<User>("/users", userData);
-                if (created) {
-                    setUsers((prev) => [...prev, created]);
-                    showToast(`New user ${created.email} created successfully.`, "success");
-                    await logAuditTrail("CREATE", created.id, `Created account ${created.email} with role ${created.role}`);
-                } else {
-                    await fetchUsers();
-                }
-            } catch (err) {
-                showToast(err instanceof Error ? err.message : "Failed to create user", "error");
-            }
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : "Failed to create user", "error");
         }
-    };
-
-    const togglePasswordVisibility = (id: string) => {
-        setVisiblePasswords((prev) => ({
-            ...prev,
-            [id]: !prev[id],
-        }));
     };
 
     const filteredUsers = useMemo(() => {
@@ -412,7 +367,7 @@ export function UserManagementPage() {
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Status</th>
-                                    <th>Password</th>
+                                    <th>Password Credential</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -427,6 +382,7 @@ export function UserManagementPage() {
                                     filteredUsers.map((u, index) => {
                                         const isSelf = u.id === currentLoggedInUserId;
                                         const isLastAdmin = u.role === "Admin" && adminCount <= 1;
+                                        const isPasswordVisible = visiblePasswords[u.id];
 
                                         return (
                                             <tr key={u.id}>
@@ -438,27 +394,23 @@ export function UserManagementPage() {
                                                 <td>{getRoleBadge(u.role)}</td>
                                                 <td>{getStatusStyle(u.status)}</td>
                                                 <td>
-                                                    <div className={styles.passwordField}>
-                                                        <span>
-                                                            {visiblePasswords[u.id] ? u.password || "••••••••" : "••••••••"}
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                        <span style={{ fontFamily: "monospace", color: isPasswordVisible ? "#0f172a" : "#64748b" }}>
+                                                            {isPasswordVisible ? u.password || "[Hashed/Protected]" : "••••••••"}
                                                         </span>
                                                         <button
-                                                            className={styles.toggleBtn}
+                                                            type="button"
+                                                            className={styles.eyeIconBtn}
                                                             onClick={() => togglePasswordVisibility(u.id)}
-                                                            title="Toggle password view"
+                                                            title={isPasswordVisible ? "Hide password" : "Show password"}
+                                                            style={{ border: "none", background: "transparent", cursor: "pointer" }}
                                                         >
-                                                            {visiblePasswords[u.id] ? "🙈" : "👁️"}
+                                                            {isPasswordVisible ? "🙈" : "👁️"}
                                                         </button>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div className={styles.actionCell}>
-                                                        <button
-                                                            className={styles.editBtn}
-                                                            onClick={() => handleEditUser(u)}
-                                                        >
-                                                            Edit
-                                                        </button>
                                                         <button
                                                             className={styles.deleteBtn}
                                                             disabled={isSelf || isLastAdmin}
@@ -493,8 +445,6 @@ export function UserManagementPage() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveUser}
-                initialData={editingUser}
-                isLastAdmin={editingUser?.role === "Admin" && adminCount <= 1}
             />
         </div>
     );
