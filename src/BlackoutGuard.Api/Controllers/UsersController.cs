@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BlackoutGuard.Application.DTOs;
@@ -44,7 +45,6 @@ public class UsersController : ControllerBase
         var tenantId = GetTenantId();
         var result = await _createUserUseCase.ExecuteAsync(tenantId, request.Email, request.Password, request.Role, ct);
 
-        // CS8602 Warning Fix: result.Value Null-Safe checking 
         return (result.IsSuccess && result.Value is not null)
             ? CreatedAtAction(nameof(List), new { id = result.Value.Id }, result.Value)
             : BadRequest(result.ErrorMessage);
@@ -70,17 +70,32 @@ public class UsersController : ControllerBase
 
     private Guid GetTenantId()
     {
-        var claim = User.FindFirst("tenant_id") ?? User.FindFirst("tenantId");
-        if (claim is null)
-            throw new UnauthorizedAccessException("Tenant ID not found in token.");
-        return Guid.Parse(claim.Value);
+        var claim = User.FindFirst("tenant_id")
+                 ?? User.FindFirst("tenantId")
+                 ?? User.FindFirst("TenantId");
+
+        if (claim is null || !Guid.TryParse(claim.Value, out var tenantId))
+        {
+            throw new UnauthorizedAccessException("Tenant ID not found or invalid in token.");
+        }
+
+        return tenantId;
     }
 
     private Guid GetCurrentUserId()
     {
-        var claim = User.FindFirst("user_id") ?? User.FindFirst("userId") ?? User.FindFirst("nameid");
-        if (claim is null)
-            throw new UnauthorizedAccessException("User ID not found in token.");
-        return Guid.Parse(claim.Value);
+        // ASP.NET Core JWT Middleware maps NameIdentifier/sub automatically
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier)
+                 ?? User.FindFirst("sub")
+                 ?? User.FindFirst("user_id")
+                 ?? User.FindFirst("userId")
+                 ?? User.FindFirst("id");
+
+        if (claim is null || !Guid.TryParse(claim.Value, out var userId))
+        {
+            throw new UnauthorizedAccessException("User ID not found or invalid in token.");
+        }
+
+        return userId;
     }
 }

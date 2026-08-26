@@ -1,0 +1,8 @@
+.gitignore
+.vs
+BlackoutGuard.slnx
+client
+docs
+filelist.txt
+src
+tests

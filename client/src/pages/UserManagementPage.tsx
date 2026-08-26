@@ -63,7 +63,7 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
         e.preventDefault();
         setValidationError(null);
 
-        // Password validation စစ်ဆေးခြင်း
+        // Password validation check
         if (!validatePassword(password)) {
             setValidationError(
                 "Password တွင် အနည်းဆုံး ၈ လုံး၊ စာလုံးကြီး၊ စာလုံးငယ်၊ နံပါတ် နှင့် Special Character ပါဝင်ရပါမည်။"
