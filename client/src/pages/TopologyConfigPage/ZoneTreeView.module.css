@@ -93,3 +93,58 @@
     color: #64748b;
     margin-left: auto;
 }
+
+.actionGroup {
+    margin-left: auto;
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.iconBtn,
+.iconBtnDanger {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+    .iconBtn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .iconBtnDanger:hover {
+        background: rgba(239, 68, 68, 0.2);
+    }
+
+.editContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.editInput {
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #f8fafc;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.actionBtnBtn {
+    background: #334155;
+    color: #fff;
+    border: none;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+    .actionBtnBtn:hover {
+        background: #475569;
+    }

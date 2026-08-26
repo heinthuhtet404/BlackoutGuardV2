@@ -1,6 +1,7 @@
 using BlackoutGuard.Application.DTOs;
 using BlackoutGuard.Application.Services;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -60,7 +61,8 @@ public class EvaluateSheddingUseCase
             {
                 LoadId = load.Id,
                 LoadName = load.Name,
-                RelayAddress = load.RelayAddress,
+                // RelayAddress က int? (Nullable) ဖြစ်နေသဖြင့် int သို့ မပြောင်းမီ Null Check / Fallback ထည့်သွင်းထားသည်
+                RelayAddress = load.RelayAddress ?? 0,
                 PowerRatingKw = load.PowerRatingKw,
                 Priority = load.Priority,
                 CriticalityScore = load.CriticalityScore,

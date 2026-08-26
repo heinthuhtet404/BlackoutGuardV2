@@ -217,7 +217,7 @@ export function LiveOverviewPage() {
                 <div className={styles.card}>
                     <h3 className={styles.cardLabel}>⚡ Active Real-Time Load</h3>
                     <p className={`${styles.cardValue} ${styles.valueAmber}`}>
-                        {telemetry ? `${telemetry.totalLoadKw.toFixed(1)} kW` : "—"}
+                        {loadingDbData ? "..." : `${totalConfiguredKw.toFixed(1)} kW`}
                     </p>
                 </div>
 

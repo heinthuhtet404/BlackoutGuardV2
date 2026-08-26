@@ -30,6 +30,7 @@ public sealed class UpdateUserUseCase
         if (user.TenantId != tenantId)
             return Result<UserDto>.Failure("User not found in this tenant.");
 
+        // Last Admin Demotion Protection
         if (request.Role is not null && request.Role != "Admin" && user.Role == "Admin")
         {
             var adminCount = await _userRepository.CountAdminsInTenantAsync(tenantId, ct);
@@ -37,6 +38,7 @@ public sealed class UpdateUserUseCase
                 return Result<UserDto>.Failure("Cannot demote the last Admin in the tenant.");
         }
 
+        // Apply Core Field Updates
         if (!string.IsNullOrWhiteSpace(request.Email))
             user.Email = request.Email;
 
@@ -45,6 +47,19 @@ public sealed class UpdateUserUseCase
 
         if (request.IsActive.HasValue)
             user.IsActive = request.IsActive.Value;
+
+        // Safe Defaults and Null-Coalescing for Optional Fields
+        if (request.FullName is not null)
+            user.FullName = string.IsNullOrWhiteSpace(request.FullName) ? null : request.FullName;
+
+        if (request.FacilityLocation is not null)
+            user.FacilityLocation = string.IsNullOrWhiteSpace(request.FacilityLocation) ? null : request.FacilityLocation;
+
+        if (request.OrganizationName is not null)
+            user.OrganizationName = string.IsNullOrWhiteSpace(request.OrganizationName) ? null : request.OrganizationName;
+
+        if (request.GeneratorCapacity.HasValue)
+            user.GeneratorCapacity = request.GeneratorCapacity.Value;
 
         user.UpdatedAt = DateTime.UtcNow;
 
@@ -57,7 +72,11 @@ public sealed class UpdateUserUseCase
             Email = user.Email,
             Role = user.Role,
             IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            FullName = user.FullName,
+            FacilityLocation = user.FacilityLocation,
+            GeneratorCapacity = user.GeneratorCapacity,
+            OrganizationName = user.OrganizationName
         });
     }
 }

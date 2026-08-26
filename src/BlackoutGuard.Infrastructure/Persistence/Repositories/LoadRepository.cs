@@ -5,6 +5,11 @@ using BlackoutGuard.Infrastructure.Persistence;
 using BlackoutGuard.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BlackoutGuard.Infrastructure.Persistence.Repositories;
 
@@ -45,9 +50,8 @@ public class LoadRepository : ILoadRepository
         if (zoneId.HasValue)
             query = query.Where(l => l.ZoneId == zoneId.Value);
 
-        return await query
-            .Select(l => MapToDto(l))
-            .ToListAsync(ct);
+        var loads = await query.ToListAsync(ct);
+        return loads.Select(MapToDto).ToList();
     }
 
     public async Task<List<LoadDto>> GetP1LoadsAsync(Guid facilityId, Guid? excludeLoadId = null, CancellationToken ct = default)
@@ -58,9 +62,8 @@ public class LoadRepository : ILoadRepository
         if (excludeLoadId.HasValue)
             query = query.Where(l => l.Id != excludeLoadId.Value);
 
-        return await query
-            .Select(l => MapToDto(l))
-            .ToListAsync(ct);
+        var loads = await query.ToListAsync(ct);
+        return loads.Select(MapToDto).ToList();
     }
 
     public async Task<Guid> AddAsync(LoadDto load, CancellationToken ct = default)
@@ -71,7 +74,8 @@ public class LoadRepository : ILoadRepository
             FacilityId = load.FacilityId,
             ZoneId = load.ZoneId,
             Name = load.Name,
-            RelayAddress = load.RelayAddress,
+            // int? to int conversion fix for Entity
+            RelayAddress = load.RelayAddress ?? 0,
             PowerRatingKw = load.PowerRatingKw,
             Priority = load.Priority,
             PriorityMode = load.PriorityMode,
@@ -94,7 +98,9 @@ public class LoadRepository : ILoadRepository
             && pgEx.SqlState == PostgresErrorCodes.UniqueViolation
             && pgEx.ConstraintName == "uq_relay_per_facility")
         {
-            throw new RelayConflictException(load.RelayAddress, load.Name);
+            // int? to int explicit conversion fix for Exception
+            int relay = load.RelayAddress.HasValue ? load.RelayAddress.Value : 0;
+            throw new RelayConflictException(relay, load.Name);
         }
 
         return entity.Id;
@@ -109,7 +115,8 @@ public class LoadRepository : ILoadRepository
             return;
 
         entity.Name = load.Name;
-        entity.RelayAddress = load.RelayAddress;
+        // int? to int conversion fix for Entity assignment
+        entity.RelayAddress = load.RelayAddress ?? 0;
         entity.PowerRatingKw = load.PowerRatingKw;
         entity.Priority = load.Priority;
         entity.PriorityMode = load.PriorityMode;
@@ -129,7 +136,9 @@ public class LoadRepository : ILoadRepository
             && pgEx.SqlState == PostgresErrorCodes.UniqueViolation
             && pgEx.ConstraintName == "uq_relay_per_facility")
         {
-            throw new RelayConflictException(load.RelayAddress, load.Name);
+            // int? to int explicit conversion fix for Exception
+            int relay = load.RelayAddress.HasValue ? load.RelayAddress.Value : 0;
+            throw new RelayConflictException(relay, load.Name);
         }
     }
 

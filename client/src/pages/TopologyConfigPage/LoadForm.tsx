@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, useEffect, type FormEvent, type ReactNode } from "react";
 import { useZones } from "../../hooks/useZones";
 import { ApiError, post, put } from "../../api/apiClient";
 import { Button } from "../../components/ui/Button";
@@ -71,6 +71,20 @@ export function LoadForm({ loadId, initialValues, onSaved, onCreated }: LoadForm
 
     const flatZones = flattenZones(zones ?? []);
     const isEdit = loadId !== undefined;
+
+    useEffect(() => {
+        if (initialValues) {
+            if (initialValues.name !== undefined) setName(initialValues.name);
+            if (initialValues.zoneId !== undefined) setZoneId(initialValues.zoneId);
+            if (initialValues.relayAddress !== undefined) setRelayAddress(initialValues.relayAddress);
+            if (initialValues.powerRatingKw !== undefined) setPowerRatingKw(initialValues.powerRatingKw);
+            if (initialValues.isSheddable !== undefined) setIsSheddable(initialValues.isSheddable);
+            if (initialValues.safetyRisk !== undefined) setSafetyRisk(initialValues.safetyRisk);
+            if (initialValues.dataLossRisk !== undefined) setDataLossRisk(initialValues.dataLossRisk);
+            if (initialValues.operationalRisk !== undefined) setOperationalRisk(initialValues.operationalRisk);
+            if (initialValues.comfortRisk !== undefined) setComfortRisk(initialValues.comfortRisk);
+        }
+    }, [initialValues]);
 
     const submit = async (force: boolean) => {
         setRelayError(null);

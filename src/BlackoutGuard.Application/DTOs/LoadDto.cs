@@ -9,11 +9,17 @@ public class LoadDto
     public int? RelayAddress { get; set; }
     public double PowerRatingKw { get; set; }
 
-    // Priority properties
-    public string Priority { get; set; } = "P1"; // "P1", "P2", "P3"
+    // Priority Properties
+    public string Priority { get; set; } = "P3"; // Default P3
     public string PriorityMode { get; set; } = "auto";
 
-    // Criticality Assessment Scores
+    // Criticality Assessment / Risk Scores (Mapped from Frontend)
+    public int SafetyRisk { get; set; } = 5;
+    public int DataLossRisk { get; set; } = 5;
+    public int OperationalRisk { get; set; } = 5;
+    public int ComfortRisk { get; set; } = 5;
+
+    // Legacy Question-based Scores
     public short? CriticalityQ1 { get; set; }
     public short? CriticalityQ2 { get; set; }
     public short? CriticalityQ3 { get; set; }
@@ -34,21 +40,7 @@ public class LoadDto
             {
                 return pNum;
             }
-            return 1; // Default P1
+            return 3;
         }
     }
-}
-
-public class ZoneDto
-{
-    public Guid Id { get; set; }
-    public Guid FacilityId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public Guid? ParentZoneId { get; set; }
-
-    // Navigation and Hierarchy Lists
-    public List<LoadDto> Loads { get; set; } = new();
-    public List<ZoneDto> Children { get; set; } = new();
-    public List<ZoneDto> SubZones { get; set; } = new(); // Alias for UI tree mapping
 }
