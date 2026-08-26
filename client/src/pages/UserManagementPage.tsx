@@ -24,7 +24,6 @@ interface UserModalProps {
     onSave: (userData: Partial<User> & { sendWelcomeEmail?: boolean }) => Promise<void>;
 }
 
-// Password complexity validation logic
 const validatePassword = (pwd: string) => {
     return (
         pwd.length >= 8 &&
@@ -63,7 +62,6 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
         e.preventDefault();
         setValidationError(null);
 
-        // Password validation check
         if (!validatePassword(password)) {
             setValidationError(
                 "Password တွင် အနည်းဆုံး ၈ လုံး၊ စာလုံးကြီး၊ စာလုံးငယ်၊ နံပါတ် နှင့် Special Character ပါဝင်ရပါမည်။"
@@ -92,7 +90,10 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
     return (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
             <div className={styles.modal}>
-                <h2 className={styles.modalHeader}>👤 Create New User</h2>
+                <div className={styles.modalHeader}>
+                    <h2>👤 Create New User</h2>
+                    <button type="button" className={styles.modalClose} onClick={onClose}>✕</button>
+                </div>
                 <form onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
                         <label htmlFor="fullName">Full Name</label>
@@ -144,7 +145,7 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                     </div>
 
                     {validationError && (
-                        <div style={{ color: "#ef4444", fontSize: "13px", marginBottom: "12px", lineHeight: "1.4" }}>
+                        <div className={styles.validationError}>
                             ⚠️ {validationError}
                         </div>
                     )}
@@ -327,7 +328,7 @@ export function UserManagementPage() {
             <div className={styles.headerContainer}>
                 <div>
                     <h1 className={styles.heading}>👥 User Management</h1>
-                    <div className={styles.subHeading}>Configure user permissions, roles, and access credentials.</div>
+                    <p className={styles.subHeading}>Configure user permissions, roles, and access credentials.</p>
                 </div>
                 <button className={styles.createBtn} onClick={handleCreateUser}>
                     + Create User
@@ -355,7 +356,10 @@ export function UserManagementPage() {
             </div>
 
             {loading ? (
-                <div className={styles.loading}>Loading user registry...</div>
+                <div className={styles.loadingState}>
+                    <span className={styles.spinner}></span>
+                    Loading user registry...
+                </div>
             ) : (
                 <>
                     <div className={styles.tableWrapper}>
@@ -367,14 +371,15 @@ export function UserManagementPage() {
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Status</th>
-                                    <th>Password Credential</th>
+                                    <th>Password</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredUsers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} style={{ textAlign: "center", padding: "2rem", color: "#94a3b8" }}>
+                                        <td colSpan={7} className={styles.emptyRow}>
+                                            <span className={styles.emptyIcon}>📭</span>
                                             No users matched your criteria.
                                         </td>
                                     </tr>
@@ -385,47 +390,45 @@ export function UserManagementPage() {
                                         const isPasswordVisible = visiblePasswords[u.id];
 
                                         return (
-                                            <tr key={u.id}>
+                                            <tr key={u.id} className={isSelf ? styles.selfRow : ""}>
                                                 <td>{index + 1}</td>
                                                 <td>
-                                                    <strong>{u.fullName || u.username || "—"}</strong>
+                                                    <span className={styles.userName}>{u.fullName || u.username || "—"}</span>
+                                                    {isSelf && <span className={styles.selfBadge}>You</span>}
                                                 </td>
-                                                <td>{u.email}</td>
+                                                <td className={styles.userEmail}>{u.email}</td>
                                                 <td>{getRoleBadge(u.role)}</td>
                                                 <td>{getStatusStyle(u.status)}</td>
                                                 <td>
-                                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                        <span style={{ fontFamily: "monospace", color: isPasswordVisible ? "#0f172a" : "#64748b" }}>
-                                                            {isPasswordVisible ? u.password || "[Hashed/Protected]" : "••••••••"}
+                                                    <div className={styles.passwordCell}>
+                                                        <span className={styles.passwordText}>
+                                                            {isPasswordVisible ? u.password || "[Hashed]" : "••••••••"}
                                                         </span>
                                                         <button
                                                             type="button"
-                                                            className={styles.eyeIconBtn}
+                                                            className={styles.eyeBtnSmall}
                                                             onClick={() => togglePasswordVisibility(u.id)}
                                                             title={isPasswordVisible ? "Hide password" : "Show password"}
-                                                            style={{ border: "none", background: "transparent", cursor: "pointer" }}
                                                         >
                                                             {isPasswordVisible ? "🙈" : "👁️"}
                                                         </button>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div className={styles.actionCell}>
-                                                        <button
-                                                            className={styles.deleteBtn}
-                                                            disabled={isSelf || isLastAdmin}
-                                                            title={
-                                                                isSelf
-                                                                    ? "Cannot delete self"
-                                                                    : isLastAdmin
-                                                                        ? "Cannot delete last admin"
-                                                                        : "Delete user"
-                                                            }
-                                                            onClick={() => handleDeleteUser(u)}
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
+                                                    <button
+                                                        className={styles.deleteBtn}
+                                                        disabled={isSelf || isLastAdmin}
+                                                        title={
+                                                            isSelf
+                                                                ? "Cannot delete self"
+                                                                : isLastAdmin
+                                                                    ? "Cannot delete last admin"
+                                                                    : "Delete user"
+                                                        }
+                                                        onClick={() => handleDeleteUser(u)}
+                                                    >
+                                                        🗑️ Delete
+                                                    </button>
                                                 </td>
                                             </tr>
                                         );
@@ -436,7 +439,7 @@ export function UserManagementPage() {
                     </div>
 
                     <div className={styles.footer}>
-                        Showing {filteredUsers.length} of {users.length} users
+                        Showing <strong>{filteredUsers.length}</strong> of <strong>{users.length}</strong> users
                     </div>
                 </>
             )}

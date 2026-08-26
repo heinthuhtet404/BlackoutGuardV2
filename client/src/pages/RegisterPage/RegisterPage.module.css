@@ -22,6 +22,8 @@
     --success-soft: rgba(52, 211, 153, 0.12);
     --shadow: rgba(0, 0, 0, 0.40);
     --shadow-heavy: rgba(0, 0, 0, 0.50);
+    --gradient-start: #1a1d24;
+    --gradient-end: #0f1117;
 }
 
 /* ========================================
@@ -34,15 +36,15 @@
     justify-content: center;
     background: var(--bg-page, #0f1117);
     padding: 24px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-image: radial-gradient(ellipse at 20% 50%, rgba(248, 113, 113, 0.05) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(52, 211, 153, 0.03) 0%, transparent 60%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-image: radial-gradient(ellipse at 20% 50%, rgba(248, 113, 113, 0.04) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(52, 211, 153, 0.03) 0%, transparent 60%);
 }
 
 .container {
     display: flex;
-    max-width: 1024px;
+    max-width: 1120px;
     width: 100%;
-    min-height: 580px;
+    min-height: 640px;
     background: var(--bg-card, #1a1d24);
     border-radius: 24px;
     box-shadow: 0 24px 80px var(--shadow, rgba(0, 0, 0, 0.40));
@@ -55,9 +57,9 @@
    HERO / LEFT SECTION
    ======================================== */
 .heroSection {
-    flex: 0 0 44%;
+    flex: 0 0 42%;
     background: linear-gradient(160deg, #1f2430 0%, #13161b 100%);
-    padding: 48px 36px;
+    padding: 48px 40px;
     display: flex;
     align-items: center;
     position: relative;
@@ -68,27 +70,25 @@
     .heroSection::before {
         content: "";
         position: absolute;
-        top: -30%;
-        right: -30%;
-        width: 400px;
-        height: 400px;
+        top: -40%;
+        right: -20%;
+        width: 300px;
+        height: 300px;
         border-radius: 50%;
         background: rgba(248, 113, 113, 0.06);
-        filter: blur(80px);
-        pointer-events: none;
+        filter: blur(60px);
     }
 
     .heroSection::after {
         content: "";
         position: absolute;
-        bottom: -20%;
-        left: -20%;
-        width: 250px;
-        height: 250px;
+        bottom: -30%;
+        left: -10%;
+        width: 200px;
+        height: 200px;
         border-radius: 50%;
         background: rgba(52, 211, 153, 0.04);
-        filter: blur(60px);
-        pointer-events: none;
+        filter: blur(50px);
     }
 
 .heroContent {
@@ -98,29 +98,24 @@
 }
 
 .brandBadge {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+    display: inline-block;
     background: rgba(255, 255, 255, 0.06);
-    padding: 8px 18px;
+    padding: 6px 16px;
     border-radius: 100px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.80);
+    letter-spacing: 0.3px;
+    color: rgba(255, 255, 255, 0.70);
     backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    margin-bottom: 28px;
+    margin-bottom: 24px;
 }
 
-    .brandBadge svg {
-        color: var(--accent-red, #f87171);
-    }
-
 .heroTitle {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 700;
     line-height: 1.2;
-    margin: 0 0 14px 0;
+    margin: 0 0 12px 0;
     letter-spacing: -0.5px;
     color: #e8edf5;
     background: linear-gradient(135deg, #e8edf5 0%, #94a3b8 100%);
@@ -130,44 +125,39 @@
 }
 
 .heroSubtext {
-    font-size: 15px;
-    line-height: 1.7;
-    color: rgba(255, 255, 255, 0.45);
-    margin: 0 0 36px 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.50);
+    margin: 0 0 32px 0;
     max-width: 320px;
 }
 
-.stats {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.stat {
+.features {
     display: flex;
     flex-direction: column;
+    gap: 12px;
+}
+
+.feature {
+    display: flex;
     align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.70);
 }
 
-.statValue {
-    font-size: 22px;
+.featureIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-red, #f87171);
+    color: #0f1117;
+    font-size: 13px;
     font-weight: 700;
-    color: #e8edf5;
-    letter-spacing: -0.3px;
-}
-
-.statLabel {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.35);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 2px;
-}
-
-.statDivider {
-    width: 1px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
 }
 
 /* ========================================
@@ -175,11 +165,11 @@
    ======================================== */
 .card {
     flex: 1;
-    padding: 48px 40px;
+    padding: 48px 44px;
     background: var(--bg-card, #1a1d24);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    overflow-y: auto;
 }
 
 .cardHeader {
@@ -187,7 +177,7 @@
 }
 
 .cardTitle {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 600;
     color: var(--text-primary, #e8edf5);
     margin: 0 0 4px 0;
@@ -201,102 +191,81 @@
 }
 
 /* ========================================
-   INPUT GROUPS
+   FORM GRID
    ======================================== */
-.inputGroup {
-    margin-bottom: 4px;
+.formGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
 }
 
-    .inputGroup :global(.input-wrapper) {
+.formLeft,
+.formRight {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+    /* ========================================
+   INPUT OVERRIDES (Dark)
+   ======================================== */
+    .formLeft :global(.input-wrapper),
+    .formRight :global(.input-wrapper) {
         background: var(--bg-input, #13161b) !important;
         border-color: var(--border-input, #2a2f38) !important;
         border-radius: 10px !important;
         transition: all 0.2s ease !important;
     }
 
-        .inputGroup :global(.input-wrapper):focus-within {
+        .formLeft :global(.input-wrapper):focus-within,
+        .formRight :global(.input-wrapper):focus-within {
             border-color: var(--accent-red, #f87171) !important;
             box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12)) !important;
         }
 
-        .inputGroup :global(.input-wrapper) input {
+        .formLeft :global(.input-wrapper) input,
+        .formRight :global(.input-wrapper) input {
             background: transparent !important;
             color: var(--text-primary, #e8edf5) !important;
         }
 
-            .inputGroup :global(.input-wrapper) input::placeholder {
+            .formLeft :global(.input-wrapper) input::placeholder,
+            .formRight :global(.input-wrapper) input::placeholder {
                 color: var(--text-muted, #64748b) !important;
             }
 
-    .inputGroup :global(.input-label) {
+    .formLeft :global(.input-label),
+    .formRight :global(.input-label) {
         color: var(--text-secondary, #94a3b8) !important;
     }
 
-.passwordWrapper {
-    position: relative;
-}
-
-    .passwordWrapper :global(.input-wrapper) {
-        position: relative;
-    }
-
-    .passwordWrapper input {
-        padding-right: 44px !important;
-    }
-
-.eyeButton {
-    position: absolute;
-    right: 12px;
-    bottom: 10px;
-    background: none;
-    border: none;
-    color: var(--text-muted, #64748b);
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-}
-
-    .eyeButton:hover {
-        color: var(--text-secondary, #94a3b8);
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .eyeButton svg {
-        color: currentColor;
-    }
-
 /* ========================================
-   REMEMBER ME
+   TERMS
    ======================================== */
-.rememberRow {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin: 6px 0 14px 0;
+.termsSection {
+    margin: 20px 0 16px 0;
+    padding: 12px 0 4px 0;
+    border-top: 1px solid var(--border-soft, #22262e);
 }
 
 .checkboxLabel {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 12px;
     cursor: pointer;
     font-size: 14px;
     color: var(--text-secondary, #94a3b8);
-    user-select: none;
+    line-height: 1.5;
 }
 
 .checkbox {
-    width: 17px;
-    height: 17px;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
     accent-color: var(--accent-red, #f87171);
     cursor: pointer;
     border-radius: 4px;
-    flex-shrink: 0;
     background: var(--bg-input, #13161b);
     border: 1px solid var(--border-input, #2a2f38);
 }
@@ -304,6 +273,22 @@
     .checkbox:checked {
         background: var(--accent-red, #f87171);
         border-color: var(--accent-red, #f87171);
+    }
+
+.checkboxText {
+    color: var(--text-secondary, #94a3b8);
+}
+
+.termsLink {
+    color: var(--accent-red, #f87171);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+    .termsLink:hover {
+        color: var(--accent-hover, #ef4444);
+        text-decoration: underline;
     }
 
 /* ========================================
@@ -319,7 +304,7 @@
     border-left: 4px solid var(--accent-red, #f87171);
     color: var(--accent-red, #f87171);
     font-size: 14px;
-    margin: 4px 0 12px 0;
+    margin: 4px 0 8px 0;
 }
 
 .errorIcon {
@@ -344,7 +329,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
+    gap: 10px !important;
     margin-top: 4px;
 }
 
@@ -359,14 +344,6 @@
         cursor: not-allowed;
         transform: none !important;
     }
-
-.btnIcon {
-    transition: transform 0.2s ease;
-}
-
-.submitBtn:hover:not(:disabled) .btnIcon {
-    transform: translateX(3px);
-}
 
 /* ========================================
    SPINNER
@@ -392,73 +369,21 @@
    ======================================== */
 .footer {
     margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary, #94a3b8);
 }
 
-.adminNotice {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text-muted, #64748b);
-    justify-content: center;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-    .adminNotice svg {
-        color: var(--text-muted, #64748b);
-        flex-shrink: 0;
-    }
-
-.divider {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-}
-
-.dividerLine {
-    flex: 1;
-    height: 1px;
-    background: var(--border-soft, #22262e);
-}
-
-.dividerText {
-    font-size: 12px;
-    color: var(--text-muted, #64748b);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-}
-
-.registerButton {
-    width: 100%;
-    padding: 12px 20px;
-    background: transparent;
-    border: 2px solid var(--border-card, #2a2f38);
-    border-radius: 12px;
-    color: var(--text-primary, #e8edf5);
-    font-size: 15px;
+.loginLink {
+    color: var(--accent-red, #f87171);
+    text-decoration: none;
     font-weight: 600;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-family: inherit;
+    transition: color 0.2s;
 }
 
-    .registerButton:hover {
-        background: rgba(255, 255, 255, 0.04);
-        border-color: var(--text-secondary, #94a3b8);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20);
+    .loginLink:hover {
+        color: var(--accent-hover, #ef4444);
+        text-decoration: underline;
     }
 
 /* ========================================
@@ -476,13 +401,13 @@
     .heroSection {
         flex: none;
         padding: 32px 36px;
-        min-height: 180px;
+        min-height: 200px;
         border-right: none;
         border-bottom: 1px solid var(--border-card, #2a2f38);
     }
 
     .heroTitle {
-        font-size: 26px;
+        font-size: 28px;
     }
 
     .heroSubtext {
@@ -490,20 +415,28 @@
         margin-bottom: 20px;
     }
 
-    .stats {
-        gap: 12px;
+    .features {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px 20px;
     }
 
-    .statValue {
-        font-size: 18px;
+    .feature {
+        font-size: 14px;
     }
 
     .card {
-        padding: 36px 32px;
+        padding: 32px 28px;
     }
 
-    .cardTitle {
-        font-size: 24px;
+    .formGrid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .formLeft,
+    .formRight {
+        gap: 12px;
     }
 }
 
@@ -512,7 +445,7 @@
     .page {
         padding: 12px;
         align-items: flex-start;
-        padding-top: 16px;
+        padding-top: 20px;
     }
 
     .container {
@@ -520,54 +453,43 @@
     }
 
     .heroSection {
-        padding: 20px 20px;
-        min-height: 140px;
+        padding: 24px 20px;
+        min-height: 160px;
     }
 
     .brandBadge {
-        font-size: 12px;
-        padding: 6px 14px;
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-
-        .brandBadge svg {
-            width: 16px;
-            height: 16px;
-        }
-
-    .heroTitle {
-        font-size: 20px;
-    }
-
-    .heroSubtext {
-        font-size: 13px;
+        font-size: 11px;
+        padding: 4px 12px;
         margin-bottom: 14px;
     }
 
-    .stats {
+    .heroTitle {
+        font-size: 22px;
+    }
+
+    .heroSubtext {
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+
+    .features {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .feature {
+        font-size: 13px;
         gap: 10px;
-        flex-wrap: wrap;
     }
 
-    .statValue {
-        font-size: 16px;
-    }
-
-    .statLabel {
-        font-size: 10px;
-    }
-
-    .statDivider {
-        height: 24px;
+    .featureIcon {
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
     }
 
     .card {
         padding: 24px 18px;
-    }
-
-    .cardHeader {
-        margin-bottom: 20px;
     }
 
     .cardTitle {
@@ -578,19 +500,23 @@
         font-size: 14px;
     }
 
-    .eyeButton {
-        bottom: 8px;
-        right: 10px;
+    .formGrid {
+        gap: 10px;
     }
 
-        .eyeButton svg {
-            width: 16px;
-            height: 16px;
-        }
+    .formLeft,
+    .formRight {
+        gap: 10px;
+    }
+
+    .termsSection {
+        margin: 12px 0 10px 0;
+        padding: 10px 0 2px 0;
+    }
 
     .checkboxLabel {
         font-size: 13px;
-        gap: 8px;
+        gap: 10px;
     }
 
     .checkbox {
@@ -601,11 +527,6 @@
     .error {
         font-size: 13px;
         padding: 10px 14px;
-        gap: 8px;
-    }
-
-    .errorIcon {
-        font-size: 16px;
     }
 
     .submitBtn {
@@ -615,54 +536,20 @@
     }
 
     .footer {
-        gap: 12px;
+        font-size: 13px;
         margin-top: 16px;
-    }
-
-    .adminNotice {
-        font-size: 12px;
-        padding: 6px 12px;
-        gap: 6px;
-    }
-
-        .adminNotice svg {
-            width: 14px;
-            height: 14px;
-        }
-
-    .divider {
-        gap: 12px;
-    }
-
-    .dividerText {
-        font-size: 11px;
-    }
-
-    .registerButton {
-        padding: 10px 16px;
-        font-size: 14px;
-        border-radius: 10px;
     }
 }
 
 /* Small mobile */
 @media (max-width: 400px) {
     .heroSection {
-        padding: 16px 16px;
-        min-height: 110px;
+        padding: 18px 16px;
+        min-height: 130px;
     }
 
     .heroTitle {
-        font-size: 17px;
-    }
-
-    .heroSubtext {
-        font-size: 12px;
-        margin-bottom: 10px;
-    }
-
-    .statValue {
-        font-size: 14px;
+        font-size: 19px;
     }
 
     .card {
@@ -671,9 +558,5 @@
 
     .cardTitle {
         font-size: 19px;
-    }
-
-    .cardSubtitle {
-        font-size: 13px;
     }
 }

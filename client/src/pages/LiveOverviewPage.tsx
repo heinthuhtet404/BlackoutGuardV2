@@ -32,7 +32,6 @@ interface ZoneDto {
     children?: ZoneDto[];
 }
 
-// Helper: Extract numeric priority (1, 2, or 3) safely from any backend payload format
 function getLoadPriorityNum(load: LoadDto): number {
     if (typeof load.priorityLevel === "number") return load.priorityLevel;
     if (typeof load.priority === "number") return load.priority;
@@ -40,10 +39,9 @@ function getLoadPriorityNum(load: LoadDto): number {
         const parsed = parseInt(load.priority.replace(/\D/g, ""), 10);
         if (!isNaN(parsed)) return parsed;
     }
-    return 1; // Default fallback
+    return 1;
 }
 
-// Helper: Recursively aggregate loads across zone hierarchy
 function getAllZoneLoads(zone: ZoneDto): LoadDto[] {
     let loads: LoadDto[] = Array.isArray(zone.loads) ? [...zone.loads] : [];
     const childZones = zone.children || zone.subZones || [];
@@ -60,15 +58,12 @@ function getAllZoneLoads(zone: ZoneDto): LoadDto[] {
 export function LiveOverviewPage() {
     const { telemetry, connected, latestDecision } = useTelemetry();
 
-    // 1. Dynamic Database States
     const [zones, setZones] = useState<ZoneDto[]>([]);
     const [loadingDbData, setLoadingDbData] = useState<boolean>(true);
 
-    // 2. Telemetry History & Alarms
     const [freqHistory, setFreqHistory] = useState<number[]>([]);
     const [alarms, setAlarms] = useState<AlarmLog[]>([]);
 
-    // Fetch Zone Hierarchy from API
     useEffect(() => {
         const fetchZonesAndLoads = async () => {
             try {
@@ -84,7 +79,6 @@ export function LiveOverviewPage() {
         fetchZonesAndLoads();
     }, []);
 
-    // Track Frequency Updates for Chart & Warning Alarms
     useEffect(() => {
         if (!telemetry) return;
 
@@ -95,7 +89,7 @@ export function LiveOverviewPage() {
             const alarmMsg = `⚠️ Low Frequency Warning: ${telemetry.frequency.toFixed(2)} Hz`;
 
             setAlarms((prev) => {
-                if (prev[0]?.message === alarmMsg) return prev; // Avoid duplicate consecutive logs
+                if (prev[0]?.message === alarmMsg) return prev;
                 return [
                     {
                         id: `${Date.now()}-${Math.random()}`,
@@ -109,7 +103,6 @@ export function LiveOverviewPage() {
         }
     }, [telemetry]);
 
-    // Track Relay Decisions for Alarms
     useEffect(() => {
         if (!latestDecision) return;
 
@@ -135,7 +128,6 @@ export function LiveOverviewPage() {
 
     const systemMode = getSystemMode();
 
-    // Aggregated Load Calculations
     const allLoads = zones.flatMap((z) => getAllZoneLoads(z));
     const totalConfiguredKw = allLoads.reduce((sum, l) => sum + (l.powerRatingKw || 0), 0);
 
@@ -153,14 +145,13 @@ export function LiveOverviewPage() {
     const p2Pct = totalConfiguredKw > 0 ? Math.round((p2Kw / totalConfiguredKw) * 100) : 0;
     const p3Pct = totalConfiguredKw > 0 ? Math.round((p3Kw / totalConfiguredKw) * 100) : 0;
 
-    // Relay Status Lookup
     const getLoadStatus = (relayAddress?: number) => {
-        if (!relayAddress || !latestDecision?.relayDecisions) return "🟢 Normal";
+        if (!relayAddress || !latestDecision?.relayDecisions) return "Normal";
         const decision = latestDecision.relayDecisions.find((r: RelayDecision) => r.relayAddress === relayAddress);
         if (decision) {
-            return decision.energize ? "🟢 Normal" : "🟡 Shedded";
+            return decision.energize ? "Normal" : "Shedded";
         }
-        return "🟢 Normal";
+        return "Normal";
     };
 
     const renderFrequencyChart = () => {
@@ -181,21 +172,38 @@ export function LiveOverviewPage() {
 
         return (
             <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-                <line x1="0" y1="25" x2={width} y2="25" stroke="#334155" strokeDasharray="2,2" />
-                <line x1="0" y1="50" x2={width} y2="50" stroke="#475569" strokeDasharray="4,4" />
-                <line x1="0" y1="75" x2={width} y2="75" stroke="#334155" strokeDasharray="2,2" />
-                <polyline fill="none" stroke={isUnderFrequency ? "#ef4444" : "#10b981"} strokeWidth="2.5" points={points} />
+                <line x1="0" y1="25" x2={width} y2="25" stroke="var(--border-soft)" strokeDasharray="2,2" opacity="0.3" />
+                <line x1="0" y1="50" x2={width} y2="50" stroke="var(--border-soft)" strokeDasharray="4,4" opacity="0.3" />
+                <line x1="0" y1="75" x2={width} y2="75" stroke="var(--border-soft)" strokeDasharray="2,2" opacity="0.3" />
+                <polyline
+                    fill="none"
+                    stroke={isUnderFrequency ? "var(--accent-red)" : "var(--success)"}
+                    strokeWidth="2.5"
+                    points={points}
+                />
+                <polyline
+                    fill="none"
+                    stroke={isUnderFrequency ? "var(--accent-red)" : "var(--success)"}
+                    strokeWidth="2.5"
+                    points={points}
+                    opacity="0.15"
+                    strokeLinecap="round"
+                />
             </svg>
         );
     };
 
     return (
         <div className={styles.page}>
-            {/* Header Banner */}
+            {/* Header */}
             <div className={styles.headerRow}>
-                <h1 className={styles.heading}>📊 Live Overview</h1>
+                <div>
+                    <h1 className={styles.heading}>Live Overview</h1>
+                    <p className={styles.headingSub}>Real-time monitoring & control</p>
+                </div>
                 <div className={`${styles.systemModeBanner} ${systemMode.className}`}>
-                    ● {systemMode.text}
+                    <span className={styles.modeDot}></span>
+                    {systemMode.text}
                 </div>
             </div>
 
@@ -205,64 +213,84 @@ export function LiveOverviewPage() {
                 </span>
             </div>
 
-            {/* Telemetry Cards Grid */}
+            {/* KPI Cards */}
             <div className={styles.grid}>
                 <div className={`${styles.card} ${isUnderFrequency ? styles.cardDanger : ""}`}>
-                    <h3 className={styles.cardLabel}>⚡ Grid Voltage</h3>
-                    <p className={`${styles.cardValue} ${styles.valueBlue}`}>
-                        {telemetry ? `${telemetry.voltage.toFixed(1)} V` : "—"}
-                    </p>
+                    <div className={styles.cardIcon}>⚡</div>
+                    <div className={styles.cardContent}>
+                        <h3 className={styles.cardLabel}>Grid Voltage</h3>
+                        <p className={`${styles.cardValue} ${styles.valueBlue}`}>
+                            {telemetry ? `${telemetry.voltage.toFixed(1)} V` : "—"}
+                        </p>
+                    </div>
                 </div>
 
                 <div className={styles.card}>
-                    <h3 className={styles.cardLabel}>⚡ Active Real-Time Load</h3>
-                    <p className={`${styles.cardValue} ${styles.valueAmber}`}>
-                        {loadingDbData ? "..." : `${totalConfiguredKw.toFixed(1)} kW`}
-                    </p>
+                    <div className={styles.cardIcon}>📊</div>
+                    <div className={styles.cardContent}>
+                        <h3 className={styles.cardLabel}>Active Real-Time Load</h3>
+                        <p className={`${styles.cardValue} ${styles.valueAmber}`}>
+                            {loadingDbData ? "..." : `${totalConfiguredKw.toFixed(1)} kW`}
+                        </p>
+                    </div>
                 </div>
 
                 <div className={`${styles.card} ${isUnderFrequency ? styles.cardDanger : ""}`}>
-                    <h3 className={styles.cardLabel}>📈 System Frequency</h3>
-                    <p className={`${styles.cardValue} ${isUnderFrequency ? styles.valueDanger : styles.valueSuccess}`}>
-                        {telemetry ? `${telemetry.frequency.toFixed(2)} Hz` : "—"}
-                    </p>
-                    {isUnderFrequency && <span className={styles.warning}>⚠️ Under-Frequency Threshold</span>}
+                    <div className={styles.cardIcon}>📈</div>
+                    <div className={styles.cardContent}>
+                        <h3 className={styles.cardLabel}>System Frequency</h3>
+                        <p className={`${styles.cardValue} ${isUnderFrequency ? styles.valueDanger : styles.valueSuccess}`}>
+                            {telemetry ? `${telemetry.frequency.toFixed(2)} Hz` : "—"}
+                        </p>
+                        {isUnderFrequency && <span className={styles.warning}>⚠️ Under-Frequency</span>}
+                    </div>
                 </div>
 
                 <div className={styles.card}>
-                    <h3 className={styles.cardLabel}>🔋 Generator Status</h3>
-                    <p className={`${styles.cardValue} ${telemetry?.generatorOn ? styles.valueSuccess : styles.valueMuted}`}>
-                        {telemetry ? (telemetry.generatorOn ? "ON" : "OFF") : "—"}
-                    </p>
+                    <div className={styles.cardIcon}>🔋</div>
+                    <div className={styles.cardContent}>
+                        <h3 className={styles.cardLabel}>Generator Status</h3>
+                        <p className={`${styles.cardValue} ${telemetry?.generatorOn ? styles.valueSuccess : styles.valueMuted}`}>
+                            {telemetry ? (telemetry.generatorOn ? "ON" : "OFF") : "—"}
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            {/* Dynamic System Status Map */}
+            {/* System Status Map */}
             <div className={styles.sectionCard}>
-                <h2 className={styles.sectionTitle}>🗺️ System Status Map (Dynamic DB Zones & Loads)</h2>
+                <div className={styles.sectionHeader}>
+                    <h2 className={styles.sectionTitle}>🗺️ System Status Map</h2>
+                    <span className={styles.sectionBadge}>{zones.length} Zones</span>
+                </div>
                 {loadingDbData ? (
-                    <p>Loading database hierarchy...</p>
+                    <div className={styles.loadingState}>
+                        <span className={styles.spinner}></span>
+                        Loading database hierarchy...
+                    </div>
                 ) : zones.length === 0 ? (
-                    <p>No zones found in database. Create a Zone to view telemetry mapping.</p>
+                    <div className={styles.emptyState}>
+                        <p>No zones found in database. Create a Zone to view telemetry mapping.</p>
+                    </div>
                 ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                    <div className={styles.zoneList}>
                         {zones.map((zone) => {
                             const zoneLoads = getAllZoneLoads(zone);
-
                             return (
-                                <div key={zone.id} style={{ border: "1px solid #334155", borderRadius: "8px", padding: "1rem" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                                        <h3 style={{ margin: 0, color: "#38bdf8" }}>🏢 Zone: {zone.name}</h3>
-                                        <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                                            Total Loads: {zoneLoads.length}
-                                        </span>
+                                <div key={zone.id} className={styles.zoneCard}>
+                                    <div className={styles.zoneHeader}>
+                                        <div className={styles.zoneTitle}>
+                                            <span className={styles.zoneIcon}>🏢</span>
+                                            <h3>{zone.name}</h3>
+                                        </div>
+                                        <span className={styles.zoneLoadCount}>{zoneLoads.length} loads</span>
                                     </div>
 
                                     <div className={styles.nodeGrid}>
                                         {zoneLoads.length > 0 ? (
                                             zoneLoads.map((load) => {
                                                 const status = getLoadStatus(load.relayAddress);
-                                                const isShedded = status.includes("Shedded");
+                                                const isShedded = status === "Shedded";
                                                 const currentPriority = getLoadPriorityNum(load);
                                                 return (
                                                     <div
@@ -270,16 +298,20 @@ export function LiveOverviewPage() {
                                                         className={`${styles.nodeCard} ${isShedded ? styles.nodeShedded : styles.nodeNormal}`}
                                                     >
                                                         <div className={styles.nodeIcon}>⚡</div>
-                                                        <div className={styles.nodeName}>{load.name}</div>
-                                                        <div className={styles.nodePriority}>
-                                                            {load.powerRatingKw} kW | P{currentPriority}
+                                                        <div className={styles.nodeInfo}>
+                                                            <div className={styles.nodeName}>{load.name}</div>
+                                                            <div className={styles.nodeMeta}>
+                                                                {load.powerRatingKw} kW · P{currentPriority}
+                                                            </div>
                                                         </div>
-                                                        <div className={styles.nodeBadge}>{status}</div>
+                                                        <div className={`${styles.nodeBadge} ${isShedded ? styles.badgeShedded : styles.badgeNormal}`}>
+                                                            {isShedded ? "⛔ Shedded" : "✅ Normal"}
+                                                        </div>
                                                     </div>
                                                 );
                                             })
                                         ) : (
-                                            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>No loads registered under this zone or its sub-zones.</p>
+                                            <p className={styles.noLoads}>No loads registered under this zone</p>
                                         )}
                                     </div>
                                 </div>
@@ -291,20 +323,18 @@ export function LiveOverviewPage() {
 
             {/* Charts Row */}
             <div className={styles.chartsRow}>
-                {/* Real-Time Frequency Chart */}
                 <div className={styles.chartCard}>
-                    <h3 className={styles.chartTitle}>📈 Real-Time Frequency Chart (Hz)</h3>
+                    <h3 className={styles.chartTitle}>📈 Real-Time Frequency</h3>
                     <div className={styles.chartContainer}>{renderFrequencyChart()}</div>
                     <div className={styles.chartFooter}>
-                        <span>Min: 48.0 Hz</span>
-                        <span>Target: 50.0 Hz</span>
-                        <span>Max: 52.0 Hz</span>
+                        <span>48.0 Hz</span>
+                        <span className={styles.chartTarget}>Target: 50.0 Hz</span>
+                        <span>52.0 Hz</span>
                     </div>
                 </div>
 
-                {/* Dynamic Load Breakdown */}
                 <div className={styles.chartCard}>
-                    <h3 className={styles.chartTitle}>⚡ Dynamic Priority Breakdown</h3>
+                    <h3 className={styles.chartTitle}>⚡ Priority Breakdown</h3>
                     <div className={styles.loadBreakdownContainer}>
                         <div className={styles.loadBarRow}>
                             <span>P1 (Critical)</span>
@@ -333,19 +363,27 @@ export function LiveOverviewPage() {
                 </div>
             </div>
 
-            {/* Alarms Log */}
+            {/* Alarms */}
             <div className={styles.sectionCard}>
-                <h2 className={styles.sectionTitle}>🔔 Recent Alarms & Events Log</h2>
+                <div className={styles.sectionHeader}>
+                    <h2 className={styles.sectionTitle}>🔔 Recent Alarms & Events</h2>
+                    <span className={styles.alarmCount}>{alarms.length} events</span>
+                </div>
                 {alarms.length === 0 ? (
-                    <p className={styles.noAlarms}>✅ System operating normally. No active alarms.</p>
+                    <div className={styles.noAlarms}>
+                        <span className={styles.noAlarmsIcon}>✅</span>
+                        System operating normally. No active alarms.
+                    </div>
                 ) : (
                     <div className={styles.alarmList}>
                         {alarms.map((alarm) => (
                             <div
                                 key={alarm.id}
-                                className={`${styles.alarmItem} ${alarm.type === "warning" || alarm.type === "critical"
-                                    ? styles.alarmWarning
-                                    : styles.alarmSuccess
+                                className={`${styles.alarmItem} ${alarm.type === "critical"
+                                        ? styles.alarmCritical
+                                        : alarm.type === "warning"
+                                            ? styles.alarmWarning
+                                            : styles.alarmSuccess
                                     }`}
                             >
                                 <span className={styles.alarmTime}>{alarm.time}</span>

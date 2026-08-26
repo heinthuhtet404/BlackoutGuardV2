@@ -1,153 +1,693 @@
+/* ========================================
+   CSS VARIABLES - DARK THEME
+   ======================================== */
+:root {
+    --bg-page: #0f1117;
+    --bg-card: #1a1d24;
+    --bg-card-hover: #22262e;
+    --bg-input: #13161b;
+    --bg-elevated: #252a33;
+    --border-card: #2a2f38;
+    --border-soft: #22262e;
+    --border-input: #2a2f38;
+    --text-primary: #e8edf5;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-inverse: #0f1117;
+    --accent-red: #f87171;
+    --accent-hover: #ef4444;
+    --accent-soft: rgba(248, 113, 113, 0.12);
+    --accent-glow: rgba(248, 113, 113, 0.20);
+    --success: #34d399;
+    --success-soft: rgba(52, 211, 153, 0.12);
+    --warning: #fbbf24;
+    --warning-soft: rgba(251, 191, 36, 0.12);
+    --chart-blue: #60a5fa;
+    --chart-blue-soft: rgba(96, 165, 250, 0.15);
+    --shadow: rgba(0, 0, 0, 0.40);
+    --shadow-heavy: rgba(0, 0, 0, 0.50);
+}
+
+/* ========================================
+   PAGE
+   ======================================== */
 .page {
-    padding: 1.5rem;
-    max-width: 900px;
+    padding: 24px 32px;
+    background: var(--bg-page, #0f1117);
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 1200px;
     margin: 0 auto;
-    color: #f1f5f9;
+    background-image: radial-gradient(ellipse at 80% 20%, rgba(248, 113, 113, 0.02) 0%, transparent 50%);
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
 }
 
 .heading {
-    font-size: 1.75rem;
+    font-size: 28px;
     font-weight: 700;
-    color: #f1f5f9;
-    margin-bottom: 0.5rem;
+    color: var(--text-primary, #e8edf5);
+    margin: 0;
+    letter-spacing: -0.3px;
 }
 
-.statusRow {
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
+.subheading {
+    font-size: 15px;
+    color: var(--text-secondary, #94a3b8);
+    margin: 4px 0 0 0;
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 13px;
     font-weight: 500;
+    border: 1px solid var(--border-card, #2a2f38);
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
 }
 
 .statusConnected {
-    color: #10b981;
+    background: var(--success-soft, rgba(52, 211, 153, 0.12));
+    color: var(--success, #34d399);
+    border-color: rgba(52, 211, 153, 0.15);
 }
+
+    .statusConnected .statusDot {
+        background: var(--success, #34d399);
+        animation: pulse 1.5s ease-in-out infinite;
+    }
 
 .statusDisconnected {
-    color: #ef4444;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted, #64748b);
+    border-color: rgba(255, 255, 255, 0.06);
 }
 
+    .statusDisconnected .statusDot {
+        background: var(--text-muted, #64748b);
+    }
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* ========================================
+   CARD
+   ======================================== */
 .card {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    background: var(--bg-card, #1a1d24);
+    border-radius: 16px;
+    padding: 24px 28px;
+    border: 1px solid var(--border-card, #2a2f38);
+    box-shadow: 0 2px 12px var(--shadow, rgba(0, 0, 0, 0.40));
+    margin-bottom: 24px;
+    transition: all 0.25s ease;
+}
+
+    .card:hover {
+        border-color: rgba(255, 255, 255, 0.04);
+    }
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
 }
 
 .cardTitle {
-    font-size: 1.1rem;
+    font-size: 17px;
     font-weight: 600;
-    margin: 0 0 1rem 0;
-    color: #f1f5f9;
+    color: var(--text-primary, #e8edf5);
+    margin: 0;
 }
 
+.cardBadge {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary, #94a3b8);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 2px 12px;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* ========================================
+   TELEMETRY GRID
+   ======================================== */
 .telemetryGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
 }
 
 .metric {
-    background: #0f172a;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid var(--border-soft, #22262e);
+    transition: all 0.2s ease;
 }
 
+    .metric:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
 .metricLabel {
-    display: block;
-    font-size: 0.7rem;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted, #64748b);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
+    letter-spacing: 0.3px;
 }
 
 .metricValue {
-    display: block;
-    font-size: 1.3rem;
+    font-size: 22px;
     font-weight: 700;
-    color: #f1f5f9;
-    margin-top: 0.25rem;
+    color: var(--text-primary, #e8edf5);
+    letter-spacing: -0.3px;
 }
 
+.valueOn {
+    color: var(--success, #34d399);
+}
+
+.valueOff {
+    color: var(--text-muted, #64748b);
+}
+
+/* ========================================
+   MODE SECTION
+   ======================================== */
+.modeSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid var(--border-soft, #22262e);
+    margin-bottom: 20px;
+}
+
+.modeInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modeIcon {
+    font-size: 24px;
+}
+
+.modeTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary, #e8edf5);
+}
+
+.modeSubtext {
+    font-size: 13px;
+    color: var(--text-secondary, #94a3b8);
+}
+
+/* ========================================
+   TOGGLE
+   ======================================== */
+.toggle {
+    padding: 6px 20px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+    min-width: 72px;
+}
+
+.toggleOn {
+    background: var(--success-soft, rgba(52, 211, 153, 0.12));
+    color: var(--success, #34d399);
+    border: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+    .toggleOn:hover {
+        background: rgba(52, 211, 153, 0.20);
+    }
+
+.toggleOff {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted, #64748b);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+    .toggleOff:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+/* ========================================
+   AUTO ACTIVE
+   ======================================== */
+.autoActive {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--success-soft, rgba(52, 211, 153, 0.08));
+    border-radius: 12px;
+    border: 1px solid rgba(52, 211, 153, 0.15);
+    margin-bottom: 20px;
+}
+
+.autoIcon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.autoActive strong {
+    color: var(--success, #34d399);
+    font-weight: 600;
+}
+
+.autoSubtext {
+    font-size: 14px;
+    color: var(--text-secondary, #94a3b8);
+    margin-top: 2px;
+}
+
+/* ========================================
+   CONTROL GROUP
+   ======================================== */
 .controlGroup {
-    margin-bottom: 1.25rem;
+    margin-bottom: 20px;
+}
+
+    .controlGroup:last-of-type {
+        margin-bottom: 16px;
+    }
+
+.controlHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
 }
 
 .controlLabel {
-    display: block;
-    font-size: 0.9rem;
+    font-size: 14px;
     font-weight: 500;
-    color: #f1f5f9;
-    margin-bottom: 0.25rem;
+    color: var(--text-secondary, #94a3b8);
 }
 
-    .controlLabel strong {
-        color: #6366f1;
-    }
+.controlValue {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary, #e8edf5);
+}
 
+/* ========================================
+   SLIDER
+   ======================================== */
 .slider {
     width: 100%;
     height: 6px;
-    border-radius: 4px;
-    background: #334155;
+    -webkit-appearance: none;
     appearance: none;
+    background: var(--bg-input, #13161b);
+    border-radius: 100px;
     outline: none;
+    transition: all 0.2s ease;
 }
 
     .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
         appearance: none;
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: #6366f1;
+        background: var(--slider-color, var(--accent-red, #f87171));
         cursor: pointer;
+        border: 2px solid var(--bg-card, #1a1d24);
+        box-shadow: 0 0 0 2px var(--slider-color, var(--accent-red, #f87171));
+        transition: all 0.2s ease;
     }
 
-.toggleRow {
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 4px var(--accent-soft, rgba(248, 113, 113, 0.20));
+        }
+
+    .slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--slider-color, var(--accent-red, #f87171));
+        cursor: pointer;
+        border: 2px solid var(--bg-card, #1a1d24);
+        box-shadow: 0 0 0 2px var(--slider-color, var(--accent-red, #f87171));
+    }
+
+    .slider:focus-visible::-webkit-slider-thumb {
+        outline: 2px solid var(--slider-color, var(--accent-red, #f87171));
+        outline-offset: 2px;
+    }
+
+.sliderLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted, #64748b);
+    margin-top: 4px;
+}
+
+/* ========================================
+   GENERATOR ROW
+   ======================================== */
+.generatorRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid var(--border-soft, #22262e);
+    margin-bottom: 16px;
+}
+
+.generatorInfo {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
+    gap: 10px;
 }
 
-.toggle {
-    padding: 0.4rem 1.2rem;
-    border: none;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+.generatorIcon {
+    font-size: 20px;
 }
 
-.toggleOn {
-    background: #10b981;
-    color: #0f172a;
-}
-
-.toggleOff {
-    background: #334155;
-    color: #94a3b8;
-}
-
+/* ========================================
+   FAULT BUTTON
+   ======================================== */
 .faultButton {
-    padding: 0.6rem 1.5rem;
-    background: #ef4444;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
+    width: 100%;
+    padding: 12px 20px;
+    background: var(--warning-soft, rgba(251, 191, 36, 0.08));
+    border: 1px solid rgba(251, 191, 36, 0.15);
+    border-radius: 12px;
+    color: var(--warning, #fbbf24);
+    font-size: 15px;
     font-weight: 600;
-    font-size: 0.9rem;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.25s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
     .faultButton:hover:not(:disabled) {
-        background: #dc2626;
+        background: rgba(251, 191, 36, 0.15);
+        border-color: rgba(251, 191, 36, 0.25);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(251, 191, 36, 0.10);
     }
 
     .faultButton:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        transform: none !important;
     }
+
+    .faultButton:focus-visible {
+        outline: 2px solid var(--warning, #fbbf24);
+        outline-offset: 2px;
+    }
+
+/* ========================================
+   SPINNER (for fault button)
+   ======================================== */
+.spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(251, 191, 36, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--warning, #fbbf24);
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 992px) {
+    .telemetryGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .heading {
+        font-size: 22px;
+    }
+
+    .statusBadge {
+        font-size: 12px;
+        padding: 4px 14px;
+    }
+
+    .card {
+        padding: 18px 20px;
+    }
+
+    .cardTitle {
+        font-size: 16px;
+    }
+
+    .telemetryGrid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .metric {
+        padding: 12px 14px;
+    }
+
+    .metricValue {
+        font-size: 18px;
+    }
+
+    .modeSection {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px 16px;
+    }
+
+    .modeInfo {
+        gap: 10px;
+    }
+
+    .modeTitle {
+        font-size: 14px;
+    }
+
+    .modeSubtext {
+        font-size: 12px;
+    }
+
+    .toggle {
+        align-self: flex-start;
+        padding: 5px 16px;
+        font-size: 12px;
+        min-width: 64px;
+    }
+
+    .controlValue {
+        font-size: 14px;
+    }
+
+    .slider::-webkit-slider-thumb {
+        width: 16px;
+        height: 16px;
+    }
+
+    .slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page {
+        padding: 12px;
+    }
+
+    .heading {
+        font-size: 20px;
+    }
+
+    .subheading {
+        font-size: 13px;
+    }
+
+    .card {
+        padding: 14px 16px;
+        border-radius: 12px;
+    }
+
+    .cardTitle {
+        font-size: 15px;
+    }
+
+    .cardBadge {
+        font-size: 10px;
+        padding: 1px 10px;
+    }
+
+    .telemetryGrid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .metric {
+        padding: 10px 12px;
+        border-radius: 10px;
+    }
+
+    .metricLabel {
+        font-size: 11px;
+    }
+
+    .metricValue {
+        font-size: 16px;
+    }
+
+    .modeSection {
+        padding: 12px 14px;
+    }
+
+    .modeIcon {
+        font-size: 20px;
+    }
+
+    .modeTitle {
+        font-size: 13px;
+    }
+
+    .modeSubtext {
+        font-size: 11px;
+    }
+
+    .autoActive {
+        padding: 12px 14px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .autoIcon {
+        font-size: 18px;
+    }
+
+    .autoSubtext {
+        font-size: 12px;
+    }
+
+    .controlGroup {
+        margin-bottom: 14px;
+    }
+
+    .controlHeader {
+        margin-bottom: 6px;
+    }
+
+    .controlLabel {
+        font-size: 13px;
+    }
+
+    .controlValue {
+        font-size: 13px;
+    }
+
+    .slider {
+        height: 5px;
+    }
+
+        .slider::-webkit-slider-thumb {
+            width: 14px;
+            height: 14px;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+        }
+
+    .sliderLabels {
+        font-size: 11px;
+    }
+
+    .generatorRow {
+        padding: 10px 14px;
+    }
+
+    .generatorIcon {
+        font-size: 18px;
+    }
+
+    .faultButton {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+}

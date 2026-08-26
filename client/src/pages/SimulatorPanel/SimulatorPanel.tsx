@@ -12,7 +12,6 @@ const LOAD_MIN = 0;
 const LOAD_MAX = 200;
 const DEBOUNCE_MS = 200;
 
-// Global State strictly managed so dynamic updates continue background streaming across navigation
 let globalAutoInterval: ReturnType<typeof setInterval> | null = null;
 let globalIsAutoSimulating = true;
 const currentValuesRef = {
@@ -22,26 +21,22 @@ const currentValuesRef = {
     generatorOn: true,
 };
 
-// Global Background Auto Engine to send Telemetry to Backend/SignalR continuously
 function startGlobalAutoSimulation() {
     if (globalAutoInterval) return;
 
     globalAutoInterval = setInterval(() => {
         if (!globalIsAutoSimulating) return;
 
-        // 1. Frequency Fluctuation (Normal Grid Ripple: 49.7Hz - 50.3Hz)
         const freqDelta = (Math.random() - 0.5) * 0.12;
         let newFreq = Number((currentValuesRef.frequency + freqDelta).toFixed(2));
         if (newFreq < 48.8) newFreq = 49.6;
         if (newFreq > 51.2) newFreq = 50.4;
 
-        // 2. Load Fluctuation (±0.5kW ~ ±2.5kW)
         const loadDelta = (Math.random() - 0.5) * 3.0;
         let newLoad = Number((currentValuesRef.loadKw + loadDelta).toFixed(1));
         if (newLoad < 40) newLoad = 65;
         if (newLoad > 180) newLoad = 140;
 
-        // 3. Voltage Fluctuation (225V ~ 235V)
         const voltDelta = (Math.random() - 0.5) * 0.8;
         let newVolt = Number((currentValuesRef.voltage + voltDelta).toFixed(1));
         if (newVolt < 222) newVolt = 227;
@@ -51,7 +46,6 @@ function startGlobalAutoSimulation() {
         currentValuesRef.loadKw = newLoad;
         currentValuesRef.voltage = newVolt;
 
-        // Post to backend so Overview via SignalR receives real-time updates
         void post("/simulator/telemetry", {
             frequency: newFreq,
             voltage: newVolt,
@@ -87,7 +81,6 @@ function SimulatorPanelContent() {
     const [isAutoSimulating, setIsAutoSimulating] = useState(globalIsAutoSimulating);
     const isInitialSynced = useRef(false);
 
-    // Initial Telemetry Sync from backend
     useEffect(() => {
         if (telemetry && !isInitialSynced.current) {
             setFrequency(telemetry.frequency);
@@ -104,7 +97,6 @@ function SimulatorPanelContent() {
         }
     }, [telemetry]);
 
-    // Keep state and ref synchronized for auto loop
     useEffect(() => {
         if (telemetry && isAutoSimulating) {
             setFrequency(telemetry.frequency);
@@ -113,7 +105,6 @@ function SimulatorPanelContent() {
         }
     }, [telemetry, isAutoSimulating]);
 
-    // Start Auto Engine loop once component mounts
     useEffect(() => {
         startGlobalAutoSimulation();
     }, []);
@@ -142,7 +133,6 @@ function SimulatorPanelContent() {
         generatorOn: g,
     });
 
-    // Manual Slider Handlers
     const handleFrequencyChange = (value: number) => {
         setFrequency(value);
         currentValuesRef.frequency = value;
@@ -191,16 +181,23 @@ function SimulatorPanelContent() {
 
     return (
         <div className={styles.page} data-testid="simulator-panel">
-            <h1 className={styles.heading}>Simulator Panel</h1>
-
-            <div className={styles.statusRow}>
-                <span className={connected ? styles.statusConnected : styles.statusDisconnected}>
-                    {connected ? "● Live (Connected)" : "○ Disconnected"}
-                </span>
+            <div className={styles.header}>
+                <div>
+                    <h1 className={styles.heading}>🎮 Simulator Panel</h1>
+                    <p className={styles.subheading}>Control and monitor hardware emulation</p>
+                </div>
+                <div className={`${styles.statusBadge} ${connected ? styles.statusConnected : styles.statusDisconnected}`}>
+                    <span className={styles.statusDot}></span>
+                    {connected ? "Live Connected" : "Disconnected"}
+                </div>
             </div>
 
+            {/* Live Telemetry */}
             <section className={styles.card}>
-                <h2 className={styles.cardTitle}>Live Telemetry</h2>
+                <div className={styles.cardHeader}>
+                    <h2 className={styles.cardTitle}>📊 Live Telemetry</h2>
+                    <span className={styles.cardBadge}>Real-time</span>
+                </div>
                 <div className={styles.telemetryGrid}>
                     <div className={styles.metric}>
                         <span className={styles.metricLabel}>Frequency</span>
@@ -222,21 +219,28 @@ function SimulatorPanelContent() {
                     </div>
                     <div className={styles.metric}>
                         <span className={styles.metricLabel}>Generator</span>
-                        <span className={styles.metricValue} data-testid="telemetry-generator">
+                        <span className={`${styles.metricValue} ${telemetry?.generatorOn ? styles.valueOn : styles.valueOff}`} data-testid="telemetry-generator">
                             {telemetry ? (telemetry.generatorOn ? "ON" : "OFF") : "—"}
                         </span>
                     </div>
                 </div>
             </section>
 
+            {/* Controls */}
             <section className={styles.card}>
-                <h2 className={styles.cardTitle}>Controls & Simulation Mode</h2>
+                <div className={styles.cardHeader}>
+                    <h2 className={styles.cardTitle}>🎛️ Controls & Simulation</h2>
+                    <span className={styles.cardBadge}>Admin</span>
+                </div>
 
-                <div className={styles.toggleRow} style={{ marginBottom: "1.5rem", paddingBottom: "1rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                    <div>
-                        <span className={styles.controlLabel} style={{ fontWeight: "bold" }}>⚡ Live Hardware Emulation (Auto Data Stream)</span>
-                        <div style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "2px" }}>
-                            {isAutoSimulating ? "Broadcasting live sensor data to Overview & System" : "Manual override control active"}
+                <div className={styles.modeSection}>
+                    <div className={styles.modeInfo}>
+                        <span className={styles.modeIcon}>⚡</span>
+                        <div>
+                            <div className={styles.modeTitle}>Live Hardware Emulation</div>
+                            <div className={styles.modeSubtext}>
+                                {isAutoSimulating ? "Broadcasting live sensor data to Overview & System" : "Manual override control active"}
+                            </div>
                         </div>
                     </div>
                     <button
@@ -251,18 +255,22 @@ function SimulatorPanelContent() {
                 </div>
 
                 {isAutoSimulating ? (
-                    <div style={{ padding: "1.25rem", textAlign: "center", background: "rgba(16, 185, 129, 0.1)", borderRadius: "8px", border: "1px dashed #10b981", color: "#10b981", marginBottom: "1.5rem" }}>
-                        ✨ <strong>Hardware Sensor Emulation is Active.</strong>
-                        <div style={{ fontSize: "0.85rem", color: "#a7f3d0", marginTop: "4px" }}>
-                            Sliders are hidden. Frequency & Grid Voltage are dynamically changing in real-time across Overview & Dashboard.
+                    <div className={styles.autoActive}>
+                        <span className={styles.autoIcon}>✨</span>
+                        <div>
+                            <strong>Hardware Sensor Emulation is Active.</strong>
+                            <div className={styles.autoSubtext}>
+                                Frequency & Grid Voltage are dynamically changing in real-time across Overview & Dashboard.
+                            </div>
                         </div>
                     </div>
                 ) : (
                     <>
                         <div className={styles.controlGroup}>
-                            <label className={styles.controlLabel}>
-                                Target Frequency: <strong data-testid="frequency-value">{frequency.toFixed(1)} Hz</strong>
-                            </label>
+                            <div className={styles.controlHeader}>
+                                <label className={styles.controlLabel}>Target Frequency</label>
+                                <span className={styles.controlValue} data-testid="frequency-value">{frequency.toFixed(1)} Hz</span>
+                            </div>
                             <input
                                 type="range"
                                 min={FREQ_MIN}
@@ -272,13 +280,19 @@ function SimulatorPanelContent() {
                                 onChange={(e) => handleFrequencyChange(Number(e.target.value))}
                                 className={styles.slider}
                                 data-testid="frequency-slider"
+                                style={{ '--slider-color': '#f87171' } as React.CSSProperties}
                             />
+                            <div className={styles.sliderLabels}>
+                                <span>{FREQ_MIN} Hz</span>
+                                <span>{FREQ_MAX} Hz</span>
+                            </div>
                         </div>
 
                         <div className={styles.controlGroup}>
-                            <label className={styles.controlLabel}>
-                                Target Load: <strong data-testid="load-value">{loadKw} kW</strong>
-                            </label>
+                            <div className={styles.controlHeader}>
+                                <label className={styles.controlLabel}>Target Load</label>
+                                <span className={styles.controlValue} data-testid="load-value">{loadKw} kW</span>
+                            </div>
                             <input
                                 type="range"
                                 min={LOAD_MIN}
@@ -288,13 +302,21 @@ function SimulatorPanelContent() {
                                 onChange={(e) => handleLoadChange(Number(e.target.value))}
                                 className={styles.slider}
                                 data-testid="load-slider"
+                                style={{ '--slider-color': '#60a5fa' } as React.CSSProperties}
                             />
+                            <div className={styles.sliderLabels}>
+                                <span>{LOAD_MIN} kW</span>
+                                <span>{LOAD_MAX} kW</span>
+                            </div>
                         </div>
                     </>
                 )}
 
-                <div className={styles.toggleRow}>
-                    <span className={styles.controlLabel}>Generator</span>
+                <div className={styles.generatorRow}>
+                    <div className={styles.generatorInfo}>
+                        <span className={styles.generatorIcon}>🔋</span>
+                        <span className={styles.controlLabel}>Generator</span>
+                    </div>
                     <button
                         type="button"
                         className={`${styles.toggle} ${generatorOn ? styles.toggleOn : styles.toggleOff}`}
@@ -312,9 +334,15 @@ function SimulatorPanelContent() {
                     onClick={handleInjectFault}
                     disabled={injectingFault}
                     data-testid="inject-fault"
-                    style={{ marginTop: "1rem" }}
                 >
-                    {injectingFault ? "Injecting…" : "Inject Fault (frequency_drop)"}
+                    {injectingFault ? (
+                        <>
+                            <span className={styles.spinner}></span>
+                            Injecting...
+                        </>
+                    ) : (
+                        "⚠️ Inject Fault (frequency_drop)"
+                    )}
                 </button>
             </section>
         </div>

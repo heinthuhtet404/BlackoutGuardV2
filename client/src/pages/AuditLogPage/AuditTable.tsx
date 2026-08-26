@@ -22,7 +22,6 @@ interface ZoneDto {
     children?: ZoneDto[];
 }
 
-// Helper: Recursively extract all loads from zone hierarchy
 function getAllLoadsFromZones(zones: ZoneDto[]): LoadDto[] {
     let loads: LoadDto[] = [];
     zones.forEach((zone) => {
@@ -79,7 +78,6 @@ export function AuditTable() {
 
     const { data, isLoading, isError, error } = useAuditLog(page, PAGE_SIZE);
 
-    // 0. Fetch Loads to map Relay Address to Load Names
     useEffect(() => {
         const fetchLoads = async () => {
             try {
@@ -102,7 +100,6 @@ export function AuditTable() {
         fetchLoads();
     }, []);
 
-    // 1. Listen for Live Decision Events from Telemetry Context
     useEffect(() => {
         if (latestDecision) {
             setLiveRows((current) =>
@@ -111,7 +108,6 @@ export function AuditTable() {
         }
     }, [latestDecision, loadsMap]);
 
-    // 2. Handle Reconnection / Gap-fill Logic
     useEffect(() => {
         if (!prevConnectedRef.current && connected) {
             setLiveRows([]);
@@ -121,16 +117,13 @@ export function AuditTable() {
         prevConnectedRef.current = connected;
     }, [connected, queryClient]);
 
-    // 3. Compute Display Rows & Avoid Duplicates across Page 1 and Live Rows
     const items = data?.items ?? [];
     const totalCount = data?.totalCount ?? items.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
     const displayRows = useMemo(() => {
-        // Show live rows only on page 1 to prevent pagination shift glitches
         if (page > 1) return items;
 
-        // Filter out any liveRows that have already been persisted to backend API items
         const filteredLiveRows = liveRows.filter(
             (live) => !items.some((item) => item.rationale === live.rationale && item.timestampUtc === live.timestampUtc)
         );
@@ -139,12 +132,18 @@ export function AuditTable() {
     }, [page, liveRows, items]);
 
     if (isLoading) {
-        return <div role="status" style={{ padding: "1rem", color: "#94a3b8" }}>Loading audit log...</div>;
+        return (
+            <div className={styles.loadingState} role="status">
+                <span className={styles.spinner}></span>
+                Loading audit log...
+            </div>
+        );
     }
 
     if (isError) {
         return (
-            <div role="alert" style={{ padding: "1rem", color: "#ef4444" }}>
+            <div className={styles.errorState} role="alert">
+                <span className={styles.errorIcon}>⚠</span>
                 Failed to load audit log: {error instanceof Error ? error.message : "unknown error"}
             </div>
         );
@@ -152,62 +151,82 @@ export function AuditTable() {
 
     return (
         <div className={styles.page} data-testid="audit-table">
-            <ExportButtons />
+            <div className={styles.header}>
+                <div>
+                    <h2 className={styles.title}>📋 Audit Log</h2>
+                    <p className={styles.subtitle}>Track all load shedding events and decisions</p>
+                </div>
+                <ExportButtons />
+            </div>
 
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Event</th>
-                        <th>Rationale</th>
-                        <th>Affected Load</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {displayRows.length === 0 && (
+            <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                    <thead>
                         <tr>
-                            <td colSpan={4} className={styles.empty}>
-                                No audit entries yet.
-                            </td>
+                            <th>Timestamp</th>
+                            <th>Event</th>
+                            <th>Rationale</th>
+                            <th>Affected Load</th>
                         </tr>
-                    )}
-                    {displayRows.map((entry) => {
-                        const isLive = typeof entry.id === "string" && entry.id.startsWith("live-");
-                        return (
-                            <tr
-                                key={entry.id}
-                                className={isLive ? styles.liveRow : undefined}
-                                data-testid={`audit-row-${entry.id}`}
-                            >
-                                <td className={styles.timestamp}>{formatTimestamp(entry.timestampUtc)}</td>
-                                <td>{entry.eventType}</td>
-                                <td className={styles.rationale}>{entry.rationale}</td>
-                                <td>{entry.affectedLoadId ?? "—"}</td>
+                    </thead>
+                    <tbody>
+                        {displayRows.length === 0 && (
+                            <tr>
+                                <td colSpan={4} className={styles.empty}>
+                                    <span className={styles.emptyIcon}>📭</span>
+                                    No audit entries yet.
+                                </td>
                             </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                        )}
+                        {displayRows.map((entry) => {
+                            const isLive = typeof entry.id === "string" && entry.id.startsWith("live-");
+                            return (
+                                <tr
+                                    key={entry.id}
+                                    className={`${styles.row} ${isLive ? styles.liveRow : ""}`}
+                                    data-testid={`audit-row-${entry.id}`}
+                                >
+                                    <td className={styles.timestamp}>
+                                        <span className={isLive ? styles.liveDot : ""}>
+                                            {isLive && <span className={styles.dot}></span>}
+                                            {formatTimestamp(entry.timestampUtc)}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span className={`${styles.eventBadge} ${styles[`event${entry.eventType.replace(/\s/g, '')}`] || ''}`}>
+                                            {entry.eventType}
+                                        </span>
+                                    </td>
+                                    <td className={styles.rationale}>{entry.rationale}</td>
+                                    <td className={styles.affectedLoad}>{entry.affectedLoadId ?? "—"}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
 
             <div className={styles.pagination}>
                 <button
                     type="button"
+                    className={styles.pageBtn}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
                     data-testid="prev-page"
                 >
-                    Previous
+                    ← Previous
                 </button>
-                <span data-testid="page-indicator">
-                    Page {page} of {totalPages}
+                <span className={styles.pageInfo} data-testid="page-indicator">
+                    Page <strong>{page}</strong> of <strong>{totalPages}</strong>
                 </span>
                 <button
                     type="button"
+                    className={styles.pageBtn}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
                     data-testid="next-page"
                 >
-                    Next
+                    Next →
                 </button>
             </div>
         </div>

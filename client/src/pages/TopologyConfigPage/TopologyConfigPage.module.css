@@ -1,91 +1,453 @@
+/* ========================================
+   CSS VARIABLES - DARK THEME
+   ======================================== */
+:root {
+    --bg-page: #0f1117;
+    --bg-card: #1a1d24;
+    --bg-card-hover: #22262e;
+    --bg-input: #13161b;
+    --bg-elevated: #252a33;
+    --border-card: #2a2f38;
+    --border-soft: #22262e;
+    --border-input: #2a2f38;
+    --text-primary: #e8edf5;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-inverse: #0f1117;
+    --accent-red: #f87171;
+    --accent-hover: #ef4444;
+    --accent-soft: rgba(248, 113, 113, 0.12);
+    --accent-glow: rgba(248, 113, 113, 0.20);
+    --success: #34d399;
+    --success-soft: rgba(52, 211, 153, 0.12);
+    --warning: #fbbf24;
+    --warning-soft: rgba(251, 191, 36, 0.12);
+    --chart-blue: #60a5fa;
+    --chart-blue-soft: rgba(96, 165, 250, 0.15);
+    --shadow: rgba(0, 0, 0, 0.40);
+    --shadow-heavy: rgba(0, 0, 0, 0.50);
+}
+
+/* ========================================
+   PAGE
+   ======================================== */
 .page {
-    padding: 1.5rem;
-    max-width: 1200px;
+    padding: 24px 32px;
+    background: var(--bg-page, #0f1117);
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 1440px;
     margin: 0 auto;
-    color: #f1f5f9;
+    background-image: radial-gradient(ellipse at 80% 20%, rgba(248, 113, 113, 0.02) 0%, transparent 50%);
 }
 
 .heading {
-    font-size: 1.75rem;
+    font-size: 28px;
     font-weight: 700;
-    color: #f1f5f9;
-    margin-bottom: 1.5rem;
+    color: var(--text-primary, #e8edf5);
+    margin: 0 0 24px 0;
+    letter-spacing: -0.3px;
 }
 
+/* ========================================
+   COLUMNS LAYOUT
+   ======================================== */
 .columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-@media (max-width: 768px) {
-    .columns {
-        grid-template-columns: 1fr;
-    }
+    gap: 24px;
+    align-items: start;
 }
 
 .column {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 12px;
-    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .sectionTitle {
-    font-size: 1.1rem;
+    font-size: 18px;
     font-weight: 600;
-    color: #f1f5f9;
-    margin: 0 0 1rem 0;
+    color: var(--text-primary, #e8edf5);
+    margin: 0 0 4px 0;
+    letter-spacing: -0.2px;
 }
 
+/* ========================================
+   ZONE FORM
+   ======================================== */
 .zoneForm {
+    background: var(--bg-card, #1a1d24);
+    border-radius: 16px;
+    padding: 24px 28px;
+    border: 1px solid var(--border-card, #2a2f38);
+    box-shadow: 0 2px 12px var(--shadow, rgba(0, 0, 0, 0.40));
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 16px;
+    transition: all 0.25s ease;
 }
+
+    .zoneForm:hover {
+        border-color: rgba(255, 255, 255, 0.04);
+    }
+
+    .zoneForm :global(.input-wrapper) {
+        background: var(--bg-input, #13161b) !important;
+        border-color: var(--border-input, #2a2f38) !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+
+        .zoneForm :global(.input-wrapper):focus-within {
+            border-color: var(--accent-red, #f87171) !important;
+            box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12)) !important;
+        }
+
+        .zoneForm :global(.input-wrapper) input {
+            background: transparent !important;
+            color: var(--text-primary, #e8edf5) !important;
+        }
+
+            .zoneForm :global(.input-wrapper) input::placeholder {
+                color: var(--text-muted, #64748b) !important;
+            }
+
+    .zoneForm :global(.input-label) {
+        color: var(--text-secondary, #94a3b8) !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+    }
 
 .field {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 4px;
 }
 
 .label {
-    font-size: 0.8rem;
+    font-size: 14px;
     font-weight: 500;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    color: var(--text-secondary, #94a3b8);
 }
 
 .select {
-    padding: 0.6rem 0.8rem;
-    background: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    color: #f1f5f9;
-    font-size: 0.9rem;
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-input, #13161b);
+    border: 1px solid var(--border-input, #2a2f38);
+    border-radius: 10px;
+    color: var(--text-primary, #e8edf5);
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
     outline: none;
-    transition: border-color 0.2s;
 }
 
-    .select:focus {
-        border-color: #6366f1;
+    .select:hover {
+        border-color: rgba(255, 255, 255, 0.08);
     }
 
-.tree {
-    margin-top: 1rem;
+    .select:focus {
+        border-color: var(--accent-red, #f87171);
+        box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12));
+    }
+
+    .select option {
+        background: var(--bg-card, #1a1d24);
+        color: var(--text-primary, #e8edf5);
+        padding: 8px;
+    }
+
+.zoneForm button[type="submit"] {
+    width: 100%;
+    padding: 12px 24px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    background: var(--accent-red, #f87171) !important;
+    color: var(--text-inverse, #0f1117) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    cursor: pointer;
+    transition: all 0.25s ease !important;
+    margin-top: 4px;
 }
 
+    .zoneForm button[type="submit"]:hover:not(:disabled) {
+        background: var(--accent-hover, #ef4444) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px var(--accent-glow, rgba(248, 113, 113, 0.20));
+    }
+
+    .zoneForm button[type="submit"]:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+/* ========================================
+   TREE
+   ======================================== */
+.tree {
+    background: var(--bg-card, #1a1d24);
+    border-radius: 16px;
+    border: 1px solid var(--border-card, #2a2f38);
+    overflow: hidden;
+    box-shadow: 0 2px 12px var(--shadow, rgba(0, 0, 0, 0.40));
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+    .tree::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .tree::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .tree::-webkit-scrollbar-thumb {
+        background: var(--border-soft, #22262e);
+        border-radius: 100px;
+    }
+
+        .tree::-webkit-scrollbar-thumb:hover {
+            background: var(--border-card, #2a2f38);
+        }
+
+/* ========================================
+   EDIT BANNER
+   ======================================== */
 .editBanner {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #0f172a;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    margin-bottom: 1rem;
-    color: #94a3b8;
-    font-size: 0.9rem;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 18px;
+    background: var(--chart-blue-soft, rgba(96, 165, 250, 0.08));
+    border-radius: 12px;
+    border: 1px solid rgba(96, 165, 250, 0.15);
+    border-left: 4px solid var(--chart-blue, #60a5fa);
+}
+
+    .editBanner span {
+        font-size: 14px;
+        color: var(--text-secondary, #94a3b8);
+        font-weight: 500;
+    }
+
+        .editBanner span::before {
+            content: '✏️ ';
+        }
+
+    .editBanner .editActions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .editBanner button {
+        padding: 6px 16px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        font-family: inherit !important;
+    }
+
+    .editBanner .newBtn {
+        background: var(--bg-input, #13161b) !important;
+        color: var(--text-secondary, #94a3b8) !important;
+        border: 1px solid var(--border-input, #2a2f38) !important;
+    }
+
+        .editBanner .newBtn:hover {
+            background: rgba(255, 255, 255, 0.04) !important;
+            color: var(--text-primary, #e8edf5) !important;
+        }
+
+    .editBanner .deleteBtn {
+        background: var(--accent-soft, rgba(248, 113, 113, 0.08)) !important;
+        color: var(--accent-red, #f87171) !important;
+        border: 1px solid rgba(248, 113, 113, 0.15) !important;
+    }
+
+        .editBanner .deleteBtn:hover {
+            background: rgba(248, 113, 113, 0.15) !important;
+        }
+
+/* ========================================
+   LOAD FORM WRAPPER
+   ======================================== */
+.column > :last-child {
+    flex: 1;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1200px) {
+    .columns {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 992px) {
+    .columns {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .column {
+        gap: 16px;
+    }
+
+    .tree {
+        max-height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: 16px;
+    }
+
+    .heading {
+        font-size: 22px;
+        margin-bottom: 16px;
+    }
+
+    .sectionTitle {
+        font-size: 16px;
+    }
+
+    .zoneForm {
+        padding: 18px 20px;
+        border-radius: 12px;
+    }
+
+        .zoneForm :global(.input-label) {
+            font-size: 13px !important;
+        }
+
+    .select {
+        padding: 8px 12px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+
+    .zoneForm button[type="submit"] {
+        font-size: 14px !important;
+        padding: 10px 20px !important;
+        border-radius: 8px !important;
+    }
+
+    .tree {
+        max-height: 350px;
+        border-radius: 12px;
+    }
+
+    .editBanner {
+        padding: 10px 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+        .editBanner span {
+            font-size: 13px;
+        }
+
+        .editBanner .editActions {
+            justify-content: stretch;
+        }
+
+            .editBanner .editActions button {
+                flex: 1;
+                justify-content: center;
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+            }
+}
+
+@media (max-width: 480px) {
+    .page {
+        padding: 12px;
+    }
+
+    .heading {
+        font-size: 20px;
+        margin-bottom: 12px;
+    }
+
+    .sectionTitle {
+        font-size: 15px;
+    }
+
+    .zoneForm {
+        padding: 14px 16px;
+        border-radius: 10px;
+        gap: 12px;
+    }
+
+        .zoneForm :global(.input-label) {
+            font-size: 12px !important;
+        }
+
+        .zoneForm :global(.input-wrapper) {
+            border-radius: 8px !important;
+        }
+
+            .zoneForm :global(.input-wrapper) input {
+                font-size: 14px !important;
+            }
+
+    .label {
+        font-size: 12px;
+    }
+
+    .select {
+        padding: 6px 10px;
+        font-size: 12px;
+        border-radius: 8px;
+        background-position: right 10px center;
+    }
+
+    .zoneForm button[type="submit"] {
+        font-size: 13px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+    }
+
+    .tree {
+        max-height: 300px;
+        border-radius: 10px;
+    }
+
+    .editBanner {
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+        .editBanner span {
+            font-size: 12px;
+        }
+
+        .editBanner .editActions button {
+            font-size: 11px !important;
+            padding: 4px 10px !important;
+        }
+
+    .columns {
+        gap: 16px;
+    }
 }

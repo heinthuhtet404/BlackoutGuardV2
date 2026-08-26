@@ -1,150 +1,460 @@
+/* ========================================
+   CSS VARIABLES - Inherit from parent
+   ======================================== */
+:root {
+    --bg-card: #1a1d24;
+    --bg-card-hover: #22262e;
+    --bg-input: #13161b;
+    --border-card: #2a2f38;
+    --border-soft: #22262e;
+    --text-primary: #e8edf5;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent-red: #f87171;
+    --accent-soft: rgba(248, 113, 113, 0.12);
+    --success: #34d399;
+    --success-soft: rgba(52, 211, 153, 0.12);
+    --chart-blue: #60a5fa;
+    --chart-blue-soft: rgba(96, 165, 250, 0.12);
+    --warning: #fbbf24;
+    --warning-soft: rgba(251, 191, 36, 0.12);
+    --shadow: rgba(0, 0, 0, 0.30);
+}
+
+/* ========================================
+   TREE CONTAINER
+   ======================================== */
 .treeContainer {
-    font-size: 0.9rem;
-    color: #f1f5f9;
+    background: transparent;
+    padding: 4px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* ========================================
+   NODE BLOCK
+   ======================================== */
 .nodeBlock {
-    padding: 0.1rem 0;
+    position: relative;
 }
 
+    .nodeBlock:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 40px;
+        right: 16px;
+        height: 1px;
+        background: var(--border-soft, #22262e);
+        opacity: 0.4;
+    }
+
+/* ========================================
+   NODE ROW
+   ======================================== */
 .nodeRow {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.3rem 0.5rem;
-    border-radius: 6px;
-    transition: background 0.15s;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin: 1px 4px;
+    transition: all 0.2s ease;
+    cursor: default;
+    position: relative;
 }
 
     .nodeRow:hover {
-        background: #0f172a;
+        background: rgba(255, 255, 255, 0.03);
     }
 
-.dropTarget {
-    background: #1e293b;
-    border: 1px dashed #6366f1;
-    border-radius: 6px;
-}
+    .nodeRow:focus-within {
+        background: rgba(255, 255, 255, 0.04);
+        box-shadow: inset 0 0 0 1px var(--accent-red, #f87171);
+    }
 
+/* ========================================
+   TOGGLE BUTTON
+   ======================================== */
 .toggle {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
-    color: #94a3b8;
-    font-size: 0.8rem;
+    border-radius: 6px;
+    color: var(--text-secondary, #94a3b8);
+    font-size: 13px;
     cursor: pointer;
-    width: 1.2rem;
-    text-align: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
     padding: 0;
+    font-family: inherit;
 }
 
+    .toggle:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary, #e8edf5);
+        transform: scale(1.15);
+    }
+
     .toggle:disabled {
-        opacity: 0.3;
+        opacity: 0.25;
         cursor: default;
     }
 
-.dragHandle {
-    color: #64748b;
-    font-size: 1rem;
-    cursor: grab;
-    user-select: none;
-    line-height: 1;
-}
-
-    .dragHandle:active {
-        cursor: grabbing;
+    .toggle:focus-visible {
+        outline: 2px solid var(--accent-red, #f87171);
+        outline-offset: 1px;
     }
 
+/* ========================================
+   ZONE NAME
+   ======================================== */
 .zoneName {
+    font-size: 14px;
     font-weight: 500;
-    color: #f1f5f9;
+    color: var(--text-primary, #e8edf5);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.2s ease;
 }
 
+.nodeRow:hover .zoneName {
+    color: #ffffff;
+}
+
+/* ========================================
+   BADGES
+   ======================================== */
 .badge {
-    font-size: 0.6rem;
+    display: inline-block;
+    padding: 1px 10px;
+    border-radius: 100px;
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
-    padding: 0.1rem 0.4rem;
-    border-radius: 4px;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
 }
 
 .badgeBuilding {
-    background: #6366f1;
-    color: #f1f5f9;
+    background: var(--chart-blue-soft, rgba(96, 165, 250, 0.10));
+    color: var(--chart-blue, #60a5fa);
+    border-color: rgba(96, 165, 250, 0.10);
 }
 
 .badgeFloor {
-    background: #f59e0b;
-    color: #0f172a;
+    background: var(--success-soft, rgba(52, 211, 153, 0.10));
+    color: var(--success, #34d399);
+    border-color: rgba(52, 211, 153, 0.10);
 }
 
 .badgeRoom {
-    background: #10b981;
-    color: #0f172a;
+    background: var(--warning-soft, rgba(251, 191, 36, 0.10));
+    color: var(--warning, #fbbf24);
+    border-color: rgba(251, 191, 36, 0.10);
 }
 
 .badgeDefault {
-    background: #334155;
-    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary, #94a3b8);
+    border-color: rgba(255, 255, 255, 0.04);
 }
 
+/* ========================================
+   CHILD COUNT
+   ======================================== */
 .childCount {
-    font-size: 0.7rem;
-    color: #64748b;
-    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted, #64748b);
+    white-space: nowrap;
+    padding: 1px 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    display: none;
 }
 
+@media (min-width: 640px) {
+    .childCount {
+        display: inline-block;
+    }
+}
+
+/* ========================================
+   ACTION GROUP
+   ======================================== */
 .actionGroup {
-    margin-left: auto;
     display: flex;
-    gap: 0.25rem;
     align-items: center;
+    gap: 2px;
+    opacity: 0.3;
+    transition: all 0.25s ease;
 }
 
+.nodeRow:hover .actionGroup,
+.nodeRow:focus-within .actionGroup {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .actionGroup {
+        opacity: 0.7;
+    }
+}
+
+/* ========================================
+   ICON BUTTONS
+   ======================================== */
 .iconBtn,
 .iconBtnDanger {
-    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
     border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 14px;
     cursor: pointer;
-    font-size: 0.85rem;
-    padding: 0.2rem 0.4rem;
-    border-radius: 4px;
-    transition: background 0.2s ease;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+.iconBtn {
+    color: var(--text-secondary, #94a3b8);
 }
 
     .iconBtn:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary, #e8edf5);
+        transform: scale(1.1);
     }
+
+    .iconBtn:focus-visible {
+        outline: 2px solid var(--accent-red, #f87171);
+        outline-offset: 1px;
+    }
+
+.iconBtnDanger {
+    color: var(--text-muted, #64748b);
+}
 
     .iconBtnDanger:hover {
-        background: rgba(239, 68, 68, 0.2);
+        background: var(--accent-soft, rgba(248, 113, 113, 0.08));
+        color: var(--accent-red, #f87171);
+        transform: scale(1.1);
     }
 
+    .iconBtnDanger:focus-visible {
+        outline: 2px solid var(--accent-red, #f87171);
+        outline-offset: 1px;
+    }
+
+/* ========================================
+   EDIT CONTAINER
+   ======================================== */
 .editContainer {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
 }
 
 .editInput {
-    background: #1e293b;
-    border: 1px solid #475569;
-    color: #f8fafc;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.85rem;
+    flex: 1;
+    min-width: 0;
+    padding: 2px 10px;
+    height: 28px;
+    background: var(--bg-input, #13161b);
+    border: 1px solid var(--accent-red, #f87171);
+    border-radius: 6px;
+    color: var(--text-primary, #e8edf5);
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    outline: none;
 }
 
-.actionBtnBtn {
-    background: #334155;
-    color: #fff;
-    border: none;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.75rem;
-}
-
-    .actionBtnBtn:hover {
-        background: #475569;
+    .editInput:focus {
+        box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12));
     }
+
+    .editInput::placeholder {
+        color: var(--text-muted, #64748b);
+    }
+
+.editContainer .iconBtn {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+}
+
+    .editContainer .iconBtn:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+/* ========================================
+   LOADING & ERROR STATES
+   ======================================== */
+.treeContainer [role="status"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    color: var(--text-secondary, #94a3b8);
+    font-size: 14px;
+    gap: 10px;
+}
+
+    .treeContainer [role="status"]::before {
+        content: '';
+        width: 18px;
+        height: 18px;
+        border: 2.5px solid var(--border-soft, #22262e);
+        border-radius: 50%;
+        border-top-color: var(--accent-red, #f87171);
+        animation: spin 0.8s linear infinite;
+    }
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.treeContainer [role="alert"] {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    margin: 4px 8px;
+    background: var(--accent-soft, rgba(248, 113, 113, 0.06));
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-red, #f87171);
+    color: var(--accent-red, #f87171);
+    font-size: 13px;
+}
+
+    .treeContainer [role="alert"]::before {
+        content: '⚠';
+        font-size: 16px;
+    }
+
+.treeContainer p {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-muted, #64748b);
+    font-size: 14px;
+    margin: 0;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+    .nodeRow {
+        padding: 6px 10px;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .zoneName {
+        font-size: 13px;
+        flex-basis: 100%;
+        order: 1;
+    }
+
+    .badge {
+        font-size: 9px;
+        padding: 1px 8px;
+        order: 2;
+    }
+
+    .toggle {
+        width: 18px;
+        height: 18px;
+        font-size: 11px;
+        order: 0;
+    }
+
+    .actionGroup {
+        order: 3;
+        margin-left: auto;
+    }
+
+    .iconBtn,
+    .iconBtnDanger {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+
+    .editContainer {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .editInput {
+        height: 24px;
+        font-size: 12px;
+        padding: 1px 8px;
+        flex-basis: 100%;
+        order: 0;
+    }
+
+    .editContainer .iconBtn {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+        order: 1;
+    }
+
+    .nodeBlock:not(:last-child)::after {
+        left: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nodeRow {
+        padding: 4px 8px;
+    }
+
+    .zoneName {
+        font-size: 12px;
+    }
+
+    .badge {
+        font-size: 8px;
+        padding: 0px 6px;
+    }
+
+    .toggle {
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+    }
+
+    .iconBtn,
+    .iconBtnDanger {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+    }
+
+    .nodeBlock:not(:last-child)::after {
+        left: 20px;
+    }
+}

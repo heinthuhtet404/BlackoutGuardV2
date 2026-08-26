@@ -1,100 +1,633 @@
-.wizard {
-    background: #0f172a;
-    border-radius: 8px;
-    padding: 1rem;
-    margin: 0.5rem 0;
+/* ========================================
+   CSS VARIABLES - DARK THEME
+   ======================================== */
+:root {
+    --bg-page: #0f1117;
+    --bg-card: #1a1d24;
+    --bg-card-hover: #22262e;
+    --bg-input: #13161b;
+    --bg-elevated: #252a33;
+    --border-card: #2a2f38;
+    --border-soft: #22262e;
+    --border-input: #2a2f38;
+    --text-primary: #e8edf5;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-inverse: #0f1117;
+    --accent-red: #f87171;
+    --accent-hover: #ef4444;
+    --accent-soft: rgba(248, 113, 113, 0.12);
+    --accent-glow: rgba(248, 113, 113, 0.20);
+    --success: #34d399;
+    --success-soft: rgba(52, 211, 153, 0.12);
+    --warning: #fbbf24;
+    --warning-soft: rgba(251, 191, 36, 0.12);
+    --chart-blue: #60a5fa;
+    --chart-blue-soft: rgba(96, 165, 250, 0.15);
+    --shadow: rgba(0, 0, 0, 0.40);
+    --shadow-heavy: rgba(0, 0, 0, 0.50);
+    --priority-p1: #f87171;
+    --priority-p1-bg: rgba(248, 113, 113, 0.15);
+    --priority-p1-border: rgba(248, 113, 113, 0.20);
+    --priority-p2: #fbbf24;
+    --priority-p2-bg: rgba(251, 191, 36, 0.15);
+    --priority-p2-border: rgba(251, 191, 36, 0.20);
+    --priority-p3: #34d399;
+    --priority-p3-bg: rgba(52, 211, 153, 0.15);
+    --priority-p3-border: rgba(52, 211, 153, 0.20);
 }
 
+/* ========================================
+   WIZARD CONTAINER
+   ======================================== */
+.wizard {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 20px 24px;
+    background: var(--bg-card, #1a1d24);
+    border-radius: 14px;
+    border: 1px solid var(--border-card, #2a2f38);
+    box-shadow: 0 2px 12px var(--shadow, rgba(0, 0, 0, 0.40));
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: all 0.25s ease;
+}
+
+    .wizard:hover {
+        border-color: rgba(255, 255, 255, 0.04);
+    }
+
+/* ========================================
+   MODE TOGGLE
+   ======================================== */
 .modeToggle {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-    .modeToggle label {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        cursor: pointer;
-        background: #1e293b;
-        color: #94a3b8;
-        transition: background 0.2s, color 0.2s;
-    }
-
-        .modeToggle label.modeActive {
-            background: #6366f1;
-            color: #f1f5f9;
-        }
-
-    .modeToggle input[type="radio"] {
-        display: none;
-    }
-
-.manualDropdown {
-    margin: 0.75rem 0;
-}
-
-    .manualDropdown .label {
-        display: block;
-        font-size: 0.8rem;
-        font-weight: 500;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.25rem;
-    }
-
-    .manualDropdown select {
-        width: 100%;
-        padding: 0.6rem 0.8rem;
-        background: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        color: #f1f5f9;
-        font-size: 0.9rem;
-        outline: none;
-    }
-
-        .manualDropdown select:focus {
-            border-color: #6366f1;
-        }
-
-.priorityRow {
+.mode,
+.modeActive {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.75rem;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary, #94a3b8);
+    font-family: inherit;
+    user-select: none;
+    position: relative;
 }
 
-    .priorityRow .label {
-        font-size: 0.8rem;
-        font-weight: 500;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+    .mode:hover {
+        color: var(--text-primary, #e8edf5);
+        background: rgba(255, 255, 255, 0.04);
     }
 
-.formula {
-    margin-top: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    background: #1e293b;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    color: #94a3b8;
-    text-align: center;
-    font-family: monospace;
+.modeActive {
+    background: var(--accent-soft, rgba(248, 113, 113, 0.12));
+    color: var(--accent-red, #f87171);
+    box-shadow: 0 2px 8px var(--shadow, rgba(0, 0, 0, 0.30));
 }
 
+    .modeActive:hover {
+        background: rgba(248, 113, 113, 0.18);
+    }
+
+    .mode input[type="radio"],
+    .modeActive input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+    }
+
+/* ========================================
+   SLIDER OVERRIDES (Dark)
+   ======================================== */
+.wizard :global(.slider-wrapper) {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 10px !important;
+    padding: 4px 2px !important;
+    transition: all 0.2s ease !important;
+}
+
+    .wizard :global(.slider-wrapper):hover {
+        background: rgba(255, 255, 255, 0.03) !important;
+    }
+
+.wizard :global(.slider-label) {
+    color: var(--text-secondary, #94a3b8) !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+.wizard :global(.slider-value) {
+    color: var(--text-primary, #e8edf5) !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    min-width: 32px !important;
+    text-align: center !important;
+}
+
+.wizard :global(.slider-track) {
+    background: var(--bg-input, #13161b) !important;
+    border-radius: 100px !important;
+    height: 6px !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+
+.wizard :global(.slider-fill) {
+    background: var(--accent-red, #f87171) !important;
+    border-radius: 100px !important;
+    transition: width 0.15s ease !important;
+}
+
+.wizard :global(.slider-thumb) {
+    background: var(--accent-red, #f87171) !important;
+    border: 2px solid var(--bg-card, #1a1d24) !important;
+    box-shadow: 0 0 0 2px var(--accent-red, #f87171), 0 2px 8px rgba(0, 0, 0, 0.30) !important;
+    width: 18px !important;
+    height: 18px !important;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    cursor: pointer !important;
+}
+
+    .wizard :global(.slider-thumb):hover {
+        transform: scale(1.2) !important;
+        box-shadow: 0 0 0 4px var(--accent-soft, rgba(248, 113, 113, 0.20)), 0 2px 12px rgba(0, 0, 0, 0.40) !important;
+    }
+
+    .wizard :global(.slider-thumb):focus-visible {
+        outline: 2px solid var(--accent-red, #f87171) !important;
+        outline-offset: 2px !important;
+    }
+
+/* Disabled Slider State */
+.wizard :global(.slider):has(:disabled) :global(.slider-fill) {
+    opacity: 0.25;
+}
+
+.wizard :global(.slider):has(:disabled) :global(.slider-thumb) {
+    opacity: 0.35;
+    cursor: not-allowed !important;
+    box-shadow: 0 0 0 2px var(--text-muted, #64748b) !important;
+    background: var(--text-muted, #64748b) !important;
+}
+
+.wizard :global(.slider):has(:disabled) :global(.slider-track) {
+    opacity: 0.4;
+}
+
+/* ========================================
+   MANUAL DROPDOWN
+   ======================================== */
+.manualDropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    border: 1px solid var(--border-soft, #22262e);
+    animation: fadeIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.manualDropdown .label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary, #94a3b8);
+}
+
+.manualDropdown select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-input, #13161b);
+    border: 1px solid var(--border-input, #2a2f38);
+    border-radius: 10px;
+    color: var(--text-primary, #e8edf5);
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+    outline: none;
+}
+
+    .manualDropdown select:hover {
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .manualDropdown select:focus {
+        border-color: var(--accent-red, #f87171);
+        box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12));
+    }
+
+    .manualDropdown select option {
+        background: var(--bg-card, #1a1d24);
+        color: var(--text-primary, #e8edf5);
+        padding: 8px;
+    }
+
+        /* Priority options styling */
+        .manualDropdown select option[value="P1"] {
+            color: var(--priority-p1);
+        }
+
+        .manualDropdown select option[value="P2"] {
+            color: var(--priority-p2);
+        }
+
+        .manualDropdown select option[value="P3"] {
+            color: var(--priority-p3);
+        }
+
+/* ========================================
+   PRIORITY ROW
+   ======================================== */
+.priorityRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    border: 1px solid var(--border-soft, #22262e);
+    transition: all 0.2s ease;
+}
+
+    .priorityRow:hover {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .priorityRow .label {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-secondary, #94a3b8);
+    }
+
+    /* ========================================
+   BADGE COMPONENT OVERRIDES
+   ======================================== */
+    .priorityRow :global(.badge) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 18px;
+        border-radius: 100px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        min-width: 52px;
+        transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .priorityRow :global(.badge)::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 100px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .priorityRow :global(.badge):hover::after {
+            opacity: 1;
+        }
+
+    .priorityRow :global(.badge-p1) {
+        background: var(--priority-p1-bg);
+        color: var(--priority-p1);
+        border: 1px solid var(--priority-p1-border);
+    }
+
+        .priorityRow :global(.badge-p1)::after {
+            background: radial-gradient(circle at center, rgba(248, 113, 113, 0.10), transparent 70%);
+        }
+
+    .priorityRow :global(.badge-p2) {
+        background: var(--priority-p2-bg);
+        color: var(--priority-p2);
+        border: 1px solid var(--priority-p2-border);
+    }
+
+        .priorityRow :global(.badge-p2)::after {
+            background: radial-gradient(circle at center, rgba(251, 191, 36, 0.10), transparent 70%);
+        }
+
+    .priorityRow :global(.badge-p3) {
+        background: var(--priority-p3-bg);
+        color: var(--priority-p3);
+        border: 1px solid var(--priority-p3-border);
+    }
+
+        .priorityRow :global(.badge-p3)::after {
+            background: radial-gradient(circle at center, rgba(52, 211, 153, 0.10), transparent 70%);
+        }
+
+/* ========================================
+   FORMULA DISPLAY
+   ======================================== */
+.formula {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted, #64748b);
+    text-align: center;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    border: 1px dashed var(--border-soft, #22262e);
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+}
+
+    .formula:hover {
+        border-color: rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+/* ========================================
+   ERROR
+   ======================================== */
 .error {
-    margin-top: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    background: #1e293b;
-    border: 1px solid #ef4444;
-    border-radius: 6px;
-    color: #ef4444;
-    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--accent-soft, rgba(248, 113, 113, 0.08));
+    border-radius: 10px;
+    border-left: 4px solid var(--accent-red, #f87171);
+    color: var(--accent-red, #f87171);
+    font-size: 14px;
+    line-height: 1.5;
+    animation: slideDown 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error::before {
+    content: '⚠';
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 992px) {
+    .wizard {
+        padding: 18px 20px;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .wizard {
+        padding: 16px 18px;
+        gap: 14px;
+        border-radius: 12px;
+    }
+
+    .mode,
+    .modeActive {
+        padding: 8px 12px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .wizard :global(.slider-label) {
+        font-size: 13px !important;
+    }
+
+    .wizard :global(.slider-value) {
+        font-size: 14px !important;
+        min-width: 28px !important;
+    }
+
+    .wizard :global(.slider-thumb) {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    .manualDropdown {
+        padding: 12px 14px;
+    }
+
+        .manualDropdown .label {
+            font-size: 13px;
+        }
+
+        .manualDropdown select {
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            background-position: right 12px center;
+        }
+
+    .priorityRow {
+        padding: 12px 14px;
+    }
+
+        .priorityRow .label {
+            font-size: 14px;
+        }
+
+        .priorityRow :global(.badge) {
+            font-size: 14px;
+            padding: 3px 14px;
+            min-width: 44px;
+        }
+
+    .formula {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .error {
+        font-size: 13px;
+        padding: 10px 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wizard {
+        padding: 12px 14px;
+        gap: 12px;
+        border-radius: 10px;
+    }
+
+    .modeToggle {
+        flex-direction: column;
+        gap: 2px;
+        border-radius: 8px;
+    }
+
+    .mode,
+    .modeActive {
+        padding: 8px 10px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .wizard :global(.slider-label) {
+        font-size: 12px !important;
+    }
+
+    .wizard :global(.slider-value) {
+        font-size: 13px !important;
+        min-width: 24px !important;
+    }
+
+    .wizard :global(.slider-track) {
+        height: 5px !important;
+    }
+
+    .wizard :global(.slider-thumb) {
+        width: 15px !important;
+        height: 15px !important;
+    }
+
+    .manualDropdown {
+        padding: 10px 12px;
+    }
+
+        .manualDropdown .label {
+            font-size: 12px;
+        }
+
+        .manualDropdown select {
+            padding: 6px 10px;
+            font-size: 13px;
+            border-radius: 6px;
+            background-position: right 10px center;
+            background-size: 10px;
+        }
+
+    .priorityRow {
+        padding: 10px 12px;
+        flex-direction: column;
+        gap: 6px;
+        align-items: stretch;
+        text-align: center;
+    }
+
+        .priorityRow .label {
+            font-size: 13px;
+        }
+
+        .priorityRow :global(.badge) {
+            font-size: 13px;
+            padding: 3px 12px;
+            min-width: 40px;
+        }
+
+    .formula {
+        font-size: 11px;
+        padding: 6px 10px;
+        border-radius: 6px;
+    }
+
+    .error {
+        font-size: 12px;
+        padding: 8px 12px;
+        gap: 8px;
+        border-radius: 8px;
+        border-left-width: 3px;
+    }
+
+        .error::before {
+            font-size: 15px;
+        }
+}
+
+/* ========================================
+   FOCUS VISIBLE - Accessibility
+   ======================================== */
+.mode:focus-visible,
+.modeActive:focus-visible,
+.manualDropdown select:focus-visible,
+.wizard :global(.slider-thumb):focus-visible {
+    outline: 2px solid var(--accent-red, #f87171);
+    outline-offset: 2px;
+}
+
+/* ========================================
+   SCROLLBAR STYLING (for dropdown)
+   ======================================== */
+.manualDropdown select::-webkit-scrollbar {
+    width: 6px;
+}
+
+.manualDropdown select::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.manualDropdown select::-webkit-scrollbar-thumb {
+    background: var(--border-soft, #22262e);
+    border-radius: 100px;
+}
+
+    .manualDropdown select::-webkit-scrollbar-thumb:hover {
+        background: var(--border-card, #2a2f38);
+    }
+
+/* ========================================
+   HIGH CONTRAST - Priority Badge Text
+   ======================================== */
+@media (prefers-contrast: high) {
+    .priorityRow :global(.badge-p1) {
+        background: var(--priority-p1);
+        color: var(--text-inverse, #0f1117);
+    }
+
+    .priorityRow :global(.badge-p2) {
+        background: var(--priority-p2);
+        color: var(--text-inverse, #0f1117);
+    }
+
+    .priorityRow :global(.badge-p3) {
+        background: var(--priority-p3);
+        color: var(--text-inverse, #0f1117);
+    }
 }
