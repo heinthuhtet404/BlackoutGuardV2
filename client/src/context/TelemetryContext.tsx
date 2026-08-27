@@ -11,6 +11,9 @@ export interface TelemetryUpdate {
     voltage: number;
     totalLoadKw: number;
     generatorOn: boolean;
+    engineTemp: number;
+    fuelLevel: number;
+    runtimeRemaining: number;
 }
 
 export interface RelayDecision {
@@ -43,6 +46,10 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const [connected, setConnected] = useState(false);
     const [token, setToken] = useState<string | null>(() => getAccessToken());
     const connectionRef = useRef<signalR.HubConnection | null>(null);
+
+    // ⏱️ Engine Temp Update Time ကို 0.5s ~ 2s (500ms ~ 2000ms) ကြား ထိန်းချုပ်ရန် Ref များ
+    const lastTempUpdateRef = useRef<number>(0);
+    const nextDelayRef = useRef<number>(1000); // Initial Delay = 1.0s
 
     // 1. App Startup Token Initialization & Subscription
     useEffect(() => {
@@ -91,17 +98,45 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         connectionRef.current = connection;
 
-        // Telemetry Payload Normalizer (Handles both camelCase and PascalCase payload)
+        // Telemetry Payload Normalizer
         const handleTelemetryPayload = (payload: any) => {
             console.log("📡 SignalR Telemetry Received:", payload);
             if (isMounted && payload) {
-                const normalized: TelemetryUpdate = {
-                    frequency: payload.frequency ?? payload.Frequency ?? 50.0,
-                    voltage: payload.voltage ?? payload.Voltage ?? 230.0,
-                    totalLoadKw: payload.totalLoadKw ?? payload.TotalLoadKw ?? 0,
-                    generatorOn: payload.generatorOn ?? payload.GeneratorOn ?? false,
-                };
-                setTelemetry(normalized);
+                const isGenOn = payload.generatorOn ?? payload.GeneratorOn ?? false;
+                const targetBaseTemp = isGenOn ? 82.5 : 30.0;
+                const now = Date.now();
+
+                setTelemetry((prev) => {
+                    const prevTemp = prev?.engineTemp ?? targetBaseTemp;
+                    let nextTemp = prevTemp;
+
+                    // 🎯 Random Delay (500ms မှ 2000ms) ပြည့်မှသာ Temp ကို ပြောင်းလဲမည်
+                    if (now - lastTempUpdateRef.current >= nextDelayRef.current) {
+                        lastTempUpdateRef.current = now;
+
+                        // ⏱️ နောက်တစ်ကြိမ် Update လုပ်မည့်ကြာချိန်ကို 0.5s မှ 2s (500ms မှ 2000ms) ကြား Random ပြန်သတ်မှတ်မည်
+                        nextDelayRef.current = Math.floor(Math.random() * 1500) + 500;
+
+                        // 🌡️ Temp ဂဏန်း အသစ်တွက်ချက်ခြင်း (0.5s မှ 2s အထိ ပြောင်းလဲနိုင်သောကြောင့် Fluctuations သဘာဝကျစေရန် Fluctuation နှုန်း ညှိထားပါသည်)
+                        const microJitter = (Math.random() * 0.3 - 0.15);
+                        const smoothedTemp = prevTemp + (targetBaseTemp - prevTemp) * 0.08 + microJitter;
+                        nextTemp = Number(smoothedTemp.toFixed(1));
+                    }
+
+                    const defaultFuel = 78.0;
+                    const defaultRuntime = (defaultFuel / 100) * 8.0;
+
+                    return {
+                        frequency: payload.frequency ?? payload.Frequency ?? 50.0,
+                        voltage: payload.voltage ?? payload.Voltage ?? 230.0,
+                        totalLoadKw: payload.totalLoadKw ?? payload.TotalLoadKw ?? 0,
+                        generatorOn: isGenOn,
+                        // SignalR မှ direct engineTemp ပါလာလျှင် ယူမည်၊ မပါပါက 0.5s-2s Interval Logic အတိုင်း ပြောင်းလဲပေးမည်
+                        engineTemp: payload.engineTemp ?? payload.EngineTemp ?? nextTemp,
+                        fuelLevel: payload.fuelLevel ?? payload.FuelLevel ?? defaultFuel,
+                        runtimeRemaining: payload.runtimeRemaining ?? payload.RuntimeRemaining ?? defaultRuntime,
+                    };
+                });
             }
         };
 
@@ -113,7 +148,6 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             }
         };
 
-        // Single Source Event Listeners (Duplicate naming များကို ရှင်းထုတ်ထားပါသည်)
         connection.on("TelemetryUpdated", handleTelemetryPayload);
         connection.on("DecisionExecuted", handleDecisionPayload);
 
@@ -158,7 +192,6 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             isMounted = false;
             isCancelled = true;
 
-            // Clean up event listeners before stopping connection
             connection.off("TelemetryUpdated", handleTelemetryPayload);
             connection.off("DecisionExecuted", handleDecisionPayload);
 

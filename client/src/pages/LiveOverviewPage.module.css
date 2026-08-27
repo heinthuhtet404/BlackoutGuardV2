@@ -166,13 +166,14 @@
 }
 
 /* ========================================
-   KPI GRID
+   KPI GRID (FIXED CARD SIZES)
    ======================================== */
 .grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 24px;
+    align-items: stretch; /* Card တိုင်း၏ Height ကို တစ်ပြေးညီဖြစ်စေရန် */
 }
 
 .card {
@@ -185,6 +186,8 @@
     align-items: center;
     gap: 16px;
     transition: all 0.25s ease;
+    min-height: 120px; /* Card တိုင်းအတွက် အနည်းဆုံး အမြင့် သတ်မှတ်ချက် */
+    box-sizing: border-box;
 }
 
     .card:hover {
@@ -217,7 +220,10 @@
 
 .cardContent {
     flex: 1;
-    min-width: 0;
+    min-width: 0; /* Text Overflow မဖြစ်စေရန် */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .cardLabel {
@@ -226,6 +232,9 @@
     color: var(--text-secondary, #94a3b8);
     margin: 0 0 4px 0;
     letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* စာသားရှည်ပါက ... ဖြစ်သွားမည် */
 }
 
 .cardValue {
@@ -234,6 +243,7 @@
     color: var(--text-primary, #e8edf5);
     margin: 0;
     letter-spacing: -0.3px;
+    line-height: 1.2;
 }
 
 .valueBlue {
@@ -263,6 +273,7 @@
     font-weight: 600;
     margin-top: 2px;
     animation: blink 1s ease-in-out infinite;
+    white-space: nowrap;
 }
 
 @keyframes blink {
@@ -416,6 +427,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 12px;
+    align-items: stretch;
 }
 
 .nodeCard {
@@ -427,6 +439,8 @@
     border-radius: 10px;
     border: 1px solid var(--border-card, #2a2f38);
     transition: all 0.2s ease;
+    min-height: 60px;
+    box-sizing: border-box;
 }
 
     .nodeCard:hover {
@@ -725,6 +739,7 @@
         padding: 14px 16px;
         gap: 12px;
         border-radius: 12px;
+        min-height: 84px;
     }
 
     .cardValue {
@@ -808,6 +823,7 @@
         padding: 12px 14px;
         gap: 10px;
         border-radius: 10px;
+        min-height: 76px;
     }
 
     .cardValue {

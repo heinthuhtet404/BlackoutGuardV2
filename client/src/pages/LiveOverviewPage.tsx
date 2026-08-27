@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTelemetry, type RelayDecision } from "../context/TelemetryContext";
 import { get } from "../api/apiClient";
 import styles from "./LiveOverviewPage.module.css";
@@ -64,6 +64,9 @@ export function LiveOverviewPage() {
     const [freqHistory, setFreqHistory] = useState<number[]>([]);
     const [alarms, setAlarms] = useState<AlarmLog[]>([]);
 
+    // ⚡ Generator Total Capacity (kW)
+    const GENERATOR_CAPACITY_KW = 500.0;
+
     useEffect(() => {
         const fetchZonesAndLoads = async () => {
             try {
@@ -128,29 +131,76 @@ export function LiveOverviewPage() {
 
     const systemMode = getSystemMode();
 
-    const allLoads = zones.flatMap((z) => getAllZoneLoads(z));
-    const totalConfiguredKw = allLoads.reduce((sum, l) => sum + (l.powerRatingKw || 0), 0);
+    // Flatten all loads across zones
+    const allLoads = useMemo(() => {
+        return zones.flatMap((z) => getAllZoneLoads(z));
+    }, [zones]);
 
-    const getPriorityLoadSum = (priorityTarget: number) => {
-        return allLoads
-            .filter((l) => getLoadPriorityNum(l) === priorityTarget)
-            .reduce((sum, l) => sum + (l.powerRatingKw || 0), 0);
-    };
+    const totalConfiguredKw = useMemo(() => {
+        return allLoads.reduce((sum, l) => sum + (l.powerRatingKw || 0), 0);
+    }, [allLoads]);
 
-    const p1Kw = getPriorityLoadSum(1);
-    const p2Kw = getPriorityLoadSum(2);
-    const p3Kw = getPriorityLoadSum(3);
+    const realTimeLoadKw = telemetry?.totalLoadKw ?? totalConfiguredKw;
+    const capacityUsagePct = Math.round((realTimeLoadKw / GENERATOR_CAPACITY_KW) * 100);
 
-    const p1Pct = totalConfiguredKw > 0 ? Math.round((p1Kw / totalConfiguredKw) * 100) : 0;
-    const p2Pct = totalConfiguredKw > 0 ? Math.round((p2Kw / totalConfiguredKw) * 100) : 0;
-    const p3Pct = totalConfiguredKw > 0 ? Math.round((p3Kw / totalConfiguredKw) * 100) : 0;
+    // Priority Load Totals & Percentages (Memoized to prevent redundant calculations)
+    const { p1Kw, p2Kw, p3Kw, p1Pct, p2Pct, p3Pct } = useMemo(() => {
+        let p1 = 0;
+        let p2 = 0;
+        let p3 = 0;
 
-    const getLoadStatus = (relayAddress?: number) => {
-        if (!relayAddress || !latestDecision?.relayDecisions) return "Normal";
-        const decision = latestDecision.relayDecisions.find((r: RelayDecision) => r.relayAddress === relayAddress);
-        if (decision) {
-            return decision.energize ? "Normal" : "Shedded";
+        allLoads.forEach((load) => {
+            const priority = getLoadPriorityNum(load);
+            const kw = load.powerRatingKw || 0;
+            if (priority === 1) p1 += kw;
+            else if (priority === 2) p2 += kw;
+            else if (priority === 3) p3 += kw;
+        });
+
+        const pct1 = totalConfiguredKw > 0 ? Math.round((p1 / totalConfiguredKw) * 100) : 0;
+        const pct2 = totalConfiguredKw > 0 ? Math.round((p2 / totalConfiguredKw) * 100) : 0;
+        const pct3 = totalConfiguredKw > 0 ? Math.round((p3 / totalConfiguredKw) * 100) : 0;
+
+        return { p1Kw: p1, p2Kw: p2, p3Kw: p3, p1Pct: pct1, p2Pct: pct2, p3Pct: pct3 };
+    }, [allLoads, totalConfiguredKw]);
+
+    // Real-Time Load Shedding Logic
+    const getLoadStatus = (load: LoadDto) => {
+        if (!load || realTimeLoadKw === undefined || realTimeLoadKw === 0) {
+            return "Normal";
         }
+
+        // 1. Backend Relay Decision Priority
+        if (load.relayAddress && latestDecision?.relayDecisions) {
+            const decision = latestDecision.relayDecisions.find(
+                (r: RelayDecision) => r.relayAddress === load.relayAddress
+            );
+            if (decision) {
+                return decision.energize ? "Normal" : "Shedded";
+            }
+        }
+
+        // 2. Generator Capacity Overload Safeguard
+        const currentPriority = getLoadPriorityNum(load);
+
+        if (realTimeLoadKw > GENERATOR_CAPACITY_KW) {
+            let excessLoadKw = realTimeLoadKw - GENERATOR_CAPACITY_KW;
+
+            if (currentPriority === 3 && excessLoadKw > 0) {
+                return "Shedded";
+            }
+
+            excessLoadKw -= p3Kw;
+            if (currentPriority === 2 && excessLoadKw > 0) {
+                return "Shedded";
+            }
+
+            excessLoadKw -= p2Kw;
+            if (currentPriority === 1 && excessLoadKw > 0) {
+                return "Shedded";
+            }
+        }
+
         return "Normal";
     };
 
@@ -230,8 +280,19 @@ export function LiveOverviewPage() {
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Active Real-Time Load</h3>
                         <p className={`${styles.cardValue} ${styles.valueAmber}`}>
-                            {loadingDbData ? "..." : `${totalConfiguredKw.toFixed(1)} kW`}
+                            {loadingDbData ? "..." : `${realTimeLoadKw.toFixed(1)} kW`}
                         </p>
+                    </div>
+                </div>
+
+                <div className={styles.card}>
+                    <div className={styles.cardIcon}>🏭</div>
+                    <div className={styles.cardContent}>
+                        <h3 className={styles.cardLabel}>Gen Capacity</h3>
+                        <p className={`${styles.cardValue} ${styles.valueBlue}`}>
+                            {`${GENERATOR_CAPACITY_KW.toFixed(0)} kW`}
+                        </p>
+                        <span className={styles.cardSubText}>{capacityUsagePct}% Load Ratio</span>
                     </div>
                 </div>
 
@@ -247,11 +308,41 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={styles.card}>
-                    <div className={styles.cardIcon}>🔋</div>
+                    <div className={styles.cardIcon}>🔌</div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Generator Status</h3>
                         <p className={`${styles.cardValue} ${telemetry?.generatorOn ? styles.valueSuccess : styles.valueMuted}`}>
                             {telemetry ? (telemetry.generatorOn ? "ON" : "OFF") : "—"}
+                        </p>
+                    </div>
+                </div>
+
+                <div className={styles.card}>
+                    <div className={styles.cardIcon}>🌡️</div>
+                    <div className={styles.cardContent}>
+                        <h3 className={styles.cardLabel}>Engine Temp</h3>
+                        <p className={`${styles.cardValue} ${styles.valueAmber}`}>
+                            {telemetry?.engineTemp !== undefined ? `${telemetry.engineTemp.toFixed(1)} °C` : "—"}
+                        </p>
+                    </div>
+                </div>
+
+                <div className={styles.card}>
+                    <div className={styles.cardIcon}>⛽</div>
+                    <div className={styles.cardContent}>
+                        <h3 className={styles.cardLabel}>Fuel Level</h3>
+                        <p className={`${styles.cardValue} ${styles.valueBlue}`}>
+                            {telemetry?.fuelLevel !== undefined ? `${telemetry.fuelLevel.toFixed(0)} %` : "—"}
+                        </p>
+                    </div>
+                </div>
+
+                <div className={styles.card}>
+                    <div className={styles.cardIcon}>⏱️</div>
+                    <div className={styles.cardContent}>
+                        <h3 className={styles.cardLabel}>Est. Runtime</h3>
+                        <p className={`${styles.cardValue} ${styles.valueSuccess}`}>
+                            {telemetry?.runtimeRemaining !== undefined ? `${telemetry.runtimeRemaining.toFixed(1)} hrs` : "—"}
                         </p>
                     </div>
                 </div>
@@ -289,7 +380,7 @@ export function LiveOverviewPage() {
                                     <div className={styles.nodeGrid}>
                                         {zoneLoads.length > 0 ? (
                                             zoneLoads.map((load) => {
-                                                const status = getLoadStatus(load.relayAddress);
+                                                const status = getLoadStatus(load);
                                                 const isShedded = status === "Shedded";
                                                 const currentPriority = getLoadPriorityNum(load);
                                                 return (
@@ -380,10 +471,10 @@ export function LiveOverviewPage() {
                             <div
                                 key={alarm.id}
                                 className={`${styles.alarmItem} ${alarm.type === "critical"
-                                        ? styles.alarmCritical
-                                        : alarm.type === "warning"
-                                            ? styles.alarmWarning
-                                            : styles.alarmSuccess
+                                    ? styles.alarmCritical
+                                    : alarm.type === "warning"
+                                        ? styles.alarmWarning
+                                        : styles.alarmSuccess
                                     }`}
                             >
                                 <span className={styles.alarmTime}>{alarm.time}</span>

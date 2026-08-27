@@ -34,7 +34,7 @@
    PAGE
    ======================================== */
 .page {
-    padding: 4px 0;
+    padding: 24px 32px;
     background: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }

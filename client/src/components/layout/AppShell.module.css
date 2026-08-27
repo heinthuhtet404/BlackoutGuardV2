@@ -1,19 +1,38 @@
 .shell {
-  display: flex;
-  min-height: 100vh;
+    display: flex;
+    min-height: 100vh;
 }
 
 .content {
-  flex: 1;
-/*  padding: 1.5rem;*/
-  overflow-y: auto;
+    flex: 1;
+    /* Sidebar Width က 260px ဖြစ်တဲ့အတွက် ညာဘက် Panel ကို 260px ရွှေ့ပေးလိုက်တာပါ */
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    min-height: 100vh;
+    overflow-y: auto;
 }
 
 .loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  font-size: 1rem;
-  color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Screen သေးသွားတဲ့အခါ (Responsive Tablet) Sidebar width နည်းသွားလို့ Margin ပြန်ပြင်ရန် */
+@media (max-width: 992px) {
+    .content {
+        margin-left: 72px;
+        width: calc(100% - 72px);
+    }
+}
+
+/* Mobile Screen မှာ Drawer အဖြစ် ပေါ်မှာမို့ Margin ပြန်ဖြုတ်ရန် */
+@media (max-width: 768px) {
+    .content {
+        margin-left: 0;
+        width: 100%;
+    }
 }
