@@ -103,6 +103,7 @@
         background: rgba(255, 255, 255, 0.04);
         color: #e8edf5;
         transform: translateX(4px);
+        text-decoration: none;
     }
 
     .navLink.active {
