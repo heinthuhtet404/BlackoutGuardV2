@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuditLog, type AuditEntry } from "../../hooks/useAuditLog";
 import { useTelemetry, type DecisionExecutedPayload } from "../../context/TelemetryContext";
@@ -23,14 +23,21 @@ interface ZoneDto {
 }
 
 function getAllLoadsFromZones(zones: ZoneDto[]): LoadDto[] {
-    let loads: LoadDto[] = [];
-    zones.forEach((zone) => {
-        if (zone.loads) loads = [...loads, ...zone.loads];
-        const childZones = zone.children || zone.subZones || [];
-        if (childZones.length > 0) {
-            loads = [...loads, ...getAllLoadsFromZones(childZones)];
+    const loads: LoadDto[] = [];
+
+    function traverse(list: ZoneDto[]) {
+        for (const zone of list) {
+            if (zone.loads) {
+                loads.push(...zone.loads);
+            }
+            const childZones = zone.children || zone.subZones || [];
+            if (childZones.length > 0) {
+                traverse(childZones);
+            }
         }
-    });
+    }
+
+    traverse(zones);
     return loads;
 }
 
@@ -69,6 +76,7 @@ function formatTimestamp(iso: string): string {
 
 export function AuditTable() {
     const [page, setPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState("");
     const [liveRows, setLiveRows] = useState<AuditEntry[]>([]);
     const [loadsMap, setLoadsMap] = useState<Map<number, string>>(new Map());
 
@@ -78,11 +86,25 @@ export function AuditTable() {
 
     const { data, isLoading, isError, error } = useAuditLog(page, PAGE_SIZE);
 
+    const getBadgeStyleClass = useCallback((eventType: string) => {
+        switch (eventType) {
+            case "Load Shedding Executed":
+                return styles.eventLoadSheddingExecuted;
+            case "Load Restored":
+                return styles.eventLoadRestored;
+            case "Relay Decision Executed":
+                return styles.eventRelayDecisionExecuted;
+            default:
+                return styles.eventDefault;
+        }
+    }, []);
+
     useEffect(() => {
+        let isMounted = true;
         const fetchLoads = async () => {
             try {
                 const zones = await get<ZoneDto[]>("/zones");
-                if (zones) {
+                if (zones && isMounted) {
                     const allLoads = getAllLoadsFromZones(zones);
                     const map = new Map<number, string>();
                     allLoads.forEach((l) => {
@@ -98,13 +120,15 @@ export function AuditTable() {
         };
 
         fetchLoads();
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     useEffect(() => {
         if (latestDecision) {
-            setLiveRows((current) =>
-                [mapDecisionToEntry(latestDecision, loadsMap), ...current].slice(0, MAX_LIVE_ROWS)
-            );
+            const entry = mapDecisionToEntry(latestDecision, loadsMap);
+            setLiveRows((current) => [entry, ...current].slice(0, MAX_LIVE_ROWS));
         }
     }, [latestDecision, loadsMap]);
 
@@ -122,14 +146,25 @@ export function AuditTable() {
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
     const displayRows = useMemo(() => {
-        if (page > 1) return items;
+        let combined = items;
 
-        const filteredLiveRows = liveRows.filter(
-            (live) => !items.some((item) => item.rationale === live.rationale && item.timestampUtc === live.timestampUtc)
+        if (page === 1) {
+            const filteredLiveRows = liveRows.filter(
+                (live) => !items.some((item) => item.rationale === live.rationale && item.timestampUtc === live.timestampUtc)
+            );
+            combined = [...filteredLiveRows, ...items];
+        }
+
+        if (!searchQuery.trim()) return combined;
+
+        const q = searchQuery.toLowerCase();
+        return combined.filter(
+            (row) =>
+                row.eventType.toLowerCase().includes(q) ||
+                row.rationale.toLowerCase().includes(q) ||
+                (row.affectedLoadId && row.affectedLoadId.toLowerCase().includes(q))
         );
-
-        return [...filteredLiveRows, ...items];
-    }, [page, liveRows, items]);
+    }, [page, liveRows, items, searchQuery]);
 
     if (isLoading) {
         return (
@@ -156,7 +191,16 @@ export function AuditTable() {
                     <h2 className={styles.title}>📋 Audit Log</h2>
                     <p className={styles.subtitle}>Track all load shedding events and decisions</p>
                 </div>
-                <ExportButtons />
+                <div className={styles.actions}>
+                    <input
+                        type="text"
+                        placeholder="Search logs..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className={styles.searchInput}
+                    />
+                    <ExportButtons data={displayRows} />
+                </div>
             </div>
 
             <div className={styles.tableWrapper}>
@@ -174,12 +218,13 @@ export function AuditTable() {
                             <tr>
                                 <td colSpan={4} className={styles.empty}>
                                     <span className={styles.emptyIcon}>📭</span>
-                                    No audit entries yet.
+                                    No audit entries found.
                                 </td>
                             </tr>
                         )}
                         {displayRows.map((entry) => {
                             const isLive = typeof entry.id === "string" && entry.id.startsWith("live-");
+
                             return (
                                 <tr
                                     key={entry.id}
@@ -193,7 +238,7 @@ export function AuditTable() {
                                         </span>
                                     </td>
                                     <td>
-                                        <span className={`${styles.eventBadge} ${styles[`event${entry.eventType.replace(/\s/g, '')}`] || ''}`}>
+                                        <span className={`${styles.eventBadge} ${getBadgeStyleClass(entry.eventType)}`}>
                                             {entry.eventType}
                                         </span>
                                     </td>

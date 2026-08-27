@@ -1,7 +1,7 @@
 .container {
     display: flex;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+/*    margin-bottom: 1rem;*/
     flex-wrap: wrap;
 }
 
@@ -45,3 +45,14 @@
     .buttonPdf:hover {
         background: #059669;
     }
+
+
+/* ExportButtons.module.css (သို့မဟုတ် သက်ဆိုင်ရာ CSS ဖိုင်) */
+
+.gradientText {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    /* Stylelint / Linter warning များကို ကျော်လွန်ရန် */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

@@ -64,7 +64,6 @@ export function LiveOverviewPage() {
     const [freqHistory, setFreqHistory] = useState<number[]>([]);
     const [alarms, setAlarms] = useState<AlarmLog[]>([]);
 
-    // ⚡ Generator Total Capacity (kW)
     const GENERATOR_CAPACITY_KW = 500.0;
 
     useEffect(() => {
@@ -131,7 +130,6 @@ export function LiveOverviewPage() {
 
     const systemMode = getSystemMode();
 
-    // Flatten all loads across zones
     const allLoads = useMemo(() => {
         return zones.flatMap((z) => getAllZoneLoads(z));
     }, [zones]);
@@ -140,14 +138,34 @@ export function LiveOverviewPage() {
         return allLoads.reduce((sum, l) => sum + (l.powerRatingKw || 0), 0);
     }, [allLoads]);
 
-    const realTimeLoadKw = telemetry?.totalLoadKw ?? totalConfiguredKw;
+    // Create a Set of Shedded Relay Addresses from WebSocket decision
+    const sheddedRelayAddresses = useMemo(() => {
+        const set = new Set<number>();
+        if (latestDecision?.relayDecisions) {
+            latestDecision.relayDecisions.forEach((r: RelayDecision) => {
+                if (!r.energize && r.relayAddress !== undefined) {
+                    set.add(r.relayAddress);
+                }
+            });
+        }
+        return set;
+    }, [latestDecision]);
+
+    // Calculate actual active load considering shedding decisions
+    const realTimeLoadKw = useMemo(() => {
+        if (telemetry?.totalLoadKw !== undefined) {
+            return telemetry.totalLoadKw;
+        }
+        return allLoads.reduce((sum, load) => {
+            const isShed = load.relayAddress !== undefined && sheddedRelayAddresses.has(load.relayAddress);
+            return isShed ? sum : sum + (load.powerRatingKw || 0);
+        }, 0);
+    }, [telemetry, allLoads, sheddedRelayAddresses]);
+
     const capacityUsagePct = Math.round((realTimeLoadKw / GENERATOR_CAPACITY_KW) * 100);
 
-    // Priority Load Totals & Percentages (Memoized to prevent redundant calculations)
     const { p1Kw, p2Kw, p3Kw, p1Pct, p2Pct, p3Pct } = useMemo(() => {
-        let p1 = 0;
-        let p2 = 0;
-        let p3 = 0;
+        let p1 = 0, p2 = 0, p3 = 0;
 
         allLoads.forEach((load) => {
             const priority = getLoadPriorityNum(load);
@@ -164,44 +182,42 @@ export function LiveOverviewPage() {
         return { p1Kw: p1, p2Kw: p2, p3Kw: p3, p1Pct: pct1, p2Pct: pct2, p3Pct: pct3 };
     }, [allLoads, totalConfiguredKw]);
 
-    // Real-Time Load Shedding Logic
-    const getLoadStatus = (load: LoadDto) => {
-        if (!load || realTimeLoadKw === undefined || realTimeLoadKw === 0) {
-            return "Normal";
-        }
+    // Map of individual load statuses determined in a single deterministic pass
+    const loadStatusMap = useMemo(() => {
+        const statusMap = new Map<string, "Normal" | "Shedded">();
 
-        // 1. Backend Relay Decision Priority
-        if (load.relayAddress && latestDecision?.relayDecisions) {
-            const decision = latestDecision.relayDecisions.find(
-                (r: RelayDecision) => r.relayAddress === load.relayAddress
-            );
-            if (decision) {
-                return decision.energize ? "Normal" : "Shedded";
+        // 1. Mark status via direct backend Relay Decisions
+        allLoads.forEach((load) => {
+            if (load.relayAddress !== undefined && sheddedRelayAddresses.has(load.relayAddress)) {
+                statusMap.set(load.id, "Shedded");
+            } else {
+                statusMap.set(load.id, "Normal");
             }
-        }
+        });
 
-        // 2. Generator Capacity Overload Safeguard
-        const currentPriority = getLoadPriorityNum(load);
-
+        // 2. Fallback Overload Simulation if telemetry is exceeding capacity
         if (realTimeLoadKw > GENERATOR_CAPACITY_KW) {
-            let excessLoadKw = realTimeLoadKw - GENERATOR_CAPACITY_KW;
+            let excess = realTimeLoadKw - GENERATOR_CAPACITY_KW;
 
-            if (currentPriority === 3 && excessLoadKw > 0) {
-                return "Shedded";
-            }
+            // Sort loads from lowest priority (P3 -> P2 -> P1) for sequential shedding
+            const sortedLoads = [...allLoads].sort(
+                (a, b) => getLoadPriorityNum(b) - getLoadPriorityNum(a)
+            );
 
-            excessLoadKw -= p3Kw;
-            if (currentPriority === 2 && excessLoadKw > 0) {
-                return "Shedded";
-            }
-
-            excessLoadKw -= p2Kw;
-            if (currentPriority === 1 && excessLoadKw > 0) {
-                return "Shedded";
+            for (const load of sortedLoads) {
+                if (excess <= 0) break;
+                if (statusMap.get(load.id) === "Normal") {
+                    statusMap.set(load.id, "Shedded");
+                    excess -= load.powerRatingKw || 0;
+                }
             }
         }
 
-        return "Normal";
+        return statusMap;
+    }, [allLoads, sheddedRelayAddresses, realTimeLoadKw, GENERATOR_CAPACITY_KW]);
+
+    const getLoadStatus = (load: LoadDto) => {
+        return loadStatusMap.get(load.id) || "Normal";
     };
 
     const renderFrequencyChart = () => {

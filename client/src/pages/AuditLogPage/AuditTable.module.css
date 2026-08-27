@@ -31,7 +31,7 @@
 }
 
 /* ========================================
-   PAGE
+   PAGE & HEADER
    ======================================== */
 .page {
     padding: 24px 32px;
@@ -39,9 +39,6 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* ========================================
-   HEADER
-   ======================================== */
 .header {
     display: flex;
     justify-content: space-between;
@@ -50,6 +47,27 @@
     gap: 16px;
     margin-bottom: 20px;
 }
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.searchInput {
+    padding: 8px 14px;
+    background: var(--bg-input, #13161b);
+    border: 1px solid var(--border-input, #2a2f38);
+    border-radius: 8px;
+    color: var(--text-primary, #e8edf5);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+    .searchInput:focus {
+        border-color: var(--chart-blue, #60a5fa);
+    }
 
 .title {
     font-size: 22px;
@@ -66,7 +84,7 @@
 }
 
 /* ========================================
-   TABLE WRAPPER
+   TABLE WRAPPER & TABLE
    ======================================== */
 .tableWrapper {
     background: var(--bg-card, #1a1d24);
@@ -77,9 +95,6 @@
     margin-bottom: 20px;
 }
 
-/* ========================================
-   TABLE
-   ======================================== */
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -126,7 +141,7 @@
     }
 
 /* ========================================
-   ROW STATES
+   ROW STATES & TIMESTAMPS
    ======================================== */
 .row {
     transition: background 0.2s ease;
@@ -142,9 +157,6 @@
         background: rgba(52, 211, 153, 0.10) !important;
     }
 
-/* ========================================
-   TIMESTAMP
-   ======================================== */
 .timestamp {
     font-size: 13px;
     color: var(--text-secondary, #94a3b8);
@@ -180,7 +192,7 @@
 }
 
 /* ========================================
-   EVENT BADGE
+   EVENT BADGES
    ======================================== */
 .eventBadge {
     display: inline-block;
@@ -195,30 +207,29 @@
 .eventLoadSheddingExecuted {
     background: var(--accent-soft, rgba(248, 113, 113, 0.12));
     color: var(--accent-red, #f87171);
-    border-color: rgba(248, 113, 113, 0.15);
+    border-color: rgba(248, 113, 113, 0.25);
 }
 
 .eventLoadRestored {
     background: var(--success-soft, rgba(52, 211, 153, 0.12));
     color: var(--success, #34d399);
-    border-color: rgba(52, 211, 153, 0.15);
+    border-color: rgba(52, 211, 153, 0.25);
 }
 
 .eventRelayDecisionExecuted {
     background: var(--chart-blue-soft, rgba(96, 165, 250, 0.12));
     color: var(--chart-blue, #60a5fa);
-    border-color: rgba(96, 165, 250, 0.15);
+    border-color: rgba(96, 165, 250, 0.25);
 }
 
-/* Fallback for any other event type */
-.eventBadge:not([class*="event"]) {
+.eventDefault {
     background: rgba(255, 255, 255, 0.04);
     color: var(--text-secondary, #94a3b8);
     border-color: rgba(255, 255, 255, 0.06);
 }
 
 /* ========================================
-   RATIONALE
+   DETAILS & PAGINATION
    ======================================== */
 .rationale {
     color: var(--text-primary, #e8edf5);
@@ -227,9 +238,6 @@
     font-size: 14px;
 }
 
-/* ========================================
-   AFFECTED LOAD
-   ======================================== */
 .affectedLoad {
     font-size: 13px;
     color: var(--text-secondary, #94a3b8);
@@ -237,9 +245,6 @@
     word-break: break-word;
 }
 
-/* ========================================
-   EMPTY STATE
-   ======================================== */
 .empty {
     text-align: center !important;
     padding: 48px 20px !important;
@@ -254,9 +259,6 @@
     opacity: 0.5;
 }
 
-/* ========================================
-   LOADING STATE
-   ======================================== */
 .loadingState {
     display: flex;
     align-items: center;
@@ -285,9 +287,6 @@
     }
 }
 
-/* ========================================
-   ERROR STATE
-   ======================================== */
 .errorState {
     display: flex;
     align-items: center;
@@ -305,9 +304,6 @@
     flex-shrink: 0;
 }
 
-/* ========================================
-   PAGINATION
-   ======================================== */
 .pagination {
     display: flex;
     justify-content: space-between;
