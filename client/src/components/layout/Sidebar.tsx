@@ -108,23 +108,24 @@ export function Sidebar() {
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                         <div className={styles.modalHeader}>
                             <span className={styles.modalWarnIcon}>⚠️</span>
-                            <h3>Logout အတည်ပြုရန်</h3>
+                            <h3>Confirm Logout</h3>
                         </div>
                         <p className={styles.modalText}>
-                            အကောင့်ထဲမှ ထွက်ခွာရန် သေချာပါသလား? Login Page သို့ ပြန်လည်ရောက်ရှိသွားပါမည်။
+                            Are you sure you want to log out of your account?
+                            You will be redirected to the login page.
                         </p>
                         <div className={styles.modalActions}>
                             <button
                                 className={styles.cancelBtn}
                                 onClick={() => setShowLogoutModal(false)}
                             >
-                                မထွက်တော့ပါ
+                                Cancel
                             </button>
                             <button
                                 className={styles.confirmBtn}
                                 onClick={handleConfirmLogout}
                             >
-                                ထွက်မည်
+                                Logout
                             </button>
                         </div>
                     </div>
