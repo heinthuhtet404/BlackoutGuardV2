@@ -498,7 +498,7 @@ export function LiveOverviewPage() {
                             </div>
                         ))}
                     </div>
-                )}
+                )}  
             </div>
         </div>
     );

@@ -128,7 +128,7 @@ export function LoginPage() {
                     </div>
 
                     {/* Remember Me */}
-                    <div className={styles.rememberRow}>
+                    {/* <div className={styles.rememberRow}>
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -138,7 +138,7 @@ export function LoginPage() {
                             />
                             <span>Remember me</span>
                         </label>
-                    </div>
+                    </div> */}
 
                     {/* Error Alert */}
                     {error && (

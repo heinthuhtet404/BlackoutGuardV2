@@ -21,7 +21,9 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
+        // AsNoTracking() ထည့်ထားသဖြင့် EF Core Change Tracker ထဲ ရောက်မသွားတော့ပါ။
         var user = await _context.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == id, ct);
 
         return user is null ? null : MapToDomain(user);
@@ -30,12 +32,14 @@ public class UserRepository : IUserRepository
     public async Task<UserAuthDto?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
         var user = await _context.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email, ct);
 
         if (user is null)
             return null;
 
         var facilityId = await _context.Facilities
+            .AsNoTracking()
             .Where(f => f.TenantId == user.TenantId)
             .Select(f => (Guid?)f.Id)
             .FirstOrDefaultAsync(ct);
@@ -54,6 +58,7 @@ public class UserRepository : IUserRepository
     public async Task<IReadOnlyList<User>> GetByTenantIdAsync(Guid tenantId, CancellationToken ct = default)
     {
         var users = await _context.Users
+            .AsNoTracking()
             .Where(u => u.TenantId == tenantId)
             .OrderBy(u => u.CreatedAt)
             .ToListAsync(ct);
@@ -64,12 +69,15 @@ public class UserRepository : IUserRepository
     public async Task<int> CountAdminsInTenantAsync(Guid tenantId, CancellationToken ct = default)
     {
         return await _context.Users
+            .AsNoTracking()
             .CountAsync(u => u.TenantId == tenantId && u.Role == "Admin" && u.IsActive, ct);
     }
 
     public async Task<bool> HasAnyUserAsync(CancellationToken ct = default)
     {
-        return await _context.Users.AnyAsync(ct);
+        return await _context.Users
+            .AsNoTracking()
+            .AnyAsync(ct);
     }
 
     public async Task AddAsync(User user, CancellationToken ct = default)
@@ -88,6 +96,14 @@ public class UserRepository : IUserRepository
     public Task DeleteAsync(User user, CancellationToken ct = default)
     {
         var entity = MapToInfrastructure(user);
+
+        // Tracker ထဲတွင် ID တူသော Entity ရှိနေပါက Conflict မဖြစ်စေရန် Detaching ပြုလုပ်ပေးခြင်း
+        var trackedEntity = _context.Users.Local.FirstOrDefault(e => e.Id == entity.Id);
+        if (trackedEntity != null)
+        {
+            _context.Entry(trackedEntity).State = EntityState.Detached;
+        }
+
         _context.Users.Remove(entity);
         return Task.CompletedTask;
     }

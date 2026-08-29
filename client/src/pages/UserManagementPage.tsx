@@ -21,7 +21,14 @@ export interface User {
 interface UserModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (userData: Partial<User> & { sendWelcomeEmail?: boolean }) => Promise<void>;
+    onSave: (userData: Partial<User> & { sendWelcomeEmail?: boolean }) => Promise<User | undefined>;
+}
+
+interface DeleteModalProps {
+    isOpen: boolean;
+    user: User | null;
+    onClose: () => void;
+    onConfirm: () => Promise<void>;
 }
 
 const validatePassword = (pwd: string) => {
@@ -34,6 +41,103 @@ const validatePassword = (pwd: string) => {
     );
 };
 
+// ----------------------------------------------------
+// Custom Delete Confirmation Modal Component
+// ----------------------------------------------------
+function DeleteConfirmationModal({ isOpen, user, onClose, onConfirm }: DeleteModalProps) {
+    const [deleting, setDeleting] = useState(false);
+
+    if (!isOpen || !user) return null;
+
+    const displayName = user.fullName || user.username;
+
+    const handleConfirm = async () => {
+        setDeleting(true);
+        try {
+            await onConfirm();
+        } finally {
+            setDeleting(false);
+            onClose();
+        }
+    };
+
+    return (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+            <div className={styles.modal}>
+                {/* Header with icon */}
+                <div className={styles.modalHeader}>
+                    <div className={styles.modalIconWrapper}>
+                        <span className={styles.modalIcon}>🗑️</span>
+                    </div>
+                    <h2 className={styles.modalTitle}>Delete User</h2>
+                    <button
+                        type="button"
+                        className={styles.modalClose}
+                        onClick={onClose}
+                        disabled={deleting}
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className={styles.modalBody}>
+                    <p className={styles.modalText}>
+                        Are you sure you want to permanently delete this user account?
+                    </p>
+
+                    <div className={styles.deleteTargetCard}>
+                        <div className={styles.deleteTargetAvatar}>
+                            {displayName?.[0] || user.email[0]}
+                        </div>
+                        <div className={styles.deleteTargetInfo}>
+                            <div className={styles.deleteTargetName}>
+                                {displayName || user.email}
+                            </div>
+                            <div className={styles.deleteTargetEmail}>{user.email}</div>
+                        </div>
+                    </div>
+
+                    <div className={styles.warningBanner}>
+                        <span className={styles.warningIcon}>⚠️</span>
+                        <span>This action cannot be undone.</span>
+                    </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className={styles.modalFooter}>
+                    <button
+                        type="button"
+                        className={styles.cancelBtn}
+                        onClick={onClose}
+                        disabled={deleting}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        className={styles.deleteConfirmBtn}
+                        onClick={handleConfirm}
+                        disabled={deleting}
+                    >
+                        {deleting ? (
+                            <>
+                                <span className={styles.spinnerSmall}></span>
+                                Deleting...
+                            </>
+                        ) : (
+                            "Yes, Delete"
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ----------------------------------------------------
+// Create User Modal Component
+// ----------------------------------------------------
 function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
@@ -91,8 +195,13 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
             <div className={styles.modal}>
                 <div className={styles.modalHeader}>
-                    <h2>👤 Create New User</h2>
-                    <button type="button" className={styles.modalClose} onClick={onClose}>✕</button>
+                    <div className={styles.modalIconWrapper}>
+                        <span className={styles.modalIcon}>👤</span>
+                    </div>
+                    <h2 className={styles.modalTitle}>Create New User</h2>
+                    <button type="button" className={styles.modalClose} onClick={onClose}>
+                        ✕
+                    </button>
                 </div>
                 <form onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
@@ -158,12 +267,13 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                             value={role}
                             onChange={(e) => setRole(e.target.value as UserRole)}
                         >
+                            <option value="Admin">🛡️ Admin</option>
                             <option value="Operator">⚙️ Operator</option>
                             <option value="Viewer">👁️ Viewer</option>
                         </select>
                     </div>
 
-                    <div className={styles.checkboxGroup}>
+                    {/* <div className={styles.checkboxGroup}>
                         <input
                             type="checkbox"
                             id="welcomeEmail"
@@ -171,9 +281,9 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                             onChange={(e) => setSendWelcomeEmail(e.target.checked)}
                         />
                         <label htmlFor="welcomeEmail">Send Welcome Email (with credentials)</label>
-                    </div>
+                    </div> */}
 
-                    <div className={styles.modalActions}>
+                    <div className={styles.modalFooter}>
                         <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={submitting}>
                             Cancel
                         </button>
@@ -187,12 +297,36 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
     );
 }
 
+// ----------------------------------------------------
+// Main User Management Page Component
+// ----------------------------------------------------
 export function UserManagementPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState<string>("All");
     const [visiblePasswords, setVisiblePasswords] = useState<{ [key: string]: boolean }>({});
+
+    // Delete Modal state
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
+    // Demo environment state persistence
+    const [createdPasswords, setCreatedPasswords] = useState<{ [userId: string]: string }>(() => {
+        try {
+            const saved = localStorage.getItem("demo_created_passwords");
+            return saved ? JSON.parse(saved) : {};
+        } catch {
+            return {};
+        }
+    });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem("demo_created_passwords", JSON.stringify(createdPasswords));
+        } catch (err) {
+            console.warn("Failed to persist created passwords to LocalStorage.", err);
+        }
+    }, [createdPasswords]);
 
     const { user: currentUser } = useAuth();
     const currentLoggedInUserId = currentUser?.id;
@@ -243,7 +377,7 @@ export function UserManagementPage() {
         }));
     };
 
-    const handleDeleteUser = async (user: User) => {
+    const openDeleteModal = (user: User) => {
         if (user.id === currentLoggedInUserId) {
             showToast("Self-Delete Protection: You cannot delete your own logged-in account.", "error");
             return;
@@ -254,34 +388,51 @@ export function UserManagementPage() {
             return;
         }
 
-        const displayName = user.fullName || user.username || user.email;
-        if (!window.confirm(`Are you sure you want to permanently delete ${displayName} (${user.email})?`)) {
-            return;
-        }
+        setUserToDelete(user);
+    };
+
+    const confirmDeleteUser = async () => {
+        if (!userToDelete) return;
 
         try {
-            await del(`/users/${user.id}`);
-            setUsers((prev) => prev.filter((u) => u.id !== user.id));
-            showToast(`User ${user.email} deleted successfully.`, "success");
-            await logAuditTrail("DELETE", user.id, `Deleted account ${user.email}`);
+            await del(`/users/${userToDelete.id}`);
+            setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+
+            setCreatedPasswords((prev) => {
+                const updated = { ...prev };
+                delete updated[userToDelete.id];
+                return updated;
+            });
+
+            showToast(`User ${userToDelete.email} deleted successfully.`, "success");
+            await logAuditTrail("DELETE", userToDelete.id, `Deleted account ${userToDelete.email}`);
         } catch (err) {
             showToast(err instanceof Error ? err.message : "Failed to delete user from database.", "error");
         }
     };
 
-    const handleSaveUser = async (userData: Partial<User> & { sendWelcomeEmail?: boolean }) => {
+    const handleSaveUser = async (userData: Partial<User> & { sendWelcomeEmail?: boolean }): Promise<User | undefined> => {
         try {
             const created = await post<User>("/users", userData);
             if (created) {
+                if (userData.password && created.id) {
+                    setCreatedPasswords((prev) => ({
+                        ...prev,
+                        [created.id]: userData.password!,
+                    }));
+                }
+
                 setUsers((prev) => [...prev, created]);
                 showToast(`New user ${created.email} created successfully.`, "success");
                 await logAuditTrail("CREATE", created.id, `Created account ${created.email} with role ${created.role}`);
+                return created;
             } else {
                 await fetchUsers();
             }
         } catch (err) {
             showToast(err instanceof Error ? err.message : "Failed to create user", "error");
         }
+        return undefined;
     };
 
     const filteredUsers = useMemo(() => {
@@ -307,19 +458,6 @@ export function UserManagementPage() {
                 return <span className={`${styles.badge} ${styles.badgeViewer}`}>👁️ Viewer</span>;
             default:
                 return <span className={styles.badge}>{role}</span>;
-        }
-    };
-
-    const getStatusStyle = (status: UserStatus) => {
-        switch (status) {
-            case "Active":
-                return <span className={styles.statusActive}>🟢 Active</span>;
-            case "Pending":
-                return <span className={styles.statusPending}>🟡 Pending</span>;
-            case "Inactive":
-                return <span className={styles.statusInactive}>🔴 Inactive</span>;
-            default:
-                return <span className={styles.statusActive}>🟢 Active</span>;
         }
     };
 
@@ -370,7 +508,6 @@ export function UserManagementPage() {
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Role</th>
-                                    <th>Status</th>
                                     <th>Password</th>
                                     <th>Actions</th>
                                 </tr>
@@ -378,7 +515,7 @@ export function UserManagementPage() {
                             <tbody>
                                 {filteredUsers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className={styles.emptyRow}>
+                                        <td colSpan={6} className={styles.emptyRow}>
                                             <span className={styles.emptyIcon}>📭</span>
                                             No users matched your criteria.
                                         </td>
@@ -388,6 +525,7 @@ export function UserManagementPage() {
                                         const isSelf = u.id === currentLoggedInUserId;
                                         const isLastAdmin = u.role === "Admin" && adminCount <= 1;
                                         const isPasswordVisible = visiblePasswords[u.id];
+                                        const displayPassword = createdPasswords[u.id] || u.password;
 
                                         return (
                                             <tr key={u.id} className={isSelf ? styles.selfRow : ""}>
@@ -398,11 +536,12 @@ export function UserManagementPage() {
                                                 </td>
                                                 <td className={styles.userEmail}>{u.email}</td>
                                                 <td>{getRoleBadge(u.role)}</td>
-                                                <td>{getStatusStyle(u.status)}</td>
                                                 <td>
                                                     <div className={styles.passwordCell}>
                                                         <span className={styles.passwordText}>
-                                                            {isPasswordVisible ? u.password || "[Hashed]" : "••••••••"}
+                                                            {isPasswordVisible
+                                                                ? displayPassword || "[Hashed]"
+                                                                : "••••••••"}
                                                         </span>
                                                         <button
                                                             type="button"
@@ -425,7 +564,7 @@ export function UserManagementPage() {
                                                                     ? "Cannot delete last admin"
                                                                     : "Delete user"
                                                         }
-                                                        onClick={() => handleDeleteUser(u)}
+                                                        onClick={() => openDeleteModal(u)}
                                                     >
                                                         🗑️ Delete
                                                     </button>
@@ -448,6 +587,13 @@ export function UserManagementPage() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveUser}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={Boolean(userToDelete)}
+                user={userToDelete}
+                onClose={() => setUserToDelete(null)}
+                onConfirm={confirmDeleteUser}
             />
         </div>
     );
