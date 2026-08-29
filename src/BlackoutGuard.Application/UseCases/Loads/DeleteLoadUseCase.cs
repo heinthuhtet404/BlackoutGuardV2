@@ -35,19 +35,21 @@ public class DeleteLoadUseCase
                 if (load is null)
                     return Result.Failure($"Load {loadId} not found in facility {facilityId}.");
 
-                // time_schedules and load_cooldown_state both have ON DELETE CASCADE
-                // on load_id per the Task 1.2 schema — rely on the database cascade.
-                await _loadRepo.DeleteAsync(loadId, facilityId, ct);
-
+                // 1. Audit Log ကို အရင်ဆောက်ပါ (Load မပျက်သေးသည့်အတွက် AffectedLoadId ထည့်လို့ရပါသည်)
                 var auditEntry = new AuditEntryDto
                 {
                     FacilityId = facilityId,
                     EventType = "LoadDeleted",
-                    Rationale = $"Load '{load.Name}' (priority {load.Priority}, relay address {load.RelayAddress}) deleted from facility {facilityId}.",
+                    Rationale = $"Load '{load.Name}' (Priority: {load.Priority}, Relay: {load.RelayAddress}) was deleted.",
                     AffectedLoadId = loadId
                 };
 
                 await _auditRepo.AddAsync(auditEntry, ct);
+
+                // 2. Audit Log ရေးပြီးမှ Load ကို Delete လုပ်ပါ
+                // (Database FK ON DELETE SET NULL ကြောင့် Load ပျက်သွားသော်လည်း Audit Log ကျန်ခဲ့ပြီး AffectedLoadId က NULL ဖြစ်သွားပါမည်)
+                await _loadRepo.DeleteAsync(loadId, facilityId, ct);
+
                 await tx.CommitAsync(ct);
 
                 return Result.Success();

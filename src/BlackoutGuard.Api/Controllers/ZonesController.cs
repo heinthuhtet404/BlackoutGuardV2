@@ -98,7 +98,7 @@ public class ZonesController : ControllerBase
             id, facilityId.Value, request.Name, request.Type, request.ParentZoneId, ct);
 
         return result.IsSuccess
-            ? Ok()
+            ? Ok(new { message = "Zone updated successfully", id })
             : MapFailure(result);
     }
 

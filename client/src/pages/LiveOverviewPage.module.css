@@ -166,14 +166,14 @@
 }
 
 /* ========================================
-   KPI GRID (FIXED CARD SIZES)
+   KPI GRID
    ======================================== */
 .grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 24px;
-    align-items: stretch; /* Card တိုင်း၏ Height ကို တစ်ပြေးညီဖြစ်စေရန် */
+    align-items: stretch;
 }
 
 .card {
@@ -186,7 +186,7 @@
     align-items: center;
     gap: 16px;
     transition: all 0.25s ease;
-    min-height: 120px; /* Card တိုင်းအတွက် အနည်းဆုံး အမြင့် သတ်မှတ်ချက် */
+    min-height: 120px;
     box-sizing: border-box;
 }
 
@@ -220,7 +220,7 @@
 
 .cardContent {
     flex: 1;
-    min-width: 0; /* Text Overflow မဖြစ်စေရန် */
+    min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -234,7 +234,7 @@
     letter-spacing: 0.2px;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* စာသားရှည်ပါက ... ဖြစ်သွားမည် */
+    text-overflow: ellipsis;
 }
 
 .cardValue {
@@ -244,6 +244,12 @@
     margin: 0;
     letter-spacing: -0.3px;
     line-height: 1.2;
+}
+
+.cardSubText {
+    font-size: 12px;
+    color: var(--text-muted, #64748b);
+    margin-top: 2px;
 }
 
 .valueBlue {
@@ -374,14 +380,14 @@
 
 .zoneCard {
     border: 1px solid var(--border-soft, #22262e);
-    border-radius: 12px;
-    padding: 18px 20px;
+    border-radius: 14px;
+    padding: 20px 24px;
     background: rgba(255, 255, 255, 0.015);
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
 }
 
     .zoneCard:hover {
-        border-color: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.025);
     }
 
@@ -391,122 +397,196 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .zoneTitle {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
     .zoneTitle h3 {
-        font-size: 16px;
+        font-size: 17px;
         font-weight: 600;
         color: var(--text-primary, #e8edf5);
         margin: 0;
+        letter-spacing: -0.2px;
     }
 
 .zoneIcon {
-    font-size: 20px;
+    font-size: 22px;
+}
+
+.zoneActionsWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .zoneLoadCount {
     font-size: 13px;
     color: var(--text-secondary, #94a3b8);
     background: rgba(255, 255, 255, 0.04);
-    padding: 2px 12px;
+    padding: 3px 14px;
     border-radius: 100px;
     border: 1px solid rgba(255, 255, 255, 0.04);
+    font-weight: 500;
 }
 
 /* ========================================
-   NODE GRID
+   NODE GRID - OPTIMIZED LAYOUT
    ======================================== */
 .nodeGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
     align-items: stretch;
 }
 
 .nodeCard {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
+    gap: 14px;
+    padding: 14px 18px;
     background: var(--bg-card, #1a1d24);
-    border-radius: 10px;
+    border-radius: 12px;
     border: 1px solid var(--border-card, #2a2f38);
-    transition: all 0.2s ease;
-    min-height: 60px;
+    transition: all 0.25s ease;
+    min-height: 72px;
     box-sizing: border-box;
+    position: relative;
 }
 
     .nodeCard:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px var(--shadow, rgba(0, 0, 0, 0.30));
-        border-color: rgba(255, 255, 255, 0.06);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px var(--shadow, rgba(0, 0, 0, 0.40));
+        border-color: rgba(255, 255, 255, 0.10);
     }
 
 .nodeShedded {
     border-color: var(--accent-red, #f87171);
-    background: rgba(248, 113, 113, 0.05);
+    background: rgba(248, 113, 113, 0.06);
 }
+
+    .nodeShedded:hover {
+        border-color: var(--accent-red, #f87171);
+        box-shadow: 0 8px 24px rgba(248, 113, 113, 0.15);
+    }
 
 .nodeNormal {
     border-color: var(--border-soft, #22262e);
 }
 
+/* ----- Node Icon ----- */
 .nodeIcon {
-    font-size: 18px;
+    font-size: 20px;
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    transition: all 0.2s ease;
 }
 
+.nodeCard:hover .nodeIcon {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+/* ----- Node Info (Name + Meta) ----- */
 .nodeInfo {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .nodeName {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-primary, #e8edf5);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    letter-spacing: -0.2px;
 }
 
 .nodeMeta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
     color: var(--text-secondary, #94a3b8);
 }
 
+    .nodeMeta .sep {
+        color: var(--text-muted, #64748b);
+        font-size: 10px;
+    }
+
+/* Priority Badge */
+.priorityBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    height: 18px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.priorityP1 {
+    background: rgba(248, 113, 113, 0.18);
+    color: #f87171;
+}
+
+.priorityP2 {
+    background: rgba(251, 191, 36, 0.18);
+    color: #fbbf24;
+}
+
+.priorityP3 {
+    background: rgba(52, 211, 153, 0.18);
+    color: #34d399;
+}
+
+/* ----- Node Badge (Status) ----- */
 .nodeBadge {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    padding: 2px 10px;
+    padding: 2px 12px;
     border-radius: 100px;
     white-space: nowrap;
+    letter-spacing: 0.2px;
+    flex-shrink: 0;
 }
 
 .badgeNormal {
-    background: var(--success-soft, rgba(52, 211, 153, 0.10));
+    background: var(--success-soft, rgba(52, 211, 153, 0.12));
     color: var(--success, #34d399);
-    border: 1px solid rgba(52, 211, 153, 0.10);
+    border: 1px solid rgba(52, 211, 153, 0.12);
 }
 
 .badgeShedded {
-    background: var(--accent-soft, rgba(248, 113, 113, 0.10));
+    background: var(--accent-soft, rgba(248, 113, 113, 0.12));
     color: var(--accent-red, #f87171);
-    border: 1px solid rgba(248, 113, 113, 0.10);
+    border: 1px solid rgba(248, 113, 113, 0.12);
+    animation: shedPulse 2s ease-in-out infinite;
+}
+
+@keyframes shedPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
 }
 
 .noLoads {
@@ -516,6 +596,96 @@
     margin: 0;
     text-align: center;
     grid-column: 1 / -1;
+}
+
+/* ========================================
+   NODE ACTIONS - Right side
+   ======================================== */
+.nodeActionsWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transform: scale(0.85);
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+
+.nodeCard:hover .actionButtons,
+.nodeCard:focus-within .actionButtons {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.editBtn,
+.deleteBtn {
+    background: transparent;
+    border: 1px solid var(--border-soft, #2a2f38);
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    color: var(--text-secondary, #94a3b8);
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+    .editBtn:hover {
+        background: rgba(96, 165, 250, 0.15);
+        border-color: var(--chart-blue, #60a5fa);
+        color: var(--chart-blue, #60a5fa);
+        transform: scale(1.08);
+    }
+
+    .deleteBtn:hover {
+        background: rgba(248, 113, 113, 0.15);
+        border-color: var(--accent-red, #f87171);
+        color: var(--accent-red, #f87171);
+        transform: scale(1.08);
+    }
+
+    .deleteBtn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+        .deleteBtn:disabled:hover {
+            background: transparent;
+            border-color: var(--border-soft, #2a2f38);
+            color: var(--text-secondary, #94a3b8);
+        }
+
+/* Zone Action Buttons - Always visible */
+.zoneActionsWrapper .actionButtons {
+    opacity: 0.6;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+    .zoneActionsWrapper .actionButtons:hover {
+        opacity: 1;
+    }
+
+.zoneActionsWrapper .editBtn,
+.zoneActionsWrapper .deleteBtn {
+    padding: 3px 7px;
+    font-size: 12px;
+    min-width: 26px;
+    min-height: 26px;
 }
 
 /* ========================================
@@ -691,7 +861,177 @@
 }
 
 /* ========================================
-   RESPONSIVE
+   EDIT MODAL
+   ======================================== */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modalCard {
+    background: var(--bg-card, #1a1d24);
+    border: 1px solid var(--border-card, #2a2f38);
+    border-radius: 16px;
+    padding: 28px 32px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 24px 80px var(--shadow-heavy, rgba(0, 0, 0, 0.60));
+    animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modalCard h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary, #e8edf5);
+    margin: 0 0 4px 0;
+}
+
+.modalSubtitle {
+    font-size: 14px;
+    color: var(--text-secondary, #94a3b8);
+    margin: 0 0 20px 0;
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+    .modalForm label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary, #94a3b8);
+    }
+
+    .modalForm input,
+    .modalForm select {
+        background: var(--bg-input, #13161b);
+        border: 1px solid var(--border-input, #2a2f38);
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: var(--text-primary, #e8edf5);
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        outline: none;
+    }
+
+        .modalForm input:hover,
+        .modalForm select:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .modalForm input:focus,
+        .modalForm select:focus {
+            border-color: var(--accent-red, #f87171);
+            box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12));
+        }
+
+    .modalForm select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        cursor: pointer;
+    }
+
+        .modalForm select option {
+            background: var(--bg-card, #1a1d24);
+            color: var(--text-primary, #e8edf5);
+        }
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft, #22262e);
+}
+
+.cancelBtn {
+    background: transparent;
+    border: 1px solid var(--border-card, #2a2f38);
+    color: var(--text-secondary, #94a3b8);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+    .cancelBtn:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary, #e8edf5);
+    }
+
+.saveBtn {
+    background: var(--accent-red, #f87171);
+    color: var(--text-inverse, #0f1117);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.25s ease;
+}
+
+    .saveBtn:hover:not(:disabled) {
+        background: var(--accent-hover, #ef4444);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px var(--accent-glow, rgba(248, 113, 113, 0.20));
+    }
+
+    .saveBtn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+/* ========================================
+   RESPONSIVE - OPTIMIZED
    ======================================== */
 @media (max-width: 1200px) {
     .grid {
@@ -765,8 +1105,83 @@
         font-size: 16px;
     }
 
+    /* Node Grid - 2 columns */
     .nodeGrid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .nodeCard {
+        padding: 12px 14px;
+        min-height: 64px;
+        gap: 12px;
+        border-radius: 10px;
+    }
+
+    .nodeName {
+        font-size: 14px;
+    }
+
+    .nodeMeta {
+        font-size: 11px;
+    }
+
+    .nodeIcon {
+        font-size: 18px;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+    }
+
+    .nodeBadge {
+        font-size: 10px;
+        padding: 2px 10px;
+    }
+
+    /* Action buttons always visible on tablet */
+    .actionButtons {
+        opacity: 0.7;
+        transform: scale(1);
+        pointer-events: auto;
+    }
+
+    .editBtn,
+    .deleteBtn {
+        padding: 3px 7px;
+        font-size: 12px;
+        min-width: 28px;
+        min-height: 28px;
+        border-radius: 6px;
+    }
+
+    .zoneCard {
+        padding: 16px 18px;
+        border-radius: 12px;
+    }
+
+    .zoneTitle h3 {
+        font-size: 15px;
+    }
+
+    .zoneIcon {
+        font-size: 20px;
+    }
+
+    .zoneLoadCount {
+        font-size: 12px;
+        padding: 2px 12px;
+    }
+
+    .zoneActionsWrapper .actionButtons {
+        opacity: 0.8;
+    }
+
+    .zoneActionsWrapper .editBtn,
+    .zoneActionsWrapper .deleteBtn {
+        padding: 3px 6px;
+        font-size: 12px;
+        min-width: 24px;
+        min-height: 24px;
     }
 
     .chartCard {
@@ -776,10 +1191,6 @@
 
     .chartContainer {
         height: 90px;
-    }
-
-    .zoneCard {
-        padding: 14px 16px;
     }
 
     .alarmItem {
@@ -793,6 +1204,10 @@
 
     .loadBarRow {
         font-size: 13px;
+    }
+
+    .modalCard {
+        padding: 22px 24px;
     }
 }
 
@@ -860,26 +1275,96 @@
         padding: 2px 10px;
     }
 
+    /* Node Grid - 1 column */
     .nodeGrid {
         grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 10px;
     }
 
     .nodeCard {
-        padding: 10px 12px;
+        padding: 12px 14px;
+        min-height: 60px;
+        gap: 12px;
+        border-radius: 10px;
     }
 
     .nodeName {
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .nodeMeta {
         font-size: 11px;
+        gap: 4px;
+    }
+
+    .nodeIcon {
+        font-size: 17px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
     }
 
     .nodeBadge {
         font-size: 10px;
-        padding: 1px 8px;
+        padding: 2px 10px;
+    }
+
+    .nodeActionsWrapper {
+        gap: 6px;
+    }
+
+    /* Action buttons always visible on mobile */
+    .actionButtons {
+        opacity: 0.8;
+        gap: 4px;
+    }
+
+    .editBtn,
+    .deleteBtn {
+        padding: 2px 6px;
+        font-size: 12px;
+        min-width: 26px;
+        min-height: 26px;
+        border-radius: 6px;
+    }
+
+    .zoneCard {
+        padding: 12px 14px;
+        border-radius: 10px;
+    }
+
+    .zoneHeader {
+        margin-bottom: 12px;
+    }
+
+    .zoneTitle h3 {
+        font-size: 14px;
+    }
+
+    .zoneIcon {
+        font-size: 18px;
+    }
+
+    .zoneLoadCount {
+        font-size: 11px;
+        padding: 1px 10px;
+    }
+
+    .zoneActionsWrapper .actionButtons {
+        opacity: 1;
+    }
+
+    .zoneActionsWrapper .editBtn,
+    .zoneActionsWrapper .deleteBtn {
+        padding: 2px 5px;
+        font-size: 11px;
+        min-width: 22px;
+        min-height: 22px;
+    }
+
+    .noLoads {
+        font-size: 13px;
+        padding: 8px 0;
     }
 
     .chartCard {
@@ -898,24 +1383,6 @@
 
     .chartFooter {
         font-size: 10px;
-    }
-
-    .zoneCard {
-        padding: 10px 12px;
-        border-radius: 10px;
-    }
-
-    .zoneTitle h3 {
-        font-size: 14px;
-    }
-
-    .zoneIcon {
-        font-size: 18px;
-    }
-
-    .zoneLoadCount {
-        font-size: 11px;
-        padding: 1px 10px;
     }
 
     .loadBarRow {
@@ -959,6 +1426,56 @@
     .emptyState {
         font-size: 13px;
         padding: 20px 0;
+    }
+
+    .modalCard {
+        padding: 18px 16px;
+        border-radius: 14px;
+    }
+
+        .modalCard h3 {
+            font-size: 18px;
+        }
+
+    .modalForm label {
+        font-size: 13px;
+    }
+
+    .modalForm input,
+    .modalForm select {
+        font-size: 13px;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+    .cancelBtn,
+    .saveBtn {
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 8px;
+    }
+
+    .modalActions {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+/* Extra Small - Zone Actions */
+@media (max-width: 380px) {
+    .zoneHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .zoneActionsWrapper {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .zoneLoadCount {
+        font-size: 11px;
     }
 }
 
