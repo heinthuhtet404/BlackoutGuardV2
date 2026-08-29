@@ -130,37 +130,52 @@ export function LiveOverviewPage() {
 
     const systemMode = getSystemMode();
 
+    // 1. Database မှ ယူထားသော Pure Loads တိုက်ရိုက် ရယူခြင်း
     const allLoads = useMemo(() => {
         return zones.flatMap((z) => getAllZoneLoads(z));
     }, [zones]);
 
+    // 2. Database ရှိ Loads အားလုံး၏ စုစုပေါင်း Power Rating (kW)
     const totalConfiguredKw = useMemo(() => {
         return allLoads.reduce((sum, l) => sum + (l.powerRatingKw || 0), 0);
     }, [allLoads]);
 
-    // Create a Set of Shedded Relay Addresses from WebSocket decision
-    const sheddedRelayAddresses = useMemo(() => {
-        const set = new Set<number>();
-        if (latestDecision?.relayDecisions) {
-            latestDecision.relayDecisions.forEach((r: RelayDecision) => {
-                if (!r.energize && r.relayAddress !== undefined) {
-                    set.add(r.relayAddress);
-                }
-            });
-        }
-        return set;
-    }, [latestDecision]);
+    // 3. System Load Status Calculation (DB Data Source Single Source of Truth & Capacity Shedding Logic)
+    const loadStatusMap = useMemo(() => {
+        const statusMap = new Map<string, "Normal" | "Shedded">();
 
-    // Calculate actual active load considering shedding decisions
-    const realTimeLoadKw = useMemo(() => {
-        if (telemetry?.totalLoadKw !== undefined) {
-            return telemetry.totalLoadKw;
+        // 3.1 DB load state များကို default 'Normal' အဖြစ် သတ်မှတ်ခြင်း (External telemetry override မလုပ်စေရန်)
+        allLoads.forEach((load) => {
+            statusMap.set(load.id, "Normal");
+        });
+
+        // 3.2 Generator capacity (500 kW) ထက် Total Configured Load များနေပါက Load Shedding တွက်ချက်ခြင်း
+        if (totalConfiguredKw > GENERATOR_CAPACITY_KW) {
+            let excessPower = totalConfiguredKw - GENERATOR_CAPACITY_KW;
+
+            // Low priority မှ High priority သို့ စီစဉ်ခြင်း (P3 -> P2 -> P1)
+            const sortedLoads = [...allLoads].sort(
+                (a, b) => getLoadPriorityNum(b) - getLoadPriorityNum(a)
+            );
+
+            for (const load of sortedLoads) {
+                if (excessPower <= 0) break;
+
+                statusMap.set(load.id, "Shedded");
+                excessPower -= load.powerRatingKw || 0;
+            }
         }
+
+        return statusMap;
+    }, [allLoads, totalConfiguredKw, GENERATOR_CAPACITY_KW]);
+
+    // 4. Actual Real-Time Active Load kW (Shedded loads များကို ဖယ်ထုတ်ပြီး Active Loads များကိုသာ တွက်ချက်ခြင်း)
+    const realTimeLoadKw = useMemo(() => {
         return allLoads.reduce((sum, load) => {
-            const isShed = load.relayAddress !== undefined && sheddedRelayAddresses.has(load.relayAddress);
-            return isShed ? sum : sum + (load.powerRatingKw || 0);
+            const status = loadStatusMap.get(load.id);
+            return status === "Shedded" ? sum : sum + (load.powerRatingKw || 0);
         }, 0);
-    }, [telemetry, allLoads, sheddedRelayAddresses]);
+    }, [allLoads, loadStatusMap]);
 
     const capacityUsagePct = Math.round((realTimeLoadKw / GENERATOR_CAPACITY_KW) * 100);
 
@@ -181,40 +196,6 @@ export function LiveOverviewPage() {
 
         return { p1Kw: p1, p2Kw: p2, p3Kw: p3, p1Pct: pct1, p2Pct: pct2, p3Pct: pct3 };
     }, [allLoads, totalConfiguredKw]);
-
-    // Map of individual load statuses determined in a single deterministic pass
-    const loadStatusMap = useMemo(() => {
-        const statusMap = new Map<string, "Normal" | "Shedded">();
-
-        // 1. Mark status via direct backend Relay Decisions
-        allLoads.forEach((load) => {
-            if (load.relayAddress !== undefined && sheddedRelayAddresses.has(load.relayAddress)) {
-                statusMap.set(load.id, "Shedded");
-            } else {
-                statusMap.set(load.id, "Normal");
-            }
-        });
-
-        // 2. Fallback Overload Simulation if telemetry is exceeding capacity
-        if (realTimeLoadKw > GENERATOR_CAPACITY_KW) {
-            let excess = realTimeLoadKw - GENERATOR_CAPACITY_KW;
-
-            // Sort loads from lowest priority (P3 -> P2 -> P1) for sequential shedding
-            const sortedLoads = [...allLoads].sort(
-                (a, b) => getLoadPriorityNum(b) - getLoadPriorityNum(a)
-            );
-
-            for (const load of sortedLoads) {
-                if (excess <= 0) break;
-                if (statusMap.get(load.id) === "Normal") {
-                    statusMap.set(load.id, "Shedded");
-                    excess -= load.powerRatingKw || 0;
-                }
-            }
-        }
-
-        return statusMap;
-    }, [allLoads, sheddedRelayAddresses, realTimeLoadKw, GENERATOR_CAPACITY_KW]);
 
     const getLoadStatus = (load: LoadDto) => {
         return loadStatusMap.get(load.id) || "Normal";
@@ -498,7 +479,7 @@ export function LiveOverviewPage() {
                             </div>
                         ))}
                     </div>
-                )}  
+                )}
             </div>
         </div>
     );
