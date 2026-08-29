@@ -6,10 +6,14 @@ namespace BlackoutGuard.Application.UseCases.Zones;
 public class UpdateZoneUseCase
 {
     private readonly IZoneRepository _repository;
+    private readonly IDecisionAuditLogRepository _auditLogRepository;
 
-    public UpdateZoneUseCase(IZoneRepository repository)
+    public UpdateZoneUseCase(
+        IZoneRepository repository,
+        IDecisionAuditLogRepository auditLogRepository)
     {
         _repository = repository;
+        _auditLogRepository = auditLogRepository;
     }
 
     public async Task<Result> ExecuteAsync(
@@ -38,6 +42,10 @@ public class UpdateZoneUseCase
                 return Result.Failure("Cycle detected: the new parent is already a descendant of this zone.");
         }
 
+        var oldName = zone.Name;
+        var oldType = zone.Type;
+        var oldParentId = zone.ParentZoneId;
+
         if (name is not null)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -55,6 +63,20 @@ public class UpdateZoneUseCase
         zone.ParentZoneId = parentZoneId;
 
         await _repository.UpdateAsync(zone, ct);
+
+        // Audit Log Entry
+        var auditEntry = new AuditEntryDto
+        {
+            FacilityId = facilityId,
+            EventType = "UPDATE_ZONE",
+            Rationale = $"Updated zone '{zone.Name}'. " +
+                        $"Name: '{oldName}' -> '{zone.Name}', " +
+                        $"Type: '{oldType}' -> '{zone.Type}', " +
+                        $"ParentZoneId: '{oldParentId}' -> '{zone.ParentZoneId}'"
+        };
+
+        await _auditLogRepository.AddAsync(auditEntry, ct);
+
         return Result.Success();
     }
 }

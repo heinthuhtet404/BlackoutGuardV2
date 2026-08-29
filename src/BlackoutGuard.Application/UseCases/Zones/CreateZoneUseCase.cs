@@ -7,11 +7,16 @@ public class CreateZoneUseCase
 {
     private readonly IZoneRepository _repository;
     private readonly IFacilityRepository _facilityRepository;
+    private readonly IDecisionAuditLogRepository _auditLogRepository;
 
-    public CreateZoneUseCase(IZoneRepository repository, IFacilityRepository facilityRepository)
+    public CreateZoneUseCase(
+        IZoneRepository repository,
+        IFacilityRepository facilityRepository,
+        IDecisionAuditLogRepository auditLogRepository)
     {
         _repository = repository;
         _facilityRepository = facilityRepository;
+        _auditLogRepository = auditLogRepository;
     }
 
     public async Task<Result<Guid>> ExecuteAsync(
@@ -52,6 +57,17 @@ public class CreateZoneUseCase
         };
 
         var id = await _repository.CreateAsync(zone, ct);
+
+        // Audit Log Entry
+        var auditEntry = new AuditEntryDto
+        {
+            FacilityId = facilityId,
+            EventType = "CREATE_ZONE",
+            Rationale = $"Created zone '{name}' (Type: {type}, ParentZoneId: {parentZoneId})"
+        };
+
+        await _auditLogRepository.AddAsync(auditEntry, ct);
+
         return Result<Guid>.Success(id);
     }
 }

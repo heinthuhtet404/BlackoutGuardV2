@@ -33,13 +33,16 @@ public class DeleteLoadUseCase
             {
                 var load = await _loadRepo.GetByIdAsync(loadId, facilityId, ct);
                 if (load is null)
+                {
+                    await tx.RollbackAsync(ct);
                     return Result.Failure($"Load {loadId} not found in facility {facilityId}.");
+                }
 
                 // 1. Audit Log ကို အရင်ဆောက်ပါ (Load မပျက်သေးသည့်အတွက် AffectedLoadId ထည့်လို့ရပါသည်)
                 var auditEntry = new AuditEntryDto
                 {
                     FacilityId = facilityId,
-                    EventType = "LoadDeleted",
+                    EventType = "LOAD_DELETED",
                     Rationale = $"Load '{load.Name}' (Priority: {load.Priority}, Relay: {load.RelayAddress}) was deleted.",
                     AffectedLoadId = loadId
                 };
@@ -51,7 +54,6 @@ public class DeleteLoadUseCase
                 await _loadRepo.DeleteAsync(loadId, facilityId, ct);
 
                 await tx.CommitAsync(ct);
-
                 return Result.Success();
             }
             catch (Exception)

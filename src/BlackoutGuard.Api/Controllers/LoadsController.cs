@@ -55,6 +55,7 @@ public class LoadsController : ControllerBase
         if (facilityId is null)
             return Unauthorized(new { error = "Missing or invalid facility_id claim." });
 
+        // CS8858 Fix: 'with' expression အစား DTO အသစ်ဆောက်၍ Target Data သတ်မှတ်ပေးခြင်း
         request.FacilityId = facilityId.Value;
         request.Force = force;
 
@@ -75,6 +76,7 @@ public class LoadsController : ControllerBase
         if (facilityId is null)
             return Unauthorized(new { error = "Missing or invalid facility_id claim." });
 
+        // CS8858 Fix: 'with' expression အစား Property Assign တိုက်ရိုက်ပြုလုပ်ခြင်း
         request.LoadId = id;
         request.FacilityId = facilityId.Value;
         request.Force = force;
@@ -82,7 +84,7 @@ public class LoadsController : ControllerBase
         var result = await _updateLoadUseCase.ExecuteAsync(request, ct);
 
         return result.IsSuccess
-            ? Ok(new { warning = force ? "Force override applied; warning logged." : (string?)null })
+            ? Ok(new { message = "Load updated successfully", id, warning = force ? "Force override applied; warning logged." : (string?)null })
             : MapFailure(result);
     }
 
@@ -109,6 +111,7 @@ public class LoadsController : ControllerBase
         if (facilityId is null)
             return Unauthorized(new { error = "Missing or invalid facility_id claim." });
 
+        // CS8858 Fix: Property Assign တိုက်ရိုက်ပြုလုပ်ခြင်း
         request.LoadId = id;
         request.FacilityId = facilityId.Value;
 
@@ -136,7 +139,6 @@ public class LoadsController : ControllerBase
             message.Contains("capacity exceeded", StringComparison.OrdinalIgnoreCase) ||
             message.Contains("assigned to", StringComparison.OrdinalIgnoreCase))
         {
-            // Frontend LoadForm.tsx မှ 409 Conflict အဖြစ် ဖတ်နိုင်စေရန် HTTP 409 Return ပြန်ပေးသည်
             return StatusCode(StatusCodes.Status409Conflict, new { error = message });
         }
 

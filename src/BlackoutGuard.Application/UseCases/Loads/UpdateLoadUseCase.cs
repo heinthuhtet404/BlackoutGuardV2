@@ -43,7 +43,10 @@ public class UpdateLoadUseCase
             {
                 var existing = await _loadRepo.GetByIdAsync(request.LoadId, request.FacilityId, ct);
                 if (existing is null)
+                {
+                    await tx.RollbackAsync(ct);
                     return Result.Failure($"Load {request.LoadId} not found in facility {request.FacilityId}.");
+                }
 
                 var relayAddressChanging = request.RelayAddress.HasValue && request.RelayAddress.Value != existing.RelayAddress;
                 if (relayAddressChanging)
@@ -53,10 +56,17 @@ public class UpdateLoadUseCase
 
                     if (conflict is not null)
                     {
+                        await tx.RollbackAsync(ct);
                         return Result.Failure(
                             $"Relay address {request.RelayAddress.Value} is already assigned to '{conflict.Name}'");
                     }
                 }
+
+                // Capture old state for audit logging
+                var oldName = existing.Name;
+                var oldPriority = existing.Priority;
+                var oldRating = existing.PowerRatingKw;
+                var oldRelay = existing.RelayAddress;
 
                 var newPriority = request.Priority ?? existing.Priority;
                 var newRating = request.PowerRatingKw ?? existing.PowerRatingKw;
@@ -69,6 +79,7 @@ public class UpdateLoadUseCase
                     var capacity = await _safetyGuard.EvaluateCapacityAsync(request.FacilityId, newRating, request.LoadId, ct);
                     if (capacity.Facility is null)
                     {
+                        await tx.RollbackAsync(ct);
                         return Result.Failure($"Facility {request.FacilityId} not found.");
                     }
 
@@ -76,36 +87,22 @@ public class UpdateLoadUseCase
                     {
                         if (!request.Force)
                         {
+                            await tx.RollbackAsync(ct);
                             return Result.Failure(
                                 $"P1 capacity exceeded by {capacity.Deficit:F1} kW. " +
                                 $"Total P1: {capacity.TotalP1Kw:F1} kW, Capacity: {capacity.Facility.GeneratorCapacityKW:F1} kW. " +
                                 $"Use force=true to override.");
                         }
 
-                        var forcedName = request.Name ?? existing.Name;
-
-                        existing.Name = forcedName;
-                        existing.RelayAddress = request.RelayAddress ?? existing.RelayAddress;
-                        existing.PowerRatingKw = newRating;
-                        existing.Priority = newPriority;
-                        existing.PriorityMode = request.PriorityMode ?? existing.PriorityMode;
-                        existing.IsSheddable = request.IsSheddable ?? existing.IsSheddable;
-
-                        await _loadRepo.UpdateAsync(existing, ct);
-
-                        var auditEntry = new AuditEntryDto
+                        var auditOverride = new AuditEntryDto
                         {
                             FacilityId = request.FacilityId,
                             EventType = "CAPACITY_OVERRIDE",
-                            Rationale = $"P1 load '{forcedName}' updated with force=true. " +
+                            Rationale = $"P1 load '{request.Name ?? existing.Name}' updated with force=true. " +
                                        $"Total P1: {capacity.TotalP1Kw:F1} kW exceeds capacity {capacity.Facility.GeneratorCapacityKW:F1} kW by {capacity.Deficit:F1} kW.",
                             AffectedLoadId = request.LoadId
                         };
-
-                        await _auditRepo.AddAsync(auditEntry, ct);
-                        await tx.CommitAsync(ct);
-
-                        return Result.Success();
+                        await _auditRepo.AddAsync(auditOverride, ct);
                     }
                 }
 
@@ -117,12 +114,23 @@ public class UpdateLoadUseCase
                 existing.IsSheddable = request.IsSheddable ?? existing.IsSheddable;
 
                 await _loadRepo.UpdateAsync(existing, ct);
-                await tx.CommitAsync(ct);
 
+                // Audit Log For Load Update (Matching PascalCase naming like LoadDeleted)
+                var updateAudit = new AuditEntryDto
+                {
+                    FacilityId = request.FacilityId,
+                    EventType = "LoadUpdated",
+                    Rationale = $"Load '{existing.Name}' updated. Changes -> Name: '{oldName}' -> '{existing.Name}', Priority: '{oldPriority}' -> '{existing.Priority}', Power: {oldRating}kW -> {existing.PowerRatingKw}kW, Relay: {oldRelay} -> {existing.RelayAddress}.",
+                    AffectedLoadId = request.LoadId
+                };
+                await _auditRepo.AddAsync(updateAudit, ct);
+
+                await tx.CommitAsync(ct);
                 return Result.Success();
             }
             catch (RelayConflictException ex)
             {
+                await tx.RollbackAsync(ct);
                 return Result.Failure(ex.Message);
             }
             catch (Exception)

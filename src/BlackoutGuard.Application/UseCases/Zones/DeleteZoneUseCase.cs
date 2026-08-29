@@ -1,3 +1,4 @@
+using BlackoutGuard.Application.DTOs;
 using BlackoutGuard.Application.Services;
 
 namespace BlackoutGuard.Application.UseCases.Zones;
@@ -5,10 +6,14 @@ namespace BlackoutGuard.Application.UseCases.Zones;
 public class DeleteZoneUseCase
 {
     private readonly IZoneRepository _repository;
+    private readonly IDecisionAuditLogRepository _auditLogRepository;
 
-    public DeleteZoneUseCase(IZoneRepository repository)
+    public DeleteZoneUseCase(
+        IZoneRepository repository,
+        IDecisionAuditLogRepository auditLogRepository)
     {
         _repository = repository;
+        _auditLogRepository = auditLogRepository;
     }
 
     public async Task<Result> ExecuteAsync(Guid zoneId, Guid facilityId, CancellationToken ct = default)
@@ -25,7 +30,18 @@ public class DeleteZoneUseCase
         if (hasLoads)
             return Result.Failure("Cannot delete zone: it has loads assigned. Remove or reassign loads first.");
 
+        // Audit Log Entry ကို Delete မလုပ်မီ Audit ထဲသိမ်းရန် အချက်အလက်ယူဆောက်ထားခြင်း
+        var auditEntry = new AuditEntryDto
+        {
+            FacilityId = facilityId,
+            EventType = "DELETE_ZONE",
+            Rationale = $"Deleted zone '{zone.Name}' (Type: {zone.Type})"
+        };
+
+        await _auditLogRepository.AddAsync(auditEntry, ct);
+
         await _repository.DeleteAsync(zoneId, facilityId, ct);
+
         return Result.Success();
     }
 }

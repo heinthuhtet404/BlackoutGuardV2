@@ -53,6 +53,7 @@ public class CreateLoadUseCase
                 {
                     if (!request.Force)
                     {
+                        await tx.RollbackAsync(ct);
                         return Result<Guid>.Failure(
                             $"Relay address {request.RelayAddress} is already assigned to '{conflict.Name}'. Use force=true to override.");
                     }
@@ -71,6 +72,7 @@ public class CreateLoadUseCase
                 var capacity = await _safetyGuard.EvaluateCapacityAsync(request.FacilityId, request.PowerRatingKw, null, ct);
                 if (capacity.Facility is null)
                 {
+                    await tx.RollbackAsync(ct);
                     return Result<Guid>.Failure($"Facility {request.FacilityId} not found.");
                 }
 
@@ -78,6 +80,7 @@ public class CreateLoadUseCase
 
                 if (isCapacityExceeded && !request.Force)
                 {
+                    await tx.RollbackAsync(ct);
                     return Result<Guid>.Failure(
                         $"P1 capacity exceeded by {capacity.Deficit:F1} kW. " +
                         $"Total P1: {capacity.TotalP1Kw:F1} kW, Capacity: {capacity.Facility.GeneratorCapacityKW:F1} kW. " +
@@ -120,6 +123,16 @@ public class CreateLoadUseCase
                     };
                     await _auditRepo.AddAsync(auditEntry, ct);
                 }
+
+                // General Creation Audit Log
+                var creationAudit = new AuditEntryDto
+                {
+                    FacilityId = request.FacilityId,
+                    EventType = "LOAD_CREATED",
+                    Rationale = $"Created load '{request.Name}' (Priority: {loadDto.Priority}, Power: {request.PowerRatingKw} kW, Relay: {request.RelayAddress}).",
+                    AffectedLoadId = loadId
+                };
+                await _auditRepo.AddAsync(creationAudit, ct);
 
                 await tx.CommitAsync(ct);
                 return Result<Guid>.Success(loadId);
