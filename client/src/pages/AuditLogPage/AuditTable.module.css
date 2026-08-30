@@ -48,25 +48,105 @@
     margin-bottom: 20px;
 }
 
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.headerIconWrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(248, 113, 113, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(248, 113, 113, 0.06);
+}
+
+.headerIcon {
+    color: var(--accent-red, #f87171);
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.connectionStatus {
+    display: flex;
+    align-items: center;
+}
+
+.statusConnected,
+.statusDisconnected {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.statusConnected {
+    background: var(--success-soft, rgba(52, 211, 153, 0.10));
+    color: var(--success, #34d399);
+    border: 1px solid rgba(52, 211, 153, 0.10);
+}
+
+.statusDisconnected {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted, #64748b);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
 .actions {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
+.searchWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted, #64748b);
+}
+
 .searchInput {
-    padding: 8px 14px;
+    padding: 8px 14px 8px 38px;
     background: var(--bg-input, #13161b);
     border: 1px solid var(--border-input, #2a2f38);
-    border-radius: 8px;
+    border-radius: 10px;
     color: var(--text-primary, #e8edf5);
     font-size: 14px;
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
+    width: 220px;
+    font-family: inherit;
 }
+
+    .searchInput::placeholder {
+        color: var(--text-muted, #64748b);
+    }
+
+    .searchInput:hover {
+        border-color: rgba(255, 255, 255, 0.08);
+    }
 
     .searchInput:focus {
         border-color: var(--chart-blue, #60a5fa);
+        box-shadow: 0 0 0 3px var(--chart-blue-soft, rgba(96, 165, 250, 0.08));
     }
 
 .title {
@@ -121,24 +201,31 @@
             z-index: 2;
         }
 
-    .table tbody tr {
-        border-bottom: 1px solid var(--border-soft, #22262e);
-        transition: background 0.15s ease;
+.thIcon {
+    display: inline-block;
+    margin-right: 6px;
+    color: var(--text-muted, #64748b);
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid var(--border-soft, #22262e);
+    transition: background 0.15s ease;
+}
+
+    .table tbody tr:last-child {
+        border-bottom: none;
     }
 
-        .table tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        .table tbody tr:hover {
-            background: var(--bg-table-stripe, rgba(255, 255, 255, 0.02));
-        }
-
-    .table tbody td {
-        padding: 12px 20px;
-        color: var(--text-secondary, #94a3b8);
-        vertical-align: middle;
+    .table tbody tr:hover {
+        background: var(--bg-table-stripe, rgba(255, 255, 255, 0.02));
     }
+
+.table tbody td {
+    padding: 12px 20px;
+    color: var(--text-secondary, #94a3b8);
+    vertical-align: middle;
+}
 
 /* ========================================
    ROW STATES & TIMESTAMPS
@@ -169,6 +256,13 @@
         gap: 6px;
     }
 
+.timerIcon {
+    display: inline-block;
+    margin-right: 4px;
+    color: var(--text-muted, #64748b);
+    vertical-align: middle;
+}
+
 .dot {
     display: inline-block;
     width: 8px;
@@ -195,7 +289,9 @@
    EVENT BADGES
    ======================================== */
 .eventBadge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 3px 12px;
     border-radius: 100px;
     font-size: 12px;
@@ -254,9 +350,9 @@
 
 .emptyIcon {
     display: block;
-    font-size: 36px;
-    margin-bottom: 8px;
-    opacity: 0.5;
+    margin: 0 auto 8px;
+    opacity: 0.4;
+    color: var(--text-muted, #64748b);
 }
 
 .loadingState {
@@ -273,11 +369,7 @@
 }
 
 .spinner {
-    width: 22px;
-    height: 22px;
-    border: 2.5px solid var(--border-soft, #22262e);
-    border-radius: 50%;
-    border-top-color: var(--accent-red, #f87171);
+    color: var(--accent-red, #f87171);
     animation: spin 0.8s linear infinite;
 }
 
@@ -300,7 +392,6 @@
 }
 
 .errorIcon {
-    font-size: 20px;
     flex-shrink: 0;
 }
 
@@ -314,6 +405,9 @@
 }
 
 .pageBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 8px 20px;
     background: var(--bg-card, #1a1d24);
     border: 1px solid var(--border-card, #2a2f38);
@@ -369,11 +463,53 @@
 }
 
 @media (max-width: 768px) {
+    .page {
+        padding: 16px;
+    }
+
     .header {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
+
+    .headerRight {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .connectionStatus {
+        align-self: flex-start;
+    }
+
+    .actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .searchWrapper {
+        width: 100%;
+    }
+
+    .searchInput {
+        width: 100%;
+        padding: 8px 14px 8px 38px;
+    }
+
+    .headerIconWrapper {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+    }
+
+        .headerIconWrapper svg {
+            width: 20px;
+            height: 20px;
+        }
 
     .title {
         font-size: 20px;
@@ -428,7 +564,8 @@
     }
 
     .emptyIcon {
-        font-size: 28px;
+        width: 28px;
+        height: 28px;
     }
 }
 
@@ -469,6 +606,17 @@
         font-size: 12px;
     }
 
+    .headerIconWrapper {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+    }
+
+        .headerIconWrapper svg {
+            width: 18px;
+            height: 18px;
+        }
+
     .pageBtn {
         font-size: 13px;
         padding: 8px 14px;
@@ -494,6 +642,18 @@
     }
 
     .emptyIcon {
-        font-size: 24px;
+        width: 24px;
+        height: 24px;
+    }
+
+    .searchInput {
+        font-size: 13px;
+        padding: 6px 12px 6px 34px;
+    }
+
+    .searchIcon {
+        left: 10px;
+        width: 14px;
+        height: 14px;
     }
 }

@@ -26,6 +26,11 @@
     --chart-blue-soft: rgba(96, 165, 250, 0.15);
     --shadow: rgba(0, 0, 0, 0.40);
     --shadow-heavy: rgba(0, 0, 0, 0.50);
+    /* Slider Colors */
+    --slider-freq: #f87171;
+    --slider-freq-bg: rgba(248, 113, 113, 0.10);
+    --slider-load: #60a5fa;
+    --slider-load-bg: rgba(96, 165, 250, 0.10);
 }
 
 /* ========================================
@@ -51,6 +56,28 @@
     flex-wrap: wrap;
     gap: 16px;
     margin-bottom: 28px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.headerIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(248, 113, 113, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(248, 113, 113, 0.08);
+}
+
+.headerIcon {
+    color: var(--accent-red, #f87171);
 }
 
 .heading {
@@ -142,6 +169,16 @@
     margin-bottom: 18px;
 }
 
+.cardHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cardIcon {
+    color: var(--text-secondary, #94a3b8);
+}
+
 .cardTitle {
     font-size: 17px;
     font-weight: 600;
@@ -150,6 +187,9 @@
 }
 
 .cardBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 11px;
     font-weight: 500;
     color: var(--text-secondary, #94a3b8);
@@ -160,6 +200,10 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
+
+    .cardBadge svg {
+        color: var(--text-muted, #64748b);
+    }
 
 /* ========================================
    TELEMETRY GRID
@@ -187,12 +231,19 @@
     }
 
 .metricLabel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
     font-weight: 500;
     color: var(--text-muted, #64748b);
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
+
+    .metricLabel svg {
+        color: var(--text-muted, #64748b);
+    }
 
 .metricValue {
     font-size: 22px;
@@ -231,8 +282,15 @@
     gap: 12px;
 }
 
-.modeIcon {
-    font-size: 24px;
+.modeIconWrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary, #94a3b8);
 }
 
 .modeTitle {
@@ -250,6 +308,9 @@
    TOGGLE
    ======================================== */
 .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 6px 20px;
     border-radius: 100px;
     font-size: 13px;
@@ -259,7 +320,8 @@
     transition: all 0.25s ease;
     font-family: inherit;
     letter-spacing: 0.5px;
-    min-width: 72px;
+    min-width: 80px;
+    justify-content: center;
 }
 
 .toggleOn {
@@ -288,18 +350,24 @@
 .autoActive {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 14px;
     padding: 16px 20px;
-    background: var(--success-soft, rgba(52, 211, 153, 0.08));
+    background: var(--success-soft, rgba(52, 211, 153, 0.06));
     border-radius: 12px;
-    border: 1px solid rgba(52, 211, 153, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.12);
     margin-bottom: 20px;
 }
 
-.autoIcon {
-    font-size: 20px;
+.autoIconWrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(52, 211, 153, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    margin-top: 2px;
+    color: var(--success, #34d399);
 }
 
 .autoActive strong {
@@ -332,9 +400,16 @@
 }
 
 .controlLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 14px;
     font-weight: 500;
     color: var(--text-secondary, #94a3b8);
+}
+
+.controlIcon {
+    color: var(--text-muted, #64748b);
 }
 
 .controlValue {
@@ -344,51 +419,91 @@
 }
 
 /* ========================================
-   SLIDER
+   SLIDER - MODERN STYLED
    ======================================== */
 .slider {
     width: 100%;
     height: 6px;
     -webkit-appearance: none;
     appearance: none;
-    background: var(--bg-input, #13161b);
     border-radius: 100px;
     outline: none;
     transition: all 0.2s ease;
+    background: var(--bg-input, #13161b);
 }
 
-    .slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: var(--slider-color, var(--accent-red, #f87171));
-        cursor: pointer;
-        border: 2px solid var(--bg-card, #1a1d24);
-        box-shadow: 0 0 0 2px var(--slider-color, var(--accent-red, #f87171));
-        transition: all 0.2s ease;
+/* Frequency Slider - Red */
+.sliderFreq {
+    background: var(--slider-freq-bg, rgba(248, 113, 113, 0.10));
+}
+
+    .sliderFreq::-webkit-slider-thumb {
+        background: var(--slider-freq, #f87171);
+        box-shadow: 0 0 0 2px var(--slider-freq, #f87171), 0 2px 12px rgba(248, 113, 113, 0.30);
     }
 
-        .slider::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
-            box-shadow: 0 0 0 4px var(--accent-soft, rgba(248, 113, 113, 0.20));
-        }
-
-    .slider::-moz-range-thumb {
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: var(--slider-color, var(--accent-red, #f87171));
-        cursor: pointer;
-        border: 2px solid var(--bg-card, #1a1d24);
-        box-shadow: 0 0 0 2px var(--slider-color, var(--accent-red, #f87171));
+    .sliderFreq::-moz-range-thumb {
+        background: var(--slider-freq, #f87171);
+        box-shadow: 0 0 0 2px var(--slider-freq, #f87171);
     }
 
-    .slider:focus-visible::-webkit-slider-thumb {
-        outline: 2px solid var(--slider-color, var(--accent-red, #f87171));
-        outline-offset: 2px;
+    .sliderFreq::-webkit-slider-runnable-track {
+        background: linear-gradient(to right, var(--slider-freq-bg, rgba(248, 113, 113, 0.10)), var(--slider-freq, #f87171));
+        border-radius: 100px;
+        height: 6px;
     }
+
+/* Load Slider - Blue */
+.sliderLoad {
+    background: var(--slider-load-bg, rgba(96, 165, 250, 0.10));
+}
+
+    .sliderLoad::-webkit-slider-thumb {
+        background: var(--slider-load, #60a5fa);
+        box-shadow: 0 0 0 2px var(--slider-load, #60a5fa), 0 2px 12px rgba(96, 165, 250, 0.30);
+    }
+
+    .sliderLoad::-moz-range-thumb {
+        background: var(--slider-load, #60a5fa);
+        box-shadow: 0 0 0 2px var(--slider-load, #60a5fa);
+    }
+
+    .sliderLoad::-webkit-slider-runnable-track {
+        background: linear-gradient(to right, var(--slider-load-bg, rgba(96, 165, 250, 0.10)), var(--slider-load, #60a5fa));
+        border-radius: 100px;
+        height: 6px;
+    }
+
+/* Common thumb styles */
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--bg-card, #1a1d24);
+    transition: all 0.2s ease;
+    margin-top: -6px;
+}
+
+    .slider::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+    }
+
+.slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--bg-card, #1a1d24);
+    transition: all 0.2s ease;
+}
+
+.slider:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--accent-red, #f87171);
+    outline-offset: 2px;
+}
 
 .sliderLabels {
     display: flex;
@@ -396,6 +511,11 @@
     font-size: 12px;
     color: var(--text-muted, #64748b);
     margin-top: 4px;
+}
+
+.sliderTarget {
+    color: var(--text-secondary, #94a3b8);
+    font-weight: 500;
 }
 
 /* ========================================
@@ -415,11 +535,35 @@
 .generatorInfo {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
-.generatorIcon {
-    font-size: 20px;
+.generatorIconWrapper {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary, #94a3b8);
+}
+
+.generatorStatus {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 2px 12px;
+    border-radius: 100px;
+}
+
+.statusOn {
+    background: var(--success-soft, rgba(52, 211, 153, 0.10));
+    color: var(--success, #34d399);
+}
+
+.statusOff {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted, #64748b);
 }
 
 /* ========================================
@@ -461,16 +605,7 @@
         outline-offset: 2px;
     }
 
-/* ========================================
-   SPINNER (for fault button)
-   ======================================== */
-.spinner {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border: 2.5px solid rgba(251, 191, 36, 0.2);
-    border-radius: 50%;
-    border-top-color: var(--warning, #fbbf24);
+.spinning {
     animation: spin 0.7s linear infinite;
 }
 
@@ -499,8 +634,27 @@
         align-items: flex-start;
     }
 
+    .headerLeft {
+        gap: 12px;
+    }
+
+    .headerIconWrapper {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+        .headerIconWrapper svg {
+            width: 20px;
+            height: 20px;
+        }
+
     .heading {
         font-size: 22px;
+    }
+
+    .subheading {
+        font-size: 14px;
     }
 
     .statusBadge {
@@ -510,6 +664,7 @@
 
     .card {
         padding: 18px 20px;
+        border-radius: 12px;
     }
 
     .cardTitle {
@@ -539,6 +694,16 @@
         gap: 10px;
     }
 
+    .modeIconWrapper {
+        width: 36px;
+        height: 36px;
+    }
+
+        .modeIconWrapper svg {
+            width: 18px;
+            height: 18px;
+        }
+
     .modeTitle {
         font-size: 14px;
     }
@@ -551,7 +716,11 @@
         align-self: flex-start;
         padding: 5px 16px;
         font-size: 12px;
-        min-width: 64px;
+        min-width: 70px;
+    }
+
+    .autoActive {
+        padding: 14px 16px;
     }
 
     .controlValue {
@@ -561,11 +730,21 @@
     .slider::-webkit-slider-thumb {
         width: 16px;
         height: 16px;
+        margin-top: -5px;
     }
 
     .slider::-moz-range-thumb {
         width: 16px;
         height: 16px;
+    }
+
+    .generatorRow {
+        padding: 12px 14px;
+    }
+
+    .faultButton {
+        font-size: 14px;
+        padding: 10px 16px;
     }
 }
 
@@ -582,9 +761,20 @@
         font-size: 13px;
     }
 
+    .headerIconWrapper {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+        .headerIconWrapper svg {
+            width: 18px;
+            height: 18px;
+        }
+
     .card {
         padding: 14px 16px;
-        border-radius: 12px;
+        border-radius: 10px;
     }
 
     .cardTitle {
@@ -618,9 +808,15 @@
         padding: 12px 14px;
     }
 
-    .modeIcon {
-        font-size: 20px;
+    .modeIconWrapper {
+        width: 32px;
+        height: 32px;
     }
+
+        .modeIconWrapper svg {
+            width: 16px;
+            height: 16px;
+        }
 
     .modeTitle {
         font-size: 13px;
@@ -636,9 +832,15 @@
         align-items: flex-start;
     }
 
-    .autoIcon {
-        font-size: 18px;
+    .autoIconWrapper {
+        width: 32px;
+        height: 32px;
     }
+
+        .autoIconWrapper svg {
+            width: 16px;
+            height: 16px;
+        }
 
     .autoSubtext {
         font-size: 12px;
@@ -667,6 +869,7 @@
         .slider::-webkit-slider-thumb {
             width: 14px;
             height: 14px;
+            margin-top: -4px;
         }
 
         .slider::-moz-range-thumb {
@@ -680,14 +883,33 @@
 
     .generatorRow {
         padding: 10px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
-    .generatorIcon {
-        font-size: 18px;
+    .generatorIconWrapper {
+        width: 30px;
+        height: 30px;
+    }
+
+        .generatorIconWrapper svg {
+            width: 16px;
+            height: 16px;
+        }
+
+    .generatorStatus {
+        font-size: 12px;
+        padding: 1px 10px;
     }
 
     .faultButton {
-        font-size: 14px;
-        padding: 10px 16px;
+        font-size: 13px;
+        padding: 8px 14px;
+        gap: 8px;
     }
+
+        .faultButton svg {
+            width: 16px;
+            height: 16px;
+        }
 }

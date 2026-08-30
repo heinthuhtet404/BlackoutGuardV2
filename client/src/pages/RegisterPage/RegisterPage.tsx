@@ -3,6 +3,26 @@ import { Navigate, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../auth/authTypes";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import {
+    UserPlus,
+    Mail,
+    Lock,
+    Building,
+    MapPin,
+    CheckCircle,
+    AlertCircle,
+    ArrowRight,
+    ShieldCheck,
+    Zap,
+    Bell,
+    BarChart3,
+    Check,
+    User,
+    Briefcase,
+    Key,
+    Shield,
+    Sparkles,
+} from "lucide-react";
 import styles from "./RegisterPage.module.css";
 
 export function RegisterPage() {
@@ -77,88 +97,125 @@ export function RegisterPage() {
     return (
         <div className={styles.page}>
             <div className={styles.container}>
+                {/* Left Side - Hero Section */}
                 <div className={styles.heroSection}>
                     <div className={styles.heroContent}>
-                        <div className={styles.brandBadge}>⚡ BlackoutGuard</div>
+                        <div className={styles.brandBadge}>
+                            <ShieldCheck size={16} />
+                            <span>BlackoutGuard</span>
+                        </div>
                         <h1 className={styles.heroTitle}>Create Your Account</h1>
                         <p className={styles.heroSubtext}>
                             Start monitoring your backup power systems with real-time insights
                         </p>
                         <div className={styles.features}>
                             <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
+                                <span className={styles.featureIcon}>
+                                    <Zap size={12} />
+                                </span>
                                 <span>Real-time monitoring</span>
                             </div>
                             <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
+                                <span className={styles.featureIcon}>
+                                    <Bell size={12} />
+                                </span>
                                 <span>Instant alerts & notifications</span>
                             </div>
                             <div className={styles.feature}>
-                                <span className={styles.featureIcon}>✓</span>
+                                <span className={styles.featureIcon}>
+                                    <BarChart3 size={12} />
+                                </span>
                                 <span>Advanced analytics dashboard</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                {/* Right Side - Registration Form */}
                 <form className={styles.card} onSubmit={(e) => void handleSubmit(e)} noValidate>
                     <div className={styles.cardHeader}>
-                        <h2 className={styles.cardTitle}>Get Started</h2>
-                        <p className={styles.cardSubtitle}>Fill in your details to register</p>
+                        <div className={styles.cardHeaderIconWrapper}>
+                            <UserPlus size={24} />
+                        </div>
+                        <div>
+                            <h2 className={styles.cardTitle}>Get Started</h2>
+                            <p className={styles.cardSubtitle}>Fill in your details to register</p>
+                        </div>
                     </div>
 
                     <div className={styles.formGrid}>
                         <div className={styles.formLeft}>
-                            <Input
-                                label="Full Name *"
-                                value={fullName}
-                                onChange={(e) => setFullName(e.target.value)}
-                                required
-                                data-testid="register-fullname"
-                                placeholder="John Doe"
-                            />
+                            {/* Full Name */}
+                            <div className={styles.inputIconWrapper}>
+                                <User size={16} className={styles.inputIcon} />
+                                <Input
+                                    label="Full Name *"
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    required
+                                    data-testid="register-fullname"
+                                    placeholder="John Doe"
+                                />
+                            </div>
 
-                            <Input
-                                label="Email Address *"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                data-testid="register-email"
-                                placeholder="john@example.com"
-                            />
+                            {/* Email */}
+                            <div className={styles.inputIconWrapper}>
+                                <Mail size={16} className={styles.inputIcon} />
+                                <Input
+                                    label="Email Address *"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    data-testid="register-email"
+                                    placeholder="john@example.com"
+                                />
+                            </div>
 
-                            <Input
-                                label="Organization Name *"
-                                value={organizationName}
-                                onChange={(e) => setOrganizationName(e.target.value)}
-                                required
-                                data-testid="register-organization"
-                                placeholder="Acme Corp"
-                            />
+                            {/* Organization Name */}
+                            <div className={styles.inputIconWrapper}>
+                                <Briefcase size={16} className={styles.inputIcon} />
+                                <Input
+                                    label="Organization Name *"
+                                    value={organizationName}
+                                    onChange={(e) => setOrganizationName(e.target.value)}
+                                    required
+                                    data-testid="register-organization"
+                                    placeholder="Acme Corp"
+                                />
+                            </div>
                         </div>
 
                         <div className={styles.formRight}>
-                            <Input
-                                label="Password *"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                data-testid="register-password"
-                                placeholder="••••••••"
-                            />
+                            {/* Password */}
+                            <div className={styles.inputIconWrapper}>
+                                <Key size={16} className={styles.inputIcon} />
+                                <Input
+                                    label="Password *"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    data-testid="register-password"
+                                    placeholder="••••••••"
+                                />
+                            </div>
 
-                            <Input
-                                label="Confirm Password *"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                data-testid="register-confirm-password"
-                                placeholder="••••••••"
-                            />
+                            {/* Confirm Password */}
+                            <div className={styles.inputIconWrapper}>
+                                <Lock size={16} className={styles.inputIcon} />
+                                <Input
+                                    label="Confirm Password *"
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                    data-testid="register-confirm-password"
+                                    placeholder="••••••••"
+                                />
+                            </div>
 
+                            {/* Generator Capacity (hidden but preserved for functionality) */}
                             {/* <Input
                                 label="Generator Capacity (kW) *"
                                 type="number"
@@ -167,18 +224,24 @@ export function RegisterPage() {
                                 required
                                 data-testid="register-capacity"
                                 placeholder="e.g., 100"
+                                className={styles.hiddenInput}
                             /> */}
 
-                            <Input
-                                label="Facility Location (Optional)"
-                                value={facilityLocation}
-                                onChange={(e) => setFacilityLocation(e.target.value)}
-                                data-testid="register-location"
-                                placeholder="City, Country"
-                            />
+                            {/* Facility Location */}
+                            <div className={styles.inputIconWrapper}>
+                                <MapPin size={16} className={styles.inputIcon} />
+                                <Input
+                                    label="Facility Location (Optional)"
+                                    value={facilityLocation}
+                                    onChange={(e) => setFacilityLocation(e.target.value)}
+                                    data-testid="register-location"
+                                    placeholder="City, Country"
+                                />
+                            </div>
                         </div>
                     </div>
 
+                    {/* Terms */}
                     <div className={styles.termsSection}>
                         <label className={styles.checkboxLabel}>
                             <input
@@ -195,13 +258,15 @@ export function RegisterPage() {
                         </label>
                     </div>
 
+                    {/* Error */}
                     {error && (
                         <div className={styles.error} role="alert" data-testid="register-error">
-                            <span className={styles.errorIcon}>⚠</span>
+                            <AlertCircle size={18} className={styles.errorIcon} />
                             {error}
                         </div>
                     )}
 
+                    {/* Submit Button */}
                     <Button type="submit" disabled={submitting} data-testid="register-submit" className={styles.submitBtn}>
                         {submitting ? (
                             <>
@@ -209,10 +274,14 @@ export function RegisterPage() {
                                 Creating Account...
                             </>
                         ) : (
-                            "Create Account →"
+                            <>
+                                Create Account
+                                <ArrowRight size={18} className={styles.btnIcon} />
+                            </>
                         )}
                     </Button>
 
+                    {/* Footer */}
                     <div className={styles.footer}>
                         Already have an account? <Link to="/login" className={styles.loginLink}>Sign In</Link>
                     </div>

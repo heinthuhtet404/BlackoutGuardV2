@@ -2,6 +2,14 @@ import { useState } from "react";
 import { useRole } from "../../auth/useRole";
 import { getAccessToken } from "../../auth/tokenStore";
 import type { AuditEntry } from "../../hooks/useAuditLog";
+import {
+    Download,
+    FileSpreadsheet,
+    FileText,
+    Loader2,
+    CheckCircle,
+    AlertCircle,
+} from "lucide-react";
 import styles from "./ExportButtons.module.css";
 
 interface ExportButtonsProps {
@@ -11,6 +19,7 @@ interface ExportButtonsProps {
 export function ExportButtons({ data }: ExportButtonsProps) {
     const { isAtLeast } = useRole();
     const [isExporting, setIsExporting] = useState<"csv" | "pdf" | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     if (!isAtLeast("Operator")) {
         return null;
@@ -18,12 +27,12 @@ export function ExportButtons({ data }: ExportButtonsProps) {
 
     const handleDownload = async (format: "csv" | "pdf") => {
         setIsExporting(format);
+        setError(null);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000/api/v1";
             const url = `${apiBase}/audit/export?format=${format}`;
             const token = getAccessToken();
 
-            // POST အစား GET သို့ ပြောင်းလဲထားပါသည်
             const response = await fetch(url, {
                 method: "GET",
                 headers: {
@@ -47,7 +56,7 @@ export function ExportButtons({ data }: ExportButtonsProps) {
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : "Export failed";
             console.error("Export Error:", errorMessage);
-            alert(`❌ ${errorMessage}`);
+            setError(errorMessage);
         } finally {
             setIsExporting(null);
         }
@@ -55,6 +64,12 @@ export function ExportButtons({ data }: ExportButtonsProps) {
 
     return (
         <div className={styles.container}>
+            {error && (
+                <div className={styles.errorToast}>
+                    <AlertCircle size={16} />
+                    {error}
+                </div>
+            )}
             <button
                 type="button"
                 className={`${styles.button} ${styles.buttonCsv}`}
@@ -62,7 +77,17 @@ export function ExportButtons({ data }: ExportButtonsProps) {
                 disabled={isExporting !== null}
                 data-testid="export-csv"
             >
-                {isExporting === "csv" ? "Exporting CSV..." : "Export CSV"}
+                {isExporting === "csv" ? (
+                    <>
+                        <Loader2 size={16} className={styles.spinning} />
+                        Exporting...
+                    </>
+                ) : (
+                    <>
+                        <FileSpreadsheet size={16} />
+                        Export CSV
+                    </>
+                )}
             </button>
             <button
                 type="button"
@@ -71,7 +96,17 @@ export function ExportButtons({ data }: ExportButtonsProps) {
                 disabled={isExporting !== null}
                 data-testid="export-pdf"
             >
-                {isExporting === "pdf" ? "Exporting PDF..." : "Export PDF"}
+                {isExporting === "pdf" ? (
+                    <>
+                        <Loader2 size={16} className={styles.spinning} />
+                        Exporting...
+                    </>
+                ) : (
+                    <>
+                        <FileText size={16} />
+                        Export PDF
+                    </>
+                )}
             </button>
         </div>
     );

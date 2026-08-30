@@ -54,6 +54,28 @@
     margin-bottom: 28px;
 }
 
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.headerIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(248, 113, 113, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(248, 113, 113, 0.06);
+}
+
+.headerIcon {
+    color: var(--accent-red, #f87171);
+}
+
 .heading {
     font-size: 28px;
     font-weight: 700;
@@ -100,6 +122,9 @@
 }
 
 .statLabel {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -147,9 +172,21 @@
     min-width: 160px;
 }
 
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.inputIcon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted, #64748b);
+}
+
 .input {
     width: 100%;
-    padding: 10px 14px;
+    padding: 10px 14px 10px 38px;
     background: var(--bg-input, #13161b);
     border: 1px solid var(--border-input, #2a2f38);
     border-radius: 10px;
@@ -174,6 +211,9 @@
     }
 
 .createBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     padding: 10px 24px;
     background: var(--accent-red, #f87171);
     color: var(--text-inverse, #0f1117);
@@ -186,9 +226,6 @@
     white-space: nowrap;
     font-family: inherit;
     height: 42px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
 }
 
     .createBtn:hover {
@@ -241,11 +278,18 @@
 }
 
 .columnTitle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 14px;
     font-weight: 600;
     color: var(--text-primary, #e8edf5);
     flex: 1;
 }
+
+    .columnTitle svg {
+        color: var(--text-secondary, #94a3b8);
+    }
 
 .columnCount {
     font-size: 12px;
@@ -342,6 +386,9 @@
 }
 
 .cardStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 11px;
     font-weight: 500;
     padding: 2px 10px;
@@ -373,10 +420,17 @@
 }
 
 .detailLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     color: var(--text-muted, #64748b);
     font-weight: 500;
-    min-width: 52px;
+    min-width: 60px;
 }
+
+    .detailLabel svg {
+        color: var(--text-muted, #64748b);
+    }
 
 .detailCode {
     font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
@@ -389,6 +443,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    flex: 1;
 }
 
 .cardInactive .detailCode {
@@ -404,6 +459,9 @@
 }
 
 .toggleBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     padding: 4px 14px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-soft, #22262e);
@@ -434,7 +492,10 @@
 }
 
 .deleteBtn {
-    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
     background: transparent;
     border: 1px solid var(--border-soft, #22262e);
     border-radius: 6px;
@@ -443,6 +504,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: inherit;
+    min-width: 32px;
 }
 
     .deleteBtn:hover {
@@ -467,13 +529,9 @@
     border: 1px solid var(--border-card, #2a2f38);
 }
 
-.spinner {
-    width: 22px;
-    height: 22px;
-    border: 2.5px solid var(--border-soft, #22262e);
-    border-radius: 50%;
-    border-top-color: var(--accent-red, #f87171);
+.spinning {
     animation: spin 0.8s linear infinite;
+    color: var(--accent-red, #f87171);
 }
 
 @keyframes spin {
@@ -494,13 +552,13 @@
     background: var(--bg-card, #1a1d24);
     border-radius: 16px;
     border: 1px solid var(--border-card, #2a2f38);
-    gap: 4px;
+    gap: 8px;
 }
 
 .emptyIcon {
-    font-size: 48px;
+    color: var(--text-muted, #64748b);
+    opacity: 0.4;
     margin-bottom: 4px;
-    opacity: 0.5;
 }
 
 .emptyState h3 {
@@ -538,6 +596,21 @@
         flex-direction: column;
         align-items: flex-start;
     }
+
+    .headerLeft {
+        gap: 12px;
+    }
+
+    .headerIconWrapper {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+        .headerIconWrapper svg {
+            width: 20px;
+            height: 20px;
+        }
 
     .heading {
         font-size: 22px;
@@ -577,7 +650,11 @@
 
     .input {
         font-size: 14px;
-        padding: 8px 12px;
+        padding: 8px 12px 8px 36px;
+    }
+
+    .inputIcon {
+        left: 10px;
     }
 
     .createBtn {
@@ -658,8 +735,14 @@
 
     .input {
         font-size: 13px;
-        padding: 6px 10px;
+        padding: 6px 10px 6px 34px;
         border-radius: 8px;
+    }
+
+    .inputIcon {
+        left: 8px;
+        width: 12px;
+        height: 12px;
     }
 
     .createBtn {
@@ -727,7 +810,8 @@
 
     .deleteBtn {
         font-size: 12px;
-        padding: 3px 8px;
+        padding: 3px 6px;
+        min-width: 28px;
     }
 
     .emptyState {
@@ -735,7 +819,8 @@
     }
 
     .emptyIcon {
-        font-size: 36px;
+        width: 36px;
+        height: 36px;
     }
 
     .emptyState h3 {

@@ -2,6 +2,17 @@ import { useState, type ReactNode } from "react";
 import { useCriticality } from "../../hooks/useCriticality";
 import { Slider } from "../../components/ui/Slider";
 import { Badge } from "../../components/ui/Badge";
+import {
+    Shield,
+    ShieldAlert,
+    ShieldCheck,
+    AlertTriangle,
+    Sparkles,
+    Brain,
+    Settings2,
+    Zap,
+    HelpCircle,
+} from "lucide-react";
 import styles from "./CriticalityWizard.module.css";
 
 export type PriorityMode = "auto" | "manual";
@@ -33,6 +44,32 @@ export function calculateCriticalityScore(inputs: CriticalityInputs): {
     }
 
     return { score, priority };
+}
+
+function getPriorityIcon(priority: PriorityLevel): ReactNode {
+    switch (priority) {
+        case "P1":
+            return <ShieldAlert size={16} />;
+        case "P2":
+            return <Shield size={16} />;
+        case "P3":
+            return <ShieldCheck size={16} />;
+        default:
+            return null;
+    }
+}
+
+function getPriorityLabel(priority: PriorityLevel): string {
+    switch (priority) {
+        case "P1":
+            return "Critical";
+        case "P2":
+            return "Essential";
+        case "P3":
+            return "Non-Essential";
+        default:
+            return "";
+    }
 }
 
 interface CriticalityWizardProps {
@@ -94,8 +131,28 @@ export function CriticalityWizard({
         onManualPriorityChange?.(priority);
     };
 
+    const priorityLabel = getPriorityLabel(localCalc.priority);
+    const priorityIcon = getPriorityIcon(localCalc.priority);
+
     return (
         <div className={styles.wizard} data-testid="criticality-wizard">
+            {/* Header */}
+            <div className={styles.wizardHeader}>
+                <div className={styles.wizardHeaderLeft}>
+                    <div className={styles.wizardIconWrapper}>
+                        <Brain size={18} />
+                    </div>
+                    <span className={styles.wizardTitle}>Criticality Assessment</span>
+                </div>
+                {!isManual && (
+                    <div className={styles.liveBadge}>
+                        <Sparkles size={12} />
+                        Live
+                    </div>
+                )}
+            </div>
+
+            {/* Mode Toggle */}
             <div className={styles.modeToggle} role="radiogroup" aria-label="Priority mode">
                 <label className={mode === "auto" ? styles.modeActive : styles.mode}>
                     <input
@@ -106,6 +163,7 @@ export function CriticalityWizard({
                         onChange={() => handleModeChange("auto")}
                         data-testid="mode-auto"
                     />
+                    <Sparkles size={14} />
                     Auto-Assign
                 </label>
                 <label className={mode === "manual" ? styles.modeActive : styles.mode}>
@@ -117,61 +175,76 @@ export function CriticalityWizard({
                         onChange={() => handleModeChange("manual")}
                         data-testid="mode-manual"
                     />
+                    <Settings2 size={14} />
                     Manual
                 </label>
             </div>
 
-            <Slider
-                label="Q1: Safety Risk (0.5)"
-                value={q1}
-                disabled={isManual}
-                onChange={(event) => {
-                    const value = Number(event.target.value);
-                    setQ1(value);
-                    onSafetyChange?.(value);
-                    if (canScore) schedule({ q1: value, q2, q3, q4 });
-                }}
-                data-testid="slider-q1"
-            />
-            <Slider
-                label="Q2: Data/Financial Risk (0.3)"
-                value={q2}
-                disabled={isManual}
-                onChange={(event) => {
-                    const value = Number(event.target.value);
-                    setQ2(value);
-                    onDataLossChange?.(value);
-                    if (canScore) schedule({ q1, q2: value, q3, q4 });
-                }}
-                data-testid="slider-q2"
-            />
-            <Slider
-                label="Q3: Operational Impact (0.2)"
-                value={q3}
-                disabled={isManual}
-                onChange={(event) => {
-                    const value = Number(event.target.value);
-                    setQ3(value);
-                    onOperationalChange?.(value);
-                    if (canScore) schedule({ q1, q2, q3: value, q4 });
-                }}
-                data-testid="slider-q3"
-            />
-            <Slider
-                label="Q4: Comfort (display only)"
-                value={q4}
-                disabled={isManual}
-                onChange={(event) => {
-                    const value = Number(event.target.value);
-                    setQ4(value);
-                    onComfortChange?.(value);
-                }}
-                data-testid="slider-q4"
-            />
+            {/* Sliders with color classes */}
+            <div className="slider-q1">
+                <Slider
+                    label="Q1: Safety Risk (0.5)"
+                    value={q1}
+                    disabled={isManual}
+                    onChange={(event) => {
+                        const value = Number(event.target.value);
+                        setQ1(value);
+                        onSafetyChange?.(value);
+                        if (canScore) schedule({ q1: value, q2, q3, q4 });
+                    }}
+                    data-testid="slider-q1"
+                />
+            </div>
 
+            <div className="slider-q2">
+                <Slider
+                    label="Q2: Data/Financial Risk (0.3)"
+                    value={q2}
+                    disabled={isManual}
+                    onChange={(event) => {
+                        const value = Number(event.target.value);
+                        setQ2(value);
+                        onDataLossChange?.(value);
+                        if (canScore) schedule({ q1, q2: value, q3, q4 });
+                    }}
+                    data-testid="slider-q2"
+                />
+            </div>
+
+            <div className="slider-q3">
+                <Slider
+                    label="Q3: Operational Impact (0.2)"
+                    value={q3}
+                    disabled={isManual}
+                    onChange={(event) => {
+                        const value = Number(event.target.value);
+                        setQ3(value);
+                        onOperationalChange?.(value);
+                        if (canScore) schedule({ q1, q2, q3: value, q4 });
+                    }}
+                    data-testid="slider-q3"
+                />
+            </div>
+
+            <div className="slider-q4">
+                <Slider
+                    label="Q4: Comfort (display only)"
+                    value={q4}
+                    disabled={isManual}
+                    onChange={(event) => {
+                        const value = Number(event.target.value);
+                        setQ4(value);
+                        onComfortChange?.(value);
+                    }}
+                    data-testid="slider-q4"
+                />
+            </div>
+
+            {/* Manual Dropdown */}
             {isManual && (
                 <div className={styles.manualDropdown} data-testid="manual-priority-dropdown">
                     <label className={styles.label} htmlFor="manual-priority">
+                        <Zap size={14} className={styles.dropdownIcon} />
                         Direct priority assignment
                     </label>
                     <select
@@ -182,30 +255,58 @@ export function CriticalityWizard({
                         }
                         data-testid="manual-priority-select"
                     >
-                        <option value="P1">P1</option>
-                        <option value="P2">P2</option>
-                        <option value="P3">P3</option>
+                        <option value="P1">🔴 P1 - Critical</option>
+                        <option value="P2">🟡 P2 - Essential</option>
+                        <option value="P3">🟢 P3 - Non-Essential</option>
                     </select>
                 </div>
             )}
 
+            {/* Priority Row */}
             <div className={styles.priorityRow}>
-                <span className={styles.label}>Priority</span>
-                {isManual ? (
-                    <Badge priority={manualPriority}>{manualPriority}</Badge>
-                ) : (
-                    <Badge priority={response?.priority ?? localCalc.priority}>
-                        {canScore && response ? response.priority : `${localCalc.priority} (${localCalc.score}/100)`}
-                    </Badge>
-                )}
+                <span className={styles.label}>
+                    <span className={styles.priorityLabelIcon}>
+                        {isManual ? getPriorityIcon(manualPriority) : priorityIcon}
+                    </span>
+                    Priority
+                </span>
+                <div className={styles.priorityDisplay}>
+                    {isManual ? (
+                        <Badge priority={manualPriority}>
+                            {getPriorityIcon(manualPriority)}
+                            {manualPriority} - {getPriorityLabel(manualPriority)}
+                        </Badge>
+                    ) : (
+                        <Badge priority={response?.priority ?? localCalc.priority}>
+                            {response?.priority ? (
+                                <>
+                                    {getPriorityIcon(response.priority as PriorityLevel)}
+                                    {response.priority} - {getPriorityLabel(response.priority as PriorityLevel)}
+                                </>
+                            ) : (
+                                <>
+                                    {priorityIcon}
+                                    {localCalc.priority} - {priorityLabel}
+                                    <span className={styles.scoreBadge}>
+                                        {localCalc.score}/100
+                                    </span>
+                                </>
+                            )}
+                        </Badge>
+                    )}
+                </div>
             </div>
 
+            {/* Formula */}
             <div className={styles.formula} data-testid="formula-reference">
+                <HelpCircle size={12} className={styles.formulaIcon} />
                 Score = ((Q1 × 0.5) + (Q2 × 0.3) + (Q3 × 0.2)) × 10
             </div>
 
+            {/* Error */}
             {error && (
                 <div className={styles.error} role="alert" data-testid="criticality-error">
+                    <AlertTriangle size={16} />
                     {error}
                 </div>
             )}

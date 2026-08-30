@@ -183,7 +183,23 @@
 }
 
 .cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 14px;
     margin-bottom: 28px;
+}
+
+.cardHeaderIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(248, 113, 113, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(248, 113, 113, 0.06);
+    color: var(--accent-red, #f87171);
 }
 
 .cardTitle {
@@ -207,30 +223,43 @@
     margin-bottom: 4px;
 }
 
-    .inputGroup :global(.input-wrapper) {
-        background: var(--bg-input, #13161b) !important;
-        border-color: var(--border-input, #2a2f38) !important;
-        border-radius: 10px !important;
-        transition: all 0.2s ease !important;
+.inputIconWrapper {
+    position: relative;
+}
+
+.inputIcon {
+    position: absolute;
+    left: 14px;
+    top: 38px;
+    color: var(--text-muted, #64748b);
+    z-index: 2;
+}
+
+.inputGroup :global(.input-wrapper) {
+    background: var(--bg-input, #13161b) !important;
+    border-color: var(--border-input, #2a2f38) !important;
+    border-radius: 10px !important;
+    transition: all 0.2s ease !important;
+}
+
+    .inputGroup :global(.input-wrapper):focus-within {
+        border-color: var(--accent-red, #f87171) !important;
+        box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12)) !important;
     }
 
-        .inputGroup :global(.input-wrapper):focus-within {
-            border-color: var(--accent-red, #f87171) !important;
-            box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12)) !important;
-        }
-
-        .inputGroup :global(.input-wrapper) input {
-            background: transparent !important;
-            color: var(--text-primary, #e8edf5) !important;
-        }
-
-            .inputGroup :global(.input-wrapper) input::placeholder {
-                color: var(--text-muted, #64748b) !important;
-            }
-
-    .inputGroup :global(.input-label) {
-        color: var(--text-secondary, #94a3b8) !important;
+    .inputGroup :global(.input-wrapper) input {
+        background: transparent !important;
+        color: var(--text-primary, #e8edf5) !important;
+        padding-left: 42px !important;
     }
+
+        .inputGroup :global(.input-wrapper) input::placeholder {
+            color: var(--text-muted, #64748b) !important;
+        }
+
+.inputGroup :global(.input-label) {
+    color: var(--text-secondary, #94a3b8) !important;
+}
 
 .passwordWrapper {
     position: relative;
@@ -268,42 +297,6 @@
 
     .eyeButton svg {
         color: currentColor;
-    }
-
-/* ========================================
-   REMEMBER ME
-   ======================================== */
-.rememberRow {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin: 6px 0 14px 0;
-}
-
-.checkboxLabel {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--text-secondary, #94a3b8);
-    user-select: none;
-}
-
-.checkbox {
-    width: 17px;
-    height: 17px;
-    accent-color: var(--accent-red, #f87171);
-    cursor: pointer;
-    border-radius: 4px;
-    flex-shrink: 0;
-    background: var(--bg-input, #13161b);
-    border: 1px solid var(--border-input, #2a2f38);
-}
-
-    .checkbox:checked {
-        background: var(--accent-red, #f87171);
-        border-color: var(--accent-red, #f87171);
     }
 
 /* ========================================
@@ -505,6 +498,17 @@
     .cardTitle {
         font-size: 24px;
     }
+
+    .cardHeaderIconWrapper {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+    }
+
+        .cardHeaderIconWrapper svg {
+            width: 20px;
+            height: 20px;
+        }
 }
 
 /* Mobile */
@@ -567,8 +571,20 @@
     }
 
     .cardHeader {
+        gap: 10px;
         margin-bottom: 20px;
     }
+
+    .cardHeaderIconWrapper {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+        .cardHeaderIconWrapper svg {
+            width: 18px;
+            height: 18px;
+        }
 
     .cardTitle {
         font-size: 22px;
@@ -576,6 +592,17 @@
 
     .cardSubtitle {
         font-size: 14px;
+    }
+
+    .inputIcon {
+        left: 12px;
+        top: 34px;
+        width: 14px;
+        height: 14px;
+    }
+
+    .inputGroup :global(.input-wrapper) input {
+        padding-left: 36px !important;
     }
 
     .eyeButton {
@@ -587,16 +614,6 @@
             width: 16px;
             height: 16px;
         }
-
-    .checkboxLabel {
-        font-size: 13px;
-        gap: 8px;
-    }
-
-    .checkbox {
-        width: 16px;
-        height: 16px;
-    }
 
     .error {
         font-size: 13px;
@@ -669,11 +686,34 @@
         padding: 18px 14px;
     }
 
+    .cardHeaderIconWrapper {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+
+        .cardHeaderIconWrapper svg {
+            width: 16px;
+            height: 16px;
+        }
+
     .cardTitle {
         font-size: 19px;
     }
 
     .cardSubtitle {
         font-size: 13px;
+    }
+
+    .inputIcon {
+        left: 10px;
+        top: 30px;
+        width: 12px;
+        height: 12px;
+    }
+
+    .inputGroup :global(.input-wrapper) input {
+        padding-left: 32px !important;
+        font-size: 14px !important;
     }
 }

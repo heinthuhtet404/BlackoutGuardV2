@@ -98,7 +98,9 @@
 }
 
 .brandBadge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.06);
     padding: 6px 16px;
     border-radius: 100px;
@@ -110,6 +112,10 @@
     border: 1px solid rgba(255, 255, 255, 0.06);
     margin-bottom: 24px;
 }
+
+    .brandBadge svg {
+        color: var(--accent-red, #f87171);
+    }
 
 .heroTitle {
     font-size: 36px;
@@ -155,8 +161,6 @@
     border-radius: 50%;
     background: var(--accent-red, #f87171);
     color: #0f1117;
-    font-size: 13px;
-    font-weight: 700;
     flex-shrink: 0;
 }
 
@@ -172,8 +176,37 @@
     overflow-y: auto;
 }
 
+    .card::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .card::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .card::-webkit-scrollbar-thumb {
+        background: var(--border-soft, #22262e);
+        border-radius: 100px;
+    }
+
 .cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 14px;
     margin-bottom: 28px;
+}
+
+.cardHeaderIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(248, 113, 113, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(248, 113, 113, 0.06);
+    color: var(--accent-red, #f87171);
 }
 
 .cardTitle {
@@ -188,6 +221,21 @@
     font-size: 15px;
     color: var(--text-secondary, #94a3b8);
     margin: 0;
+}
+
+/* ========================================
+   INPUT ICON WRAPPER
+   ======================================== */
+.inputIconWrapper {
+    position: relative;
+}
+
+.inputIcon {
+    position: absolute;
+    left: 14px;
+    top: 38px;
+    color: var(--text-muted, #64748b);
+    z-index: 2;
 }
 
 /* ========================================
@@ -227,6 +275,7 @@
         .formRight :global(.input-wrapper) input {
             background: transparent !important;
             color: var(--text-primary, #e8edf5) !important;
+            padding-left: 42px !important;
         }
 
             .formLeft :global(.input-wrapper) input::placeholder,
@@ -238,6 +287,11 @@
     .formRight :global(.input-label) {
         color: var(--text-secondary, #94a3b8) !important;
     }
+
+/* Hidden Input for Generator Capacity */
+.hiddenInput {
+    display: none !important;
+}
 
 /* ========================================
    TERMS
@@ -308,7 +362,6 @@
 }
 
 .errorIcon {
-    font-size: 18px;
     flex-shrink: 0;
 }
 
@@ -344,6 +397,14 @@
         cursor: not-allowed;
         transform: none !important;
     }
+
+.btnIcon {
+    transition: transform 0.2s ease;
+}
+
+.submitBtn:hover:not(:disabled) .btnIcon {
+    transform: translateX(3px);
+}
 
 /* ========================================
    SPINNER
@@ -429,6 +490,17 @@
         padding: 32px 28px;
     }
 
+    .cardHeaderIconWrapper {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+    }
+
+        .cardHeaderIconWrapper svg {
+            width: 20px;
+            height: 20px;
+        }
+
     .formGrid {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -463,6 +535,11 @@
         margin-bottom: 14px;
     }
 
+        .brandBadge svg {
+            width: 14px;
+            height: 14px;
+        }
+
     .heroTitle {
         font-size: 22px;
     }
@@ -485,12 +562,32 @@
     .featureIcon {
         width: 20px;
         height: 20px;
-        font-size: 11px;
     }
+
+        .featureIcon svg {
+            width: 10px;
+            height: 10px;
+        }
 
     .card {
         padding: 24px 18px;
     }
+
+    .cardHeader {
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .cardHeaderIconWrapper {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+        .cardHeaderIconWrapper svg {
+            width: 18px;
+            height: 18px;
+        }
 
     .cardTitle {
         font-size: 22px;
@@ -498,6 +595,18 @@
 
     .cardSubtitle {
         font-size: 14px;
+    }
+
+    .inputIcon {
+        left: 12px;
+        top: 34px;
+        width: 14px;
+        height: 14px;
+    }
+
+    .formLeft :global(.input-wrapper) input,
+    .formRight :global(.input-wrapper) input {
+        padding-left: 36px !important;
     }
 
     .formGrid {
@@ -529,6 +638,11 @@
         padding: 10px 14px;
     }
 
+    .errorIcon {
+        width: 16px;
+        height: 16px;
+    }
+
     .submitBtn {
         padding: 12px 20px !important;
         font-size: 15px !important;
@@ -556,7 +670,31 @@
         padding: 18px 14px;
     }
 
+    .cardHeaderIconWrapper {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+
+        .cardHeaderIconWrapper svg {
+            width: 16px;
+            height: 16px;
+        }
+
     .cardTitle {
         font-size: 19px;
+    }
+
+    .inputIcon {
+        left: 10px;
+        top: 30px;
+        width: 12px;
+        height: 12px;
+    }
+
+    .formLeft :global(.input-wrapper) input,
+    .formRight :global(.input-wrapper) input {
+        padding-left: 32px !important;
+        font-size: 14px !important;
     }
 }

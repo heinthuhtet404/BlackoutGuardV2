@@ -4,6 +4,32 @@ import { useAuditLog, type AuditEntry } from "../../hooks/useAuditLog";
 import { useTelemetry, type DecisionExecutedPayload } from "../../context/TelemetryContext";
 import { get } from "../../api/apiClient";
 import { ExportButtons } from "./ExportButtons";
+import {
+    FileText,
+    Search,
+    AlertTriangle,
+    AlertCircle,
+    CheckCircle,
+    Activity,
+    Clock,
+    Server,
+    Database,
+    ChevronLeft,
+    ChevronRight,
+    Loader2,
+    Wifi,
+    WifiOff,
+    Zap,
+    ZapOff,
+    RefreshCw,
+    ListChecks,
+    ShieldAlert,
+    ShieldCheck,
+    Shield,
+    Timer,
+    Tag,
+    Info,
+} from "lucide-react";
 import styles from "./AuditTable.module.css";
 
 const PAGE_SIZE = 20;
@@ -99,6 +125,19 @@ export function AuditTable() {
         }
     }, []);
 
+    const getEventIcon = useCallback((eventType: string) => {
+        switch (eventType) {
+            case "Load Shedding Executed":
+                return <ZapOff size={12} />;
+            case "Load Restored":
+                return <Zap size={12} />;
+            case "Relay Decision Executed":
+                return <Shield size={12} />;
+            default:
+                return <Info size={12} />;
+        }
+    }, []);
+
     useEffect(() => {
         let isMounted = true;
         const fetchLoads = async () => {
@@ -169,7 +208,7 @@ export function AuditTable() {
     if (isLoading) {
         return (
             <div className={styles.loadingState} role="status">
-                <span className={styles.spinner}></span>
+                <Loader2 size={22} className={styles.spinner} />
                 Loading audit log...
             </div>
         );
@@ -178,7 +217,7 @@ export function AuditTable() {
     if (isError) {
         return (
             <div className={styles.errorState} role="alert">
-                <span className={styles.errorIcon}>⚠</span>
+                <AlertCircle size={20} className={styles.errorIcon} />
                 Failed to load audit log: {error instanceof Error ? error.message : "unknown error"}
             </div>
         );
@@ -187,19 +226,42 @@ export function AuditTable() {
     return (
         <div className={styles.page} data-testid="audit-table">
             <div className={styles.header}>
-                <div>
-                    <h2 className={styles.title}>📋 Audit Log</h2>
-                    <p className={styles.subtitle}>Track all load shedding events and decisions</p>
+                <div className={styles.headerLeft}>
+                    <div className={styles.headerIconWrapper}>
+                        <FileText size={24} className={styles.headerIcon} />
+                    </div>
+                    <div>
+                        <h2 className={styles.title}>Audit Log</h2>
+                        <p className={styles.subtitle}>Track all load shedding events and decisions</p>
+                    </div>
                 </div>
-                <div className={styles.actions}>
-                    <input
-                        type="text"
-                        placeholder="Search logs..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={styles.searchInput}
-                    />
-                    <ExportButtons data={displayRows} />
+                <div className={styles.headerRight}>
+                    <div className={styles.connectionStatus}>
+                        {connected ? (
+                            <span className={styles.statusConnected}>
+                                <Wifi size={14} />
+                                Live
+                            </span>
+                        ) : (
+                            <span className={styles.statusDisconnected}>
+                                <WifiOff size={14} />
+                                Offline
+                            </span>
+                        )}
+                    </div>
+                    <div className={styles.actions}>
+                        <div className={styles.searchWrapper}>
+                            <Search size={16} className={styles.searchIcon} />
+                            <input
+                                type="text"
+                                placeholder="Search logs..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className={styles.searchInput}
+                            />
+                        </div>
+                        <ExportButtons data={displayRows} />
+                    </div>
                 </div>
             </div>
 
@@ -207,17 +269,29 @@ export function AuditTable() {
                 <table className={styles.table}>
                     <thead>
                         <tr>
-                            <th>Timestamp</th>
-                            <th>Event</th>
-                            <th>Rationale</th>
-                            <th>Affected Load</th>
+                            <th>
+                                <Clock size={14} className={styles.thIcon} />
+                                Timestamp
+                            </th>
+                            <th>
+                                <Tag size={14} className={styles.thIcon} />
+                                Event
+                            </th>
+                            <th>
+                                <Info size={14} className={styles.thIcon} />
+                                Rationale
+                            </th>
+                            <th>
+                                <Server size={14} className={styles.thIcon} />
+                                Affected Load
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         {displayRows.length === 0 && (
                             <tr>
                                 <td colSpan={4} className={styles.empty}>
-                                    <span className={styles.emptyIcon}>📭</span>
+                                    <Database size={36} className={styles.emptyIcon} />
                                     No audit entries found.
                                 </td>
                             </tr>
@@ -234,11 +308,13 @@ export function AuditTable() {
                                     <td className={styles.timestamp}>
                                         <span className={isLive ? styles.liveDot : ""}>
                                             {isLive && <span className={styles.dot}></span>}
+                                            <Timer size={12} className={styles.timerIcon} />
                                             {formatTimestamp(entry.timestampUtc)}
                                         </span>
                                     </td>
                                     <td>
                                         <span className={`${styles.eventBadge} ${getBadgeStyleClass(entry.eventType)}`}>
+                                            {getEventIcon(entry.eventType)}
                                             {entry.eventType}
                                         </span>
                                     </td>
@@ -259,7 +335,8 @@ export function AuditTable() {
                     disabled={page <= 1}
                     data-testid="prev-page"
                 >
-                    ← Previous
+                    <ChevronLeft size={16} />
+                    Previous
                 </button>
                 <span className={styles.pageInfo} data-testid="page-indicator">
                     Page <strong>{page}</strong> of <strong>{totalPages}</strong>
@@ -271,7 +348,8 @@ export function AuditTable() {
                     disabled={page >= totalPages}
                     data-testid="next-page"
                 >
-                    Next →
+                    Next
+                    <ChevronRight size={16} />
                 </button>
             </div>
         </div>

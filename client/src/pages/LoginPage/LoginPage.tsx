@@ -1,6 +1,24 @@
 import { useState, type FormEvent, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ShieldCheck, Info, ArrowRight } from "lucide-react";
+import {
+    Eye,
+    EyeOff,
+    ShieldCheck,
+    Info,
+    ArrowRight,
+    Mail,
+    Lock,
+    LogIn,
+    Sparkles,
+    Clock,
+    Bell,
+    Activity,
+    Zap,
+    Gauge,
+    Server,
+    Users,
+    Building,
+} from "lucide-react";
 import { useAuth } from "../../auth/authTypes";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -86,35 +104,46 @@ export function LoginPage() {
                 {/* Right Side - Login Form */}
                 <form className={styles.card} onSubmit={(e) => void handleSubmit(e)} noValidate>
                     <div className={styles.cardHeader}>
-                        <h2 className={styles.cardTitle}>Welcome Back</h2>
-                        <p className={styles.cardSubtitle}>Sign in to access your dashboard</p>
+                        <div className={styles.cardHeaderIconWrapper}>
+                            <LogIn size={24} />
+                        </div>
+                        <div>
+                            <h2 className={styles.cardTitle}>Welcome Back</h2>
+                            <p className={styles.cardSubtitle}>Sign in to access your dashboard</p>
+                        </div>
                     </div>
 
                     {/* Email Input */}
                     <div className={styles.inputGroup}>
-                        <Input
-                            label="Email Address"
-                            type="email"
-                            placeholder="user@hospital.com"
-                            value={email}
-                            onChange={(event) => setEmail(event.target.value)}
-                            required
-                            data-testid="login-email"
-                        />
+                        <div className={styles.inputIconWrapper}>
+                            <Mail size={16} className={styles.inputIcon} />
+                            <Input
+                                label="Email Address"
+                                type="email"
+                                placeholder="user@hospital.com"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
+                                required
+                                data-testid="login-email"
+                            />
+                        </div>
                     </div>
 
                     {/* Password Input with Show/Hide Toggle */}
                     <div className={styles.inputGroup}>
                         <div className={styles.passwordWrapper}>
-                            <Input
-                                label="Password"
-                                type={showPassword ? "text" : "password"}
-                                placeholder="••••••••••••"
-                                value={password}
-                                onChange={(event) => setPassword(event.target.value)}
-                                required
-                                data-testid="login-password"
-                            />
+                            <div className={styles.inputIconWrapper}>
+                                <Lock size={16} className={styles.inputIcon} />
+                                <Input
+                                    label="Password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••••••"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    required
+                                    data-testid="login-password"
+                                />
+                            </div>
                             <button
                                 type="button"
                                 className={styles.eyeButton}
@@ -126,19 +155,6 @@ export function LoginPage() {
                             </button>
                         </div>
                     </div>
-
-                    {/* Remember Me */}
-                    {/* <div className={styles.rememberRow}>
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
-                                className={styles.checkbox}
-                            />
-                            <span>Remember me</span>
-                        </label>
-                    </div> */}
 
                     {/* Error Alert */}
                     {error && (
@@ -181,6 +197,7 @@ export function LoginPage() {
                             className={styles.registerButton}
                             onClick={() => navigate("/register")}
                         >
+                            <Building size={16} />
                             Create New Organization
                         </button>
                     </div>

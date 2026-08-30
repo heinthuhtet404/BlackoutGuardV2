@@ -4,6 +4,34 @@ import { useRole } from "../../auth/useRole";
 import { post } from "../../api/apiClient";
 import { useTelemetry } from "../../context/TelemetryContext";
 import { useToast } from "../../components/ui/toastContext";
+import {
+    Server,
+    Activity,
+    Zap,
+    Gauge,
+    Plug,
+    Power,
+    Wifi,
+    WifiOff,
+    AlertTriangle,
+    Loader2,
+    Play,
+    Pause,
+    Settings2,
+    Cpu,
+    Battery,
+    Clock,
+    TrendingUp,
+    ZapOff,
+    Shield,
+    Radio,
+    Signal,
+    Database,
+    PlayCircle,
+    AlertCircle,
+    CheckCircle,
+    RefreshCw,
+} from "lucide-react";
 import styles from "./SimulatorPanel.module.css";
 
 const FREQ_MIN = 45.0;
@@ -181,12 +209,19 @@ function SimulatorPanelContent() {
 
     return (
         <div className={styles.page} data-testid="simulator-panel">
+            {/* Header */}
             <div className={styles.header}>
-                <div>
-                    <h1 className={styles.heading}>🎮 Simulator Panel</h1>
-                    <p className={styles.subheading}>Control and monitor hardware emulation</p>
+                <div className={styles.headerLeft}>
+                    <div className={styles.headerIconWrapper}>
+                        <Server size={28} className={styles.headerIcon} />
+                    </div>
+                    <div>
+                        <h1 className={styles.heading}>Simulator Panel</h1>
+                        <p className={styles.subheading}>Control and monitor hardware emulation</p>
+                    </div>
                 </div>
                 <div className={`${styles.statusBadge} ${connected ? styles.statusConnected : styles.statusDisconnected}`}>
+                    {connected ? <Wifi size={14} /> : <WifiOff size={14} />}
                     <span className={styles.statusDot}></span>
                     {connected ? "Live Connected" : "Disconnected"}
                 </div>
@@ -195,30 +230,48 @@ function SimulatorPanelContent() {
             {/* Live Telemetry */}
             <section className={styles.card}>
                 <div className={styles.cardHeader}>
-                    <h2 className={styles.cardTitle}>📊 Live Telemetry</h2>
-                    <span className={styles.cardBadge}>Real-time</span>
+                    <div className={styles.cardHeaderLeft}>
+                        <Activity size={18} className={styles.cardIcon} />
+                        <h2 className={styles.cardTitle}>Live Telemetry</h2>
+                    </div>
+                    <span className={styles.cardBadge}>
+                        <Radio size={12} />
+                        Real-time
+                    </span>
                 </div>
                 <div className={styles.telemetryGrid}>
                     <div className={styles.metric}>
-                        <span className={styles.metricLabel}>Frequency</span>
+                        <span className={styles.metricLabel}>
+                            <TrendingUp size={12} />
+                            Frequency
+                        </span>
                         <span className={styles.metricValue} data-testid="telemetry-frequency">
                             {telemetry ? `${telemetry.frequency.toFixed(2)} Hz` : "—"}
                         </span>
                     </div>
                     <div className={styles.metric}>
-                        <span className={styles.metricLabel}>Voltage</span>
+                        <span className={styles.metricLabel}>
+                            <Zap size={12} />
+                            Voltage
+                        </span>
                         <span className={styles.metricValue} data-testid="telemetry-voltage">
                             {telemetry ? `${telemetry.voltage.toFixed(1)} V` : "—"}
                         </span>
                     </div>
                     <div className={styles.metric}>
-                        <span className={styles.metricLabel}>Load</span>
+                        <span className={styles.metricLabel}>
+                            <Gauge size={12} />
+                            Load
+                        </span>
                         <span className={styles.metricValue} data-testid="telemetry-load">
                             {telemetry ? `${telemetry.totalLoadKw.toFixed(1)} kW` : "—"}
                         </span>
                     </div>
                     <div className={styles.metric}>
-                        <span className={styles.metricLabel}>Generator</span>
+                        <span className={styles.metricLabel}>
+                            <Power size={12} />
+                            Generator
+                        </span>
                         <span className={`${styles.metricValue} ${telemetry?.generatorOn ? styles.valueOn : styles.valueOff}`} data-testid="telemetry-generator">
                             {telemetry ? (telemetry.generatorOn ? "ON" : "OFF") : "—"}
                         </span>
@@ -229,13 +282,21 @@ function SimulatorPanelContent() {
             {/* Controls */}
             <section className={styles.card}>
                 <div className={styles.cardHeader}>
-                    <h2 className={styles.cardTitle}>🎛️ Controls & Simulation</h2>
-                    <span className={styles.cardBadge}>Admin</span>
+                    <div className={styles.cardHeaderLeft}>
+                        <Settings2 size={18} className={styles.cardIcon} />
+                        <h2 className={styles.cardTitle}>Controls & Simulation</h2>
+                    </div>
+                    <span className={styles.cardBadge}>
+                        <Shield size={12} />
+                        Admin
+                    </span>
                 </div>
 
                 <div className={styles.modeSection}>
                     <div className={styles.modeInfo}>
-                        <span className={styles.modeIcon}>⚡</span>
+                        <div className={styles.modeIconWrapper}>
+                            {isAutoSimulating ? <Play size={20} /> : <Pause size={20} />}
+                        </div>
                         <div>
                             <div className={styles.modeTitle}>Live Hardware Emulation</div>
                             <div className={styles.modeSubtext}>
@@ -250,13 +311,25 @@ function SimulatorPanelContent() {
                         aria-pressed={isAutoSimulating}
                         data-testid="auto-simulation-toggle"
                     >
-                        {isAutoSimulating ? "AUTO" : "MANUAL"}
+                        {isAutoSimulating ? (
+                            <>
+                                <Play size={14} />
+                                AUTO
+                            </>
+                        ) : (
+                            <>
+                                <Pause size={14} />
+                                MANUAL
+                            </>
+                        )}
                     </button>
                 </div>
 
                 {isAutoSimulating ? (
                     <div className={styles.autoActive}>
-                        <span className={styles.autoIcon}>✨</span>
+                        <div className={styles.autoIconWrapper}>
+                            <Signal size={20} />
+                        </div>
                         <div>
                             <strong>Hardware Sensor Emulation is Active.</strong>
                             <div className={styles.autoSubtext}>
@@ -268,7 +341,10 @@ function SimulatorPanelContent() {
                     <>
                         <div className={styles.controlGroup}>
                             <div className={styles.controlHeader}>
-                                <label className={styles.controlLabel}>Target Frequency</label>
+                                <label className={styles.controlLabel}>
+                                    <TrendingUp size={14} className={styles.controlIcon} />
+                                    Target Frequency
+                                </label>
                                 <span className={styles.controlValue} data-testid="frequency-value">{frequency.toFixed(1)} Hz</span>
                             </div>
                             <input
@@ -278,19 +354,22 @@ function SimulatorPanelContent() {
                                 step={0.1}
                                 value={frequency}
                                 onChange={(e) => handleFrequencyChange(Number(e.target.value))}
-                                className={styles.slider}
+                                className={`${styles.slider} ${styles.sliderFreq}`}
                                 data-testid="frequency-slider"
-                                style={{ '--slider-color': '#f87171' } as React.CSSProperties}
                             />
                             <div className={styles.sliderLabels}>
                                 <span>{FREQ_MIN} Hz</span>
+                                <span className={styles.sliderTarget}>Target: 50.0 Hz</span>
                                 <span>{FREQ_MAX} Hz</span>
                             </div>
                         </div>
 
                         <div className={styles.controlGroup}>
                             <div className={styles.controlHeader}>
-                                <label className={styles.controlLabel}>Target Load</label>
+                                <label className={styles.controlLabel}>
+                                    <Gauge size={14} className={styles.controlIcon} />
+                                    Target Load
+                                </label>
                                 <span className={styles.controlValue} data-testid="load-value">{loadKw} kW</span>
                             </div>
                             <input
@@ -300,9 +379,8 @@ function SimulatorPanelContent() {
                                 step={1}
                                 value={loadKw}
                                 onChange={(e) => handleLoadChange(Number(e.target.value))}
-                                className={styles.slider}
+                                className={`${styles.slider} ${styles.sliderLoad}`}
                                 data-testid="load-slider"
-                                style={{ '--slider-color': '#60a5fa' } as React.CSSProperties}
                             />
                             <div className={styles.sliderLabels}>
                                 <span>{LOAD_MIN} kW</span>
@@ -314,8 +392,13 @@ function SimulatorPanelContent() {
 
                 <div className={styles.generatorRow}>
                     <div className={styles.generatorInfo}>
-                        <span className={styles.generatorIcon}>🔋</span>
+                        <div className={styles.generatorIconWrapper}>
+                            {generatorOn ? <Battery size={18} /> : <ZapOff size={18} />}
+                        </div>
                         <span className={styles.controlLabel}>Generator</span>
+                        <span className={`${styles.generatorStatus} ${generatorOn ? styles.statusOn : styles.statusOff}`}>
+                            {generatorOn ? "Running" : "Stopped"}
+                        </span>
                     </div>
                     <button
                         type="button"
@@ -337,11 +420,14 @@ function SimulatorPanelContent() {
                 >
                     {injectingFault ? (
                         <>
-                            <span className={styles.spinner}></span>
+                            <Loader2 size={18} className={styles.spinning} />
                             Injecting...
                         </>
                     ) : (
-                        "⚠️ Inject Fault (frequency_drop)"
+                        <>
+                            <AlertTriangle size={18} />
+                            Inject Fault (frequency_drop)
+                        </>
                     )}
                 </button>
             </section>

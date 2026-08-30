@@ -2,6 +2,29 @@ import React, { useEffect, useState, useMemo } from "react";
 import { get, post, del } from "../api/apiClient";
 import { useToast } from "../components/ui/toastContext";
 import { useAuth } from "../auth/authTypes";
+import {
+    Users,
+    Plus,
+    Search,
+    User,
+    Mail,
+    Lock,
+    Eye,
+    EyeOff,
+    Shield,
+    ShieldAlert,
+    ShieldCheck,
+    Trash2,
+    Edit,
+    X,
+    CheckCircle,
+    AlertCircle,
+    Loader2,
+    UserPlus,
+    UserCheck,
+    UserX,
+    ListChecks,
+} from "lucide-react";
 import styles from "./UserManagementPage.module.css";
 
 export type UserRole = "Admin" | "Operator" | "Viewer";
@@ -67,7 +90,7 @@ function DeleteConfirmationModal({ isOpen, user, onClose, onConfirm }: DeleteMod
                 {/* Header with icon */}
                 <div className={styles.modalHeader}>
                     <div className={styles.modalIconWrapper}>
-                        <span className={styles.modalIcon}>🗑️</span>
+                        <Trash2 size={24} className={styles.modalIconSvg} />
                     </div>
                     <h2 className={styles.modalTitle}>Delete User</h2>
                     <button
@@ -76,7 +99,7 @@ function DeleteConfirmationModal({ isOpen, user, onClose, onConfirm }: DeleteMod
                         onClick={onClose}
                         disabled={deleting}
                     >
-                        ✕
+                        <X size={20} />
                     </button>
                 </div>
 
@@ -99,7 +122,7 @@ function DeleteConfirmationModal({ isOpen, user, onClose, onConfirm }: DeleteMod
                     </div>
 
                     <div className={styles.warningBanner}>
-                        <span className={styles.warningIcon}>⚠️</span>
+                        <AlertCircle size={16} className={styles.warningIconSvg} />
                         <span>This action cannot be undone.</span>
                     </div>
                 </div>
@@ -122,7 +145,7 @@ function DeleteConfirmationModal({ isOpen, user, onClose, onConfirm }: DeleteMod
                     >
                         {deleting ? (
                             <>
-                                <span className={styles.spinnerSmall}></span>
+                                <Loader2 size={16} className={styles.spinning} />
                                 Deleting...
                             </>
                         ) : (
@@ -196,16 +219,19 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
             <div className={styles.modal}>
                 <div className={styles.modalHeader}>
                     <div className={styles.modalIconWrapper}>
-                        <span className={styles.modalIcon}>👤</span>
+                        <UserPlus size={24} className={styles.modalIconSvg} />
                     </div>
                     <h2 className={styles.modalTitle}>Create New User</h2>
                     <button type="button" className={styles.modalClose} onClick={onClose}>
-                        ✕
+                        <X size={20} />
                     </button>
                 </div>
                 <form onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
-                        <label htmlFor="fullName">Full Name</label>
+                        <label htmlFor="fullName">
+                            <User size={14} className={styles.labelIcon} />
+                            Full Name
+                        </label>
                         <input
                             id="fullName"
                             type="text"
@@ -218,7 +244,10 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label htmlFor="email">Email Address</label>
+                        <label htmlFor="email">
+                            <Mail size={14} className={styles.labelIcon} />
+                            Email Address
+                        </label>
                         <input
                             id="email"
                             type="email"
@@ -231,7 +260,10 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label htmlFor="password">Password</label>
+                        <label htmlFor="password">
+                            <Lock size={14} className={styles.labelIcon} />
+                            Password
+                        </label>
                         <div className={styles.passwordInputWrapper}>
                             <input
                                 id="password"
@@ -248,19 +280,23 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                                 onClick={() => setShowPassword(!showPassword)}
                                 aria-label={showPassword ? "Hide password" : "Show password"}
                             >
-                                {showPassword ? "🙈" : "👁️"}
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
                     </div>
 
                     {validationError && (
                         <div className={styles.validationError}>
-                            ⚠️ {validationError}
+                            <AlertCircle size={16} />
+                            {validationError}
                         </div>
                     )}
 
                     <div className={styles.formGroup}>
-                        <label htmlFor="role">Role</label>
+                        <label htmlFor="role">
+                            <Shield size={14} className={styles.labelIcon} />
+                            Role
+                        </label>
                         <select
                             id="role"
                             className={styles.formSelect}
@@ -273,22 +309,19 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                         </select>
                     </div>
 
-                    {/* <div className={styles.checkboxGroup}>
-                        <input
-                            type="checkbox"
-                            id="welcomeEmail"
-                            checked={sendWelcomeEmail}
-                            onChange={(e) => setSendWelcomeEmail(e.target.checked)}
-                        />
-                        <label htmlFor="welcomeEmail">Send Welcome Email (with credentials)</label>
-                    </div> */}
-
                     <div className={styles.modalFooter}>
                         <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={submitting}>
                             Cancel
                         </button>
                         <button type="submit" disabled={submitting} className={styles.saveBtn}>
-                            {submitting ? "Creating..." : "Create User"}
+                            {submitting ? (
+                                <>
+                                    <Loader2 size={16} className={styles.spinning} />
+                                    Creating...
+                                </>
+                            ) : (
+                                "Create User"
+                            )}
                         </button>
                     </div>
                 </form>
@@ -448,14 +481,27 @@ export function UserManagementPage() {
         });
     }, [users, searchTerm, roleFilter]);
 
+    const getRoleIcon = (role: UserRole) => {
+        switch (role) {
+            case "Admin":
+                return <ShieldAlert size={14} />;
+            case "Operator":
+                return <Shield size={14} />;
+            case "Viewer":
+                return <ShieldCheck size={14} />;
+            default:
+                return null;
+        }
+    };
+
     const getRoleBadge = (role: UserRole) => {
         switch (role) {
             case "Admin":
-                return <span className={`${styles.badge} ${styles.badgeAdmin}`}>🛡️ Admin</span>;
+                return <span className={`${styles.badge} ${styles.badgeAdmin}`}>{getRoleIcon(role)} Admin</span>;
             case "Operator":
-                return <span className={`${styles.badge} ${styles.badgeOperator}`}>⚙️ Operator</span>;
+                return <span className={`${styles.badge} ${styles.badgeOperator}`}>{getRoleIcon(role)} Operator</span>;
             case "Viewer":
-                return <span className={`${styles.badge} ${styles.badgeViewer}`}>👁️ Viewer</span>;
+                return <span className={`${styles.badge} ${styles.badgeViewer}`}>{getRoleIcon(role)} Viewer</span>;
             default:
                 return <span className={styles.badge}>{role}</span>;
         }
@@ -464,23 +510,32 @@ export function UserManagementPage() {
     return (
         <div className={styles.page}>
             <div className={styles.headerContainer}>
-                <div>
-                    <h1 className={styles.heading}>👥 User Management</h1>
-                    <p className={styles.subHeading}>Configure user permissions, roles, and access credentials.</p>
+                <div className={styles.headerLeft}>
+                    <div className={styles.headerIconWrapper}>
+                        <Users size={28} className={styles.headerIcon} />
+                    </div>
+                    <div>
+                        <h1 className={styles.heading}>User Management</h1>
+                        <p className={styles.subHeading}>Configure user permissions, roles, and access credentials.</p>
+                    </div>
                 </div>
                 <button className={styles.createBtn} onClick={handleCreateUser}>
-                    + Create User
+                    <Plus size={18} />
+                    Create User
                 </button>
             </div>
 
             <div className={styles.toolbar}>
-                <input
-                    type="text"
-                    className={styles.searchInput}
-                    placeholder="🔍 Search by name or email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <div className={styles.searchWrapper}>
+                    <Search size={16} className={styles.searchIcon} />
+                    <input
+                        type="text"
+                        className={styles.searchInput}
+                        placeholder="Search by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
                 <select
                     className={styles.roleSelectFilter}
                     value={roleFilter}
@@ -495,7 +550,7 @@ export function UserManagementPage() {
 
             {loading ? (
                 <div className={styles.loadingState}>
-                    <span className={styles.spinner}></span>
+                    <Loader2 size={22} className={styles.spinning} />
                     Loading user registry...
                 </div>
             ) : (
@@ -516,7 +571,7 @@ export function UserManagementPage() {
                                 {filteredUsers.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className={styles.emptyRow}>
-                                            <span className={styles.emptyIcon}>📭</span>
+                                            <Users size={36} className={styles.emptyIcon} />
                                             No users matched your criteria.
                                         </td>
                                     </tr>
@@ -549,7 +604,7 @@ export function UserManagementPage() {
                                                             onClick={() => togglePasswordVisibility(u.id)}
                                                             title={isPasswordVisible ? "Hide password" : "Show password"}
                                                         >
-                                                            {isPasswordVisible ? "🙈" : "👁️"}
+                                                            {isPasswordVisible ? <EyeOff size={14} /> : <Eye size={14} />}
                                                         </button>
                                                     </div>
                                                 </td>
@@ -566,7 +621,8 @@ export function UserManagementPage() {
                                                         }
                                                         onClick={() => openDeleteModal(u)}
                                                     >
-                                                        🗑️ Delete
+                                                        <Trash2 size={14} />
+                                                        Delete
                                                     </button>
                                                 </td>
                                             </tr>

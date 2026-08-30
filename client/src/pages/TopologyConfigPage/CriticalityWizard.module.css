@@ -35,6 +35,15 @@
     --priority-p3: #34d399;
     --priority-p3-bg: rgba(52, 211, 153, 0.15);
     --priority-p3-border: rgba(52, 211, 153, 0.20);
+    /* Slider Colors */
+    --slider-q1: #f87171;
+    --slider-q1-bg: rgba(248, 113, 113, 0.15);
+    --slider-q2: #60a5fa;
+    --slider-q2-bg: rgba(96, 165, 250, 0.15);
+    --slider-q3: #fbbf24;
+    --slider-q3-bg: rgba(251, 191, 36, 0.15);
+    --slider-q4: #34d399;
+    --slider-q4-bg: rgba(52, 211, 153, 0.15);
 }
 
 /* ========================================
@@ -43,8 +52,8 @@
 .wizard {
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    padding: 20px 24px;
+    gap: 16px;
+    padding: 18px 22px;
     background: var(--bg-card, #1a1d24);
     border-radius: 14px;
     border: 1px solid var(--border-card, #2a2f38);
@@ -58,13 +67,72 @@
     }
 
 /* ========================================
+   WIZARD HEADER
+   ======================================== */
+.wizardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-soft, #22262e);
+    margin-bottom: 2px;
+}
+
+.wizardHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wizardIconWrapper {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--accent-soft, rgba(248, 113, 113, 0.08));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-red, #f87171);
+}
+
+.wizardTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary, #e8edf5);
+}
+
+.liveBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--success-soft, rgba(52, 211, 153, 0.10));
+    color: var(--success, #34d399);
+    border: 1px solid rgba(52, 211, 153, 0.10);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ========================================
    MODE TOGGLE
    ======================================== */
 .modeToggle {
     display: flex;
     gap: 4px;
     background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
+    border-radius: 10px;
     padding: 4px;
     border: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -76,9 +144,9 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
@@ -115,59 +183,153 @@
     }
 
 /* ========================================
-   SLIDER OVERRIDES (Dark)
+   SLIDER OVERRIDES - MODERN GRADIENT
    ======================================== */
+
+/* Q1 - Safety Risk (Red) */
+.wizard :global(.slider-q1) :global(.slider-fill) {
+    background: linear-gradient(90deg, rgba(248, 113, 113, 0.3), #f87171) !important;
+}
+
+.wizard :global(.slider-q1) :global(.slider-thumb) {
+    background: #f87171 !important;
+    box-shadow: 0 0 0 2px #f87171, 0 2px 12px rgba(248, 113, 113, 0.30) !important;
+}
+
+.wizard :global(.slider-q1) :global(.slider-track) {
+    background: rgba(248, 113, 113, 0.10) !important;
+}
+
+/* Q2 - Data/Financial Risk (Blue) */
+.wizard :global(.slider-q2) :global(.slider-fill) {
+    background: linear-gradient(90deg, rgba(96, 165, 250, 0.3), #60a5fa) !important;
+}
+
+.wizard :global(.slider-q2) :global(.slider-thumb) {
+    background: #60a5fa !important;
+    box-shadow: 0 0 0 2px #60a5fa, 0 2px 12px rgba(96, 165, 250, 0.30) !important;
+}
+
+.wizard :global(.slider-q2) :global(.slider-track) {
+    background: rgba(96, 165, 250, 0.10) !important;
+}
+
+/* Q3 - Operational Impact (Yellow) */
+.wizard :global(.slider-q3) :global(.slider-fill) {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.3), #fbbf24) !important;
+}
+
+.wizard :global(.slider-q3) :global(.slider-thumb) {
+    background: #fbbf24 !important;
+    box-shadow: 0 0 0 2px #fbbf24, 0 2px 12px rgba(251, 191, 36, 0.30) !important;
+}
+
+.wizard :global(.slider-q3) :global(.slider-track) {
+    background: rgba(251, 191, 36, 0.10) !important;
+}
+
+/* Q4 - Comfort (Green) */
+.wizard :global(.slider-q4) :global(.slider-fill) {
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.3), #34d399) !important;
+}
+
+.wizard :global(.slider-q4) :global(.slider-thumb) {
+    background: #34d399 !important;
+    box-shadow: 0 0 0 2px #34d399, 0 2px 12px rgba(52, 211, 153, 0.30) !important;
+}
+
+.wizard :global(.slider-q4) :global(.slider-track) {
+    background: rgba(52, 211, 153, 0.10) !important;
+}
+
+/* Base Slider Styles */
 .wizard :global(.slider-wrapper) {
     background: rgba(255, 255, 255, 0.02) !important;
     border-radius: 10px !important;
-    padding: 4px 2px !important;
+    padding: 6px 4px !important;
     transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
 }
 
     .wizard :global(.slider-wrapper):hover {
-        background: rgba(255, 255, 255, 0.03) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-color: rgba(255, 255, 255, 0.04) !important;
     }
 
 .wizard :global(.slider-label) {
     color: var(--text-secondary, #94a3b8) !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 500 !important;
+    letter-spacing: 0.2px !important;
 }
 
 .wizard :global(.slider-value) {
     color: var(--text-primary, #e8edf5) !important;
-    font-weight: 600 !important;
-    font-size: 15px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
     min-width: 32px !important;
     text-align: center !important;
 }
 
 .wizard :global(.slider-track) {
-    background: var(--bg-input, #13161b) !important;
     border-radius: 100px !important;
     height: 6px !important;
-    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    border: none !important;
+    position: relative !important;
+    overflow: hidden !important;
 }
 
 .wizard :global(.slider-fill) {
-    background: var(--accent-red, #f87171) !important;
     border-radius: 100px !important;
-    transition: width 0.15s ease !important;
+    height: 100% !important;
+    transition: width 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    position: relative !important;
+}
+
+    /* Glow effect on fill */
+    .wizard :global(.slider-fill)::after {
+        content: '' !important;
+        position: absolute !important;
+        right: 0 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 20px !important;
+        border-radius: 50% !important;
+        filter: blur(10px) !important;
+        opacity: 0.4 !important;
+        pointer-events: none !important;
+    }
+
+.wizard :global(.slider-q1) :global(.slider-fill)::after {
+    background: #f87171 !important;
+}
+
+.wizard :global(.slider-q2) :global(.slider-fill)::after {
+    background: #60a5fa !important;
+}
+
+.wizard :global(.slider-q3) :global(.slider-fill)::after {
+    background: #fbbf24 !important;
+}
+
+.wizard :global(.slider-q4) :global(.slider-fill)::after {
+    background: #34d399 !important;
 }
 
 .wizard :global(.slider-thumb) {
-    background: var(--accent-red, #f87171) !important;
-    border: 2px solid var(--bg-card, #1a1d24) !important;
-    box-shadow: 0 0 0 2px var(--accent-red, #f87171), 0 2px 8px rgba(0, 0, 0, 0.30) !important;
     width: 18px !important;
     height: 18px !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--bg-card, #1a1d24) !important;
     transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
     cursor: pointer !important;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
     .wizard :global(.slider-thumb):hover {
         transform: scale(1.2) !important;
-        box-shadow: 0 0 0 4px var(--accent-soft, rgba(248, 113, 113, 0.20)), 0 2px 12px rgba(0, 0, 0, 0.40) !important;
     }
 
     .wizard :global(.slider-thumb):focus-visible {
@@ -177,18 +339,26 @@
 
 /* Disabled Slider State */
 .wizard :global(.slider):has(:disabled) :global(.slider-fill) {
-    opacity: 0.25;
+    opacity: 0.25 !important;
 }
 
+    .wizard :global(.slider):has(:disabled) :global(.slider-fill)::after {
+        opacity: 0 !important;
+    }
+
 .wizard :global(.slider):has(:disabled) :global(.slider-thumb) {
-    opacity: 0.35;
+    opacity: 0.35 !important;
     cursor: not-allowed !important;
     box-shadow: 0 0 0 2px var(--text-muted, #64748b) !important;
     background: var(--text-muted, #64748b) !important;
 }
 
 .wizard :global(.slider):has(:disabled) :global(.slider-track) {
-    opacity: 0.4;
+    opacity: 0.4 !important;
+}
+
+.wizard :global(.slider):has(:disabled) :global(.slider-wrapper) {
+    opacity: 0.6 !important;
 }
 
 /* ========================================
@@ -198,7 +368,7 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 14px 18px;
+    padding: 12px 16px;
     background: rgba(255, 255, 255, 0.02);
     border-radius: 10px;
     border: 1px solid var(--border-soft, #22262e);
@@ -218,17 +388,24 @@
 }
 
 .manualDropdown .label {
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text-secondary, #94a3b8);
 }
 
+.dropdownIcon {
+    color: var(--text-muted, #64748b);
+}
+
 .manualDropdown select {
     width: 100%;
-    padding: 10px 14px;
+    padding: 8px 12px;
     background: var(--bg-input, #13161b);
     border: 1px solid var(--border-input, #2a2f38);
-    border-radius: 10px;
+    border-radius: 8px;
     color: var(--text-primary, #e8edf5);
     font-size: 14px;
     font-family: inherit;
@@ -236,7 +413,7 @@
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 14px center;
+    background-position: right 12px center;
     cursor: pointer;
     outline: none;
 }
@@ -253,7 +430,7 @@
     .manualDropdown select option {
         background: var(--bg-card, #1a1d24);
         color: var(--text-primary, #e8edf5);
-        padding: 8px;
+        padding: 6px;
     }
 
         /* Priority options styling */
@@ -276,7 +453,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 18px;
+    padding: 12px 16px;
     background: rgba(255, 255, 255, 0.02);
     border-radius: 10px;
     border: 1px solid var(--border-soft, #22262e);
@@ -289,80 +466,110 @@
     }
 
     .priorityRow .label {
-        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
         font-weight: 500;
         color: var(--text-secondary, #94a3b8);
     }
 
-    /* ========================================
+.priorityLabelIcon {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted, #64748b);
+}
+
+.priorityDisplay {
+    display: flex;
+    align-items: center;
+}
+
+/* ========================================
    BADGE COMPONENT OVERRIDES
    ======================================== */
-    .priorityRow :global(.badge) {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 4px 18px;
+.priorityRow :global(.badge) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 16px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    min-width: 48px;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+    .priorityRow :global(.badge)::after {
+        content: '';
+        position: absolute;
+        inset: 0;
         border-radius: 100px;
-        font-size: 15px;
-        font-weight: 700;
-        letter-spacing: 0.3px;
-        min-width: 52px;
-        transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-        position: relative;
-        overflow: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
 
-        .priorityRow :global(.badge)::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 100px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .priorityRow :global(.badge):hover::after {
-            opacity: 1;
-        }
-
-    .priorityRow :global(.badge-p1) {
-        background: var(--priority-p1-bg);
-        color: var(--priority-p1);
-        border: 1px solid var(--priority-p1-border);
+    .priorityRow :global(.badge):hover::after {
+        opacity: 1;
     }
 
-        .priorityRow :global(.badge-p1)::after {
-            background: radial-gradient(circle at center, rgba(248, 113, 113, 0.10), transparent 70%);
-        }
+.priorityRow :global(.badge-p1) {
+    background: var(--priority-p1-bg);
+    color: var(--priority-p1);
+    border: 1px solid var(--priority-p1-border);
+}
 
-    .priorityRow :global(.badge-p2) {
-        background: var(--priority-p2-bg);
-        color: var(--priority-p2);
-        border: 1px solid var(--priority-p2-border);
+    .priorityRow :global(.badge-p1)::after {
+        background: radial-gradient(circle at center, rgba(248, 113, 113, 0.10), transparent 70%);
     }
 
-        .priorityRow :global(.badge-p2)::after {
-            background: radial-gradient(circle at center, rgba(251, 191, 36, 0.10), transparent 70%);
-        }
+.priorityRow :global(.badge-p2) {
+    background: var(--priority-p2-bg);
+    color: var(--priority-p2);
+    border: 1px solid var(--priority-p2-border);
+}
 
-    .priorityRow :global(.badge-p3) {
-        background: var(--priority-p3-bg);
-        color: var(--priority-p3);
-        border: 1px solid var(--priority-p3-border);
+    .priorityRow :global(.badge-p2)::after {
+        background: radial-gradient(circle at center, rgba(251, 191, 36, 0.10), transparent 70%);
     }
 
-        .priorityRow :global(.badge-p3)::after {
-            background: radial-gradient(circle at center, rgba(52, 211, 153, 0.10), transparent 70%);
-        }
+.priorityRow :global(.badge-p3) {
+    background: var(--priority-p3-bg);
+    color: var(--priority-p3);
+    border: 1px solid var(--priority-p3-border);
+}
+
+    .priorityRow :global(.badge-p3)::after {
+        background: radial-gradient(circle at center, rgba(52, 211, 153, 0.10), transparent 70%);
+    }
+
+/* Score badge inside priority badge */
+.scoreBadge {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary, #94a3b8);
+    margin-left: 2px;
+}
 
 /* ========================================
    FORMULA DISPLAY
    ======================================== */
 .formula {
-    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 14px;
     background: rgba(255, 255, 255, 0.02);
     border-radius: 8px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 400;
     color: var(--text-muted, #64748b);
     text-align: center;
@@ -377,6 +584,11 @@
         background: rgba(255, 255, 255, 0.03);
     }
 
+.formulaIcon {
+    color: var(--text-muted, #64748b);
+    flex-shrink: 0;
+}
+
 /* ========================================
    ERROR
    ======================================== */
@@ -384,12 +596,12 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: var(--accent-soft, rgba(248, 113, 113, 0.08));
     border-radius: 10px;
     border-left: 4px solid var(--accent-red, #f87171);
     color: var(--accent-red, #f87171);
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.5;
     animation: slideDown 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -406,9 +618,7 @@
     }
 }
 
-.error::before {
-    content: '⚠';
-    font-size: 18px;
+.error svg {
     flex-shrink: 0;
 }
 
@@ -417,98 +627,48 @@
    ======================================== */
 @media (max-width: 992px) {
     .wizard {
-        padding: 18px 20px;
-        gap: 16px;
+        padding: 16px 18px;
+        gap: 14px;
     }
 }
 
 @media (max-width: 768px) {
     .wizard {
-        padding: 16px 18px;
-        gap: 14px;
+        padding: 14px 16px;
+        gap: 12px;
         border-radius: 12px;
     }
 
+    .wizardHeader {
+        padding-bottom: 8px;
+    }
+
+    .wizardIconWrapper {
+        width: 28px;
+        height: 28px;
+    }
+
+        .wizardIconWrapper svg {
+            width: 16px;
+            height: 16px;
+        }
+
+    .wizardTitle {
+        font-size: 13px;
+    }
+
     .mode,
     .modeActive {
-        padding: 8px 12px;
-        font-size: 13px;
-        border-radius: 6px;
-    }
-
-    .wizard :global(.slider-label) {
-        font-size: 13px !important;
-    }
-
-    .wizard :global(.slider-value) {
-        font-size: 14px !important;
-        min-width: 28px !important;
-    }
-
-    .wizard :global(.slider-thumb) {
-        width: 16px !important;
-        height: 16px !important;
-    }
-
-    .manualDropdown {
-        padding: 12px 14px;
-    }
-
-        .manualDropdown .label {
-            font-size: 13px;
-        }
-
-        .manualDropdown select {
-            padding: 8px 12px;
-            font-size: 14px;
-            border-radius: 8px;
-            background-position: right 12px center;
-        }
-
-    .priorityRow {
-        padding: 12px 14px;
-    }
-
-        .priorityRow .label {
-            font-size: 14px;
-        }
-
-        .priorityRow :global(.badge) {
-            font-size: 14px;
-            padding: 3px 14px;
-            min-width: 44px;
-        }
-
-    .formula {
+        padding: 6px 10px;
         font-size: 12px;
-        padding: 8px 12px;
-    }
-
-    .error {
-        font-size: 13px;
-        padding: 10px 14px;
-    }
-}
-
-@media (max-width: 480px) {
-    .wizard {
-        padding: 12px 14px;
-        gap: 12px;
-        border-radius: 10px;
-    }
-
-    .modeToggle {
-        flex-direction: column;
-        gap: 2px;
-        border-radius: 8px;
-    }
-
-    .mode,
-    .modeActive {
-        padding: 8px 10px;
-        font-size: 13px;
         border-radius: 6px;
     }
+
+        .mode svg,
+        .modeActive svg {
+            width: 14px;
+            height: 14px;
+        }
 
     .wizard :global(.slider-label) {
         font-size: 12px !important;
@@ -516,16 +676,12 @@
 
     .wizard :global(.slider-value) {
         font-size: 13px !important;
-        min-width: 24px !important;
-    }
-
-    .wizard :global(.slider-track) {
-        height: 5px !important;
+        min-width: 28px !important;
     }
 
     .wizard :global(.slider-thumb) {
-        width: 15px !important;
-        height: 15px !important;
+        width: 16px !important;
+        height: 16px !important;
     }
 
     .manualDropdown {
@@ -541,15 +697,10 @@
             font-size: 13px;
             border-radius: 6px;
             background-position: right 10px center;
-            background-size: 10px;
         }
 
     .priorityRow {
         padding: 10px 12px;
-        flex-direction: column;
-        gap: 6px;
-        align-items: stretch;
-        text-align: center;
     }
 
         .priorityRow .label {
@@ -560,24 +711,161 @@
             font-size: 13px;
             padding: 3px 12px;
             min-width: 40px;
+            gap: 6px;
         }
+
+            .priorityRow :global(.badge) svg {
+                width: 14px;
+                height: 14px;
+            }
+
+    .scoreBadge {
+        font-size: 9px;
+    }
 
     .formula {
         font-size: 11px;
-        padding: 6px 10px;
-        border-radius: 6px;
+        padding: 6px 12px;
     }
+
+        .formula svg {
+            width: 14px;
+            height: 14px;
+        }
 
     .error {
         font-size: 12px;
         padding: 8px 12px;
-        gap: 8px;
+    }
+
+        .error svg {
+            width: 16px;
+            height: 16px;
+        }
+}
+
+@media (max-width: 480px) {
+    .wizard {
+        padding: 12px 12px;
+        gap: 10px;
+        border-radius: 10px;
+    }
+
+    .wizardHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .liveBadge {
+        font-size: 9px;
+        padding: 1px 8px;
+    }
+
+    .modeToggle {
+        flex-direction: column;
+        gap: 2px;
         border-radius: 8px;
+    }
+
+    .mode,
+    .modeActive {
+        padding: 6px 10px;
+        font-size: 12px;
+        border-radius: 6px;
+    }
+
+    .wizard :global(.slider-label) {
+        font-size: 11px !important;
+    }
+
+    .wizard :global(.slider-value) {
+        font-size: 12px !important;
+        min-width: 24px !important;
+    }
+
+    .wizard :global(.slider-track) {
+        height: 5px !important;
+    }
+
+    .wizard :global(.slider-thumb) {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    .manualDropdown {
+        padding: 8px 10px;
+    }
+
+        .manualDropdown .label {
+            font-size: 11px;
+        }
+
+        .manualDropdown select {
+            padding: 5px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            background-position: right 8px center;
+            background-size: 8px;
+        }
+
+    .priorityRow {
+        padding: 8px 10px;
+        flex-direction: column;
+        gap: 6px;
+        align-items: stretch;
+        text-align: center;
+    }
+
+        .priorityRow .label {
+            justify-content: center;
+            font-size: 12px;
+        }
+
+    .priorityDisplay {
+        justify-content: center;
+    }
+
+    .priorityRow :global(.badge) {
+        font-size: 12px;
+        padding: 3px 10px;
+        min-width: 36px;
+        gap: 4px;
+    }
+
+        .priorityRow :global(.badge) svg {
+            width: 12px;
+            height: 12px;
+        }
+
+    .scoreBadge {
+        font-size: 8px;
+        padding: 0 4px;
+    }
+
+    .formula {
+        font-size: 10px;
+        padding: 4px 10px;
+        gap: 4px;
+        border-radius: 6px;
+    }
+
+        .formula svg {
+            width: 12px;
+            height: 12px;
+        }
+
+    .error {
+        font-size: 11px;
+        padding: 6px 10px;
+        gap: 6px;
+        border-radius: 6px;
         border-left-width: 3px;
     }
 
-        .error::before {
-            font-size: 15px;
+        .error svg {
+            width: 14px;
+            height: 14px;
         }
 }
 
