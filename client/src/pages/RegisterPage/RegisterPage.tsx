@@ -159,7 +159,7 @@ export function RegisterPage() {
                                 placeholder="••••••••"
                             />
 
-                            <Input
+                            {/* <Input
                                 label="Generator Capacity (kW) *"
                                 type="number"
                                 value={generatorCapacity}
@@ -167,7 +167,7 @@ export function RegisterPage() {
                                 required
                                 data-testid="register-capacity"
                                 placeholder="e.g., 100"
-                            />
+                            /> */}
 
                             <Input
                                 label="Facility Location (Optional)"

@@ -5,6 +5,19 @@ import { useRole } from "../../auth/useRole";
 import { useToast } from "../../components/ui/toastContext";
 import { del, put } from "../../api/apiClient";
 import type { ZoneTree } from "../../types/zone";
+import {
+    ChevronDown,
+    ChevronRight,
+    Check,
+    X,
+    Edit,
+    Trash2,
+    Building,
+    Home,
+    Layers,
+    Loader2,
+    AlertCircle,
+} from "lucide-react";
 import styles from "./ZoneTreeView.module.css";
 
 function typeBadgeClass(type: string): string {
@@ -17,6 +30,19 @@ function typeBadgeClass(type: string): string {
             return styles.badgeRoom;
         default:
             return styles.badgeDefault;
+    }
+}
+
+function getTypeIcon(type: string): ReactNode {
+    switch (type) {
+        case "building":
+            return <Building size={12} />;
+        case "floor":
+            return <Layers size={12} />;
+        case "room":
+            return <Home size={12} />;
+        default:
+            return null;
     }
 }
 
@@ -43,9 +69,17 @@ function ZoneNode({
 
     const handleSaveEdit = () => {
         if (!editName.trim()) return;
-        // Pass zone.type along with zone.id and editName
         onUpdateZone(zone.id, editName.trim(), zone.type);
         setIsEditing(false);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            handleSaveEdit();
+        } else if (e.key === "Escape") {
+            setEditName(zone.name);
+            setIsEditing(false);
+        }
     };
 
     return (
@@ -63,7 +97,15 @@ function ZoneNode({
                     aria-label={expanded ? "Collapse" : "Expand"}
                     data-testid={`toggle-${zone.id}`}
                 >
-                    {hasChildren ? (expanded ? "▾" : "▸") : "·"}
+                    {hasChildren ? (
+                        expanded ? (
+                            <ChevronDown size={14} />
+                        ) : (
+                            <ChevronRight size={14} />
+                        )
+                    ) : (
+                        <span className={styles.leafDot}>•</span>
+                    )}
                 </button>
 
                 {isEditing ? (
@@ -73,30 +115,35 @@ function ZoneNode({
                             className={styles.editInput}
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             autoFocus
+                            placeholder="Enter zone name..."
                         />
                         <button
                             type="button"
-                            className={styles.actionBtnBtn}
+                            className={styles.saveEditBtn}
                             onClick={handleSaveEdit}
+                            title="Save"
                         >
-                            ✓
+                            <Check size={14} />
                         </button>
                         <button
                             type="button"
-                            className={styles.actionBtnBtn}
+                            className={styles.cancelEditBtn}
                             onClick={() => {
                                 setEditName(zone.name);
                                 setIsEditing(false);
                             }}
+                            title="Cancel"
                         >
-                            ✕
+                            <X size={14} />
                         </button>
                     </div>
                 ) : (
                     <>
                         <span className={styles.zoneName}>{zone.name}</span>
                         <span className={`${styles.badge} ${typeBadgeClass(zone.type)}`}>
+                            {getTypeIcon(zone.type)}
                             {zone.type}
                         </span>
                         <span className={styles.childCount}>
@@ -113,7 +160,7 @@ function ZoneNode({
                                     onClick={() => setIsEditing(true)}
                                     title="Edit Zone"
                                 >
-                                    ✏️
+                                    <Edit size={14} />
                                 </button>
                                 <button
                                     type="button"
@@ -121,7 +168,7 @@ function ZoneNode({
                                     onClick={() => onDeleteZone(zone.id, zone.name)}
                                     title="Delete Zone"
                                 >
-                                    🗑️
+                                    <Trash2 size={14} />
                                 </button>
                             </div>
                         )}
@@ -153,7 +200,6 @@ export function ZoneTreeView(): ReactNode {
 
     const updateZoneMutation = useMutation({
         mutationFn: ({ zoneId, name, type }: { zoneId: string; name: string; type: string }) =>
-            // Included `type` in the API payload
             put(`/zones/${zoneId}`, { name, type }),
         onSuccess: () => {
             showToast("Zone updated successfully.");
@@ -192,12 +238,18 @@ export function ZoneTreeView(): ReactNode {
     };
 
     if (isLoading) {
-        return <div role="status">Loading zones...</div>;
+        return (
+            <div className={styles.loadingState} role="status">
+                <Loader2 size={18} className={styles.spinner} />
+                Loading zones...
+            </div>
+        );
     }
 
     if (isError) {
         return (
-            <div role="alert">
+            <div className={styles.errorState} role="alert">
+                <AlertCircle size={16} />
                 Failed to load zones:{" "}
                 {error instanceof Error ? error.message : "unknown error"}
             </div>
@@ -208,7 +260,13 @@ export function ZoneTreeView(): ReactNode {
 
     return (
         <div className={styles.treeContainer} role="tree" data-testid="zone-tree">
-            {tree.length === 0 && <p>No zones configured for this facility.</p>}
+            {tree.length === 0 && (
+                <div className={styles.emptyState}>
+                    <Layers size={32} className={styles.emptyIcon} />
+                    <p>No zones configured for this facility.</p>
+                    <span className={styles.emptySubtext}>Create a zone to get started</span>
+                </div>
+            )}
             {tree.map((zone) => (
                 <ZoneNode
                     key={zone.id}

@@ -2,30 +2,40 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useRole, getUserDisplayName, getUserInitial, useAuth } from "../../auth/authTypes";
 import type { Role } from "../../auth/authTypes";
+import {
+    Zap,
+    Network,
+    Sliders,
+    SlidersHorizontal,
+    ClipboardList,
+    Users,
+    LogOut,
+    AlertTriangle,
+    Building2
+} from "lucide-react";
 import styles from "./Sidebar.module.css";
 
 interface NavItem {
     label: string;
     path: string;
-    icon: string;
+    icon: React.ReactNode;
     roles: Role[];
 }
 
 const NAV_ITEMS: NavItem[] = [
-    { label: "Live Overview", path: "/overview", icon: "⚡", roles: ["Admin", "Operator", "Viewer"] },
-    { label: "Topology Config", path: "/topology", icon: "🗺️", roles: ["Admin", "Operator", "Viewer"] },
-    { label: "Rules Engine", path: "/rules", icon: "⚙️", roles: ["Admin", "Operator"] },
-    { label: "Simulator Panel", path: "/simulator", icon: "🎛️", roles: ["Admin"] },
-    { label: "Audit Logs", path: "/audit", icon: "📜", roles: ["Admin", "Operator", "Viewer"] },
-    { label: "User Management", path: "/users", icon: "👥", roles: ["Admin"] },
+    { label: "Live Overview", path: "/overview", icon: <Zap size={20} />, roles: ["Admin", "Operator", "Viewer"] },
+    { label: "Topology Config", path: "/topology", icon: <Network size={20} />, roles: ["Admin", "Operator", "Viewer"] },
+    { label: "Rules Engine", path: "/rules", icon: <Sliders size={20} />, roles: ["Admin", "Operator"] },
+    { label: "Simulator Panel", path: "/simulator", icon: <SlidersHorizontal size={20} />, roles: ["Admin"] },
+    { label: "Audit Logs", path: "/audit", icon: <ClipboardList size={20} />, roles: ["Admin", "Operator", "Viewer"] },
+    { label: "User Management", path: "/users", icon: <Users size={20} />, roles: ["Admin"] },
 ];
 
 export function Sidebar() {
     const { role } = useRole();
-    const { user, logout } = useAuth(); // useAuth ထဲမှ logout ကို ယူသုံးထားသည်
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    // Alert Box (Modal) ဖွင့်/ပိတ် ထိန်းချုပ်ရန် state
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const visibleItems = NAV_ITEMS.filter(
@@ -35,7 +45,9 @@ export function Sidebar() {
     const displayName = getUserDisplayName(user);
     const userInitial = getUserInitial(user);
 
-    // Logout ထွက်မည်ဟု အတည်ပြုလိုက်လျှင် အလုပ်လုပ်မည့် Function
+    // DB မှ OrganizationName သို့မဟုတ် fallback အနေဖြင့် BlackoutGuard
+    const organizationName = user?.organizationName || (user as Record<string, unknown>)?.OrganizationName || "BlackoutGuard";
+
     const handleConfirmLogout = async () => {
         setShowLogoutModal(false);
         if (logout) {
@@ -47,10 +59,14 @@ export function Sidebar() {
     return (
         <>
             <aside className={styles.sidebar} aria-label="Main navigation">
-                {/* Brand */}
+                {/* Brand: Organization Name ပြသခြင်း */}
                 <div className={styles.brand}>
-                    <span className={styles.brandIcon}>⚡</span>
-                    <span className={styles.brandName}>BlackoutGuard</span>
+                    <span className={styles.brandIcon}>
+                        <Building2 size={22} />
+                    </span>
+                    <span className={styles.brandName} title={String(organizationName)}>
+                        {organizationName}
+                    </span>
                 </div>
 
                 {/* Navigation */}
@@ -90,24 +106,27 @@ export function Sidebar() {
                         </div>
                     </div>
 
-                    {/* v2.0.0 နေရာတွင် ပြင်ဆင်ထားသော Logout Button */}
                     <button
                         className={styles.logoutBtn}
                         onClick={() => setShowLogoutModal(true)}
                         type="button"
                     >
-                        <span className={styles.logoutIcon}>🚪</span>
+                        <span className={styles.logoutIcon}>
+                            <LogOut size={18} />
+                        </span>
                         <span>Logout</span>
                     </button>
                 </div>
             </aside>
 
-            {/* Custom Logout Confirmation Alert Box / Modal */}
+            {/* Custom Logout Confirmation Modal */}
             {showLogoutModal && (
                 <div className={styles.modalOverlay} onClick={() => setShowLogoutModal(false)}>
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                         <div className={styles.modalHeader}>
-                            <span className={styles.modalWarnIcon}>⚠️</span>
+                            <span className={styles.modalWarnIcon}>
+                                <AlertTriangle size={24} color="#f59e0b" />
+                            </span>
                             <h3>Confirm Logout</h3>
                         </div>
                         <p className={styles.modalText}>

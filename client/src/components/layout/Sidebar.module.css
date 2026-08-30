@@ -570,3 +570,38 @@
         transform: scale(1);
     }
 }
+
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+}
+
+.brandIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brandName {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+
+.logoutIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}

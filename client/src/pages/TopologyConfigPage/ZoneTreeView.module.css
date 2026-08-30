@@ -76,8 +76,8 @@
    TOGGLE BUTTON
    ======================================== */
 .toggle {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -85,7 +85,6 @@
     border: none;
     border-radius: 6px;
     color: var(--text-secondary, #94a3b8);
-    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
@@ -96,7 +95,7 @@
     .toggle:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.06);
         color: var(--text-primary, #e8edf5);
-        transform: scale(1.15);
+        transform: scale(1.1);
     }
 
     .toggle:disabled {
@@ -108,6 +107,11 @@
         outline: 2px solid var(--accent-red, #f87171);
         outline-offset: 1px;
     }
+
+.leafDot {
+    font-size: 10px;
+    color: var(--text-muted, #64748b);
+}
 
 /* ========================================
    ZONE NAME
@@ -132,7 +136,9 @@
    BADGES
    ======================================== */
 .badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     padding: 1px 10px;
     border-radius: 100px;
     font-size: 10px;
@@ -143,6 +149,10 @@
     border: 1px solid transparent;
     transition: all 0.2s ease;
 }
+
+    .badge svg {
+        opacity: 0.7;
+    }
 
 .badgeBuilding {
     background: var(--chart-blue-soft, rgba(96, 165, 250, 0.10));
@@ -223,14 +233,10 @@
     border: none;
     border-radius: 6px;
     background: transparent;
-    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 0;
     line-height: 1;
-}
-
-.iconBtn {
     color: var(--text-secondary, #94a3b8);
 }
 
@@ -294,40 +300,52 @@
         color: var(--text-muted, #64748b);
     }
 
-.editContainer .iconBtn {
+.saveEditBtn,
+.cancelEditBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 28px;
     height: 28px;
-    font-size: 13px;
-    background: rgba(255, 255, 255, 0.03);
+    border: none;
     border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+    color: var(--text-secondary, #94a3b8);
 }
 
-    .editContainer .iconBtn:hover {
-        background: rgba(255, 255, 255, 0.06);
+    .saveEditBtn:hover {
+        background: rgba(52, 211, 153, 0.12);
+        color: var(--success, #34d399);
+        transform: scale(1.1);
+    }
+
+    .cancelEditBtn:hover {
+        background: rgba(248, 113, 113, 0.12);
+        color: var(--accent-red, #f87171);
+        transform: scale(1.1);
     }
 
 /* ========================================
-   LOADING & ERROR STATES
+   LOADING STATE
    ======================================== */
-.treeContainer [role="status"] {
+.loadingState {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
     padding: 24px 16px;
     color: var(--text-secondary, #94a3b8);
     font-size: 14px;
-    gap: 10px;
 }
 
-    .treeContainer [role="status"]::before {
-        content: '';
-        width: 18px;
-        height: 18px;
-        border: 2.5px solid var(--border-soft, #22262e);
-        border-radius: 50%;
-        border-top-color: var(--accent-red, #f87171);
-        animation: spin 0.8s linear infinite;
-    }
+.spinner {
+    animation: spin 0.8s linear infinite;
+    color: var(--accent-red, #f87171);
+}
 
 @keyframes spin {
     to {
@@ -335,7 +353,10 @@
     }
 }
 
-.treeContainer [role="alert"] {
+/* ========================================
+   ERROR STATE
+   ======================================== */
+.errorState {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -348,17 +369,34 @@
     font-size: 13px;
 }
 
-    .treeContainer [role="alert"]::before {
-        content: '⚠';
-        font-size: 16px;
-    }
-
-.treeContainer p {
-    padding: 24px 16px;
-    text-align: center;
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
     color: var(--text-muted, #64748b);
+    gap: 4px;
+}
+
+.emptyIcon {
+    color: var(--text-muted, #64748b);
+    opacity: 0.4;
+    margin-bottom: 4px;
+}
+
+.emptyState p {
     font-size: 14px;
     margin: 0;
+    color: var(--text-secondary, #94a3b8);
+}
+
+.emptySubtext {
+    font-size: 12px;
+    color: var(--text-muted, #64748b);
 }
 
 /* ========================================
@@ -384,8 +422,8 @@
     }
 
     .toggle {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         font-size: 11px;
         order: 0;
     }
@@ -396,11 +434,20 @@
     }
 
     .iconBtn,
-    .iconBtnDanger {
+    .iconBtnDanger,
+    .saveEditBtn,
+    .cancelEditBtn {
         width: 24px;
         height: 24px;
-        font-size: 12px;
     }
+
+        .iconBtn svg,
+        .iconBtnDanger svg,
+        .saveEditBtn svg,
+        .cancelEditBtn svg {
+            width: 12px;
+            height: 12px;
+        }
 
     .editContainer {
         flex-wrap: wrap;
@@ -415,7 +462,8 @@
         order: 0;
     }
 
-    .editContainer .iconBtn {
+    .saveEditBtn,
+    .cancelEditBtn {
         width: 24px;
         height: 24px;
         font-size: 12px;
@@ -442,19 +490,49 @@
     }
 
     .toggle {
-        width: 16px;
-        height: 16px;
-        font-size: 10px;
+        width: 18px;
+        height: 18px;
     }
 
+        .toggle svg {
+            width: 12px;
+            height: 12px;
+        }
+
     .iconBtn,
-    .iconBtnDanger {
+    .iconBtnDanger,
+    .saveEditBtn,
+    .cancelEditBtn {
         width: 20px;
         height: 20px;
-        font-size: 10px;
     }
+
+        .iconBtn svg,
+        .iconBtnDanger svg,
+        .saveEditBtn svg,
+        .cancelEditBtn svg {
+            width: 10px;
+            height: 10px;
+        }
 
     .nodeBlock:not(:last-child)::after {
         left: 20px;
+    }
+
+    .emptyState {
+        padding: 20px 12px;
+    }
+
+    .emptyIcon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .emptyState p {
+        font-size: 13px;
+    }
+
+    .emptySubtext {
+        font-size: 11px;
     }
 }

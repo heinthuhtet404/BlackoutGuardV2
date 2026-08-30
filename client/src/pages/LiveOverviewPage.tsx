@@ -1,6 +1,35 @@
 import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useTelemetry } from "../context/TelemetryContext";
 import { get, put, del } from "../api/apiClient";
+import {
+    Zap,
+    Gauge,
+    Factory,
+    Activity,
+    Plug,
+    Thermometer,
+    Fuel,
+    Clock,
+    Shield,
+    AlertTriangle,
+    AlertCircle,
+    CheckCircle,
+    Edit,
+    Trash2,
+    Home,
+    Bell,
+    Wifi,
+    WifiOff,
+    Power,
+    ArrowUpRight,
+    Layers,
+    Server,
+    Cpu,
+    Database,
+    Settings2,
+    RefreshCw,
+    Loader2,
+} from "lucide-react";
 import styles from "./LiveOverviewPage.module.css";
 
 interface AlarmLog {
@@ -443,9 +472,14 @@ export function LiveOverviewPage() {
         <div className={styles.page}>
             {/* Header */}
             <div className={styles.headerRow}>
-                <div>
-                    <h1 className={styles.heading}>Live Overview</h1>
-                    <p className={styles.headingSub}>Real-time monitoring & control</p>
+                <div className={styles.headerLeft}>
+                    <div className={styles.headerIconWrapper}>
+                        <Activity size={28} className={styles.headerIcon} />
+                    </div>
+                    <div>
+                        <h1 className={styles.heading}>Live Overview</h1>
+                        <p className={styles.headingSub}>Real-time monitoring & control</p>
+                    </div>
                 </div>
                 <div className={`${styles.systemModeBanner} ${systemMode.className}`}>
                     <span className={styles.modeDot}></span>
@@ -454,15 +488,25 @@ export function LiveOverviewPage() {
             </div>
 
             <div className={styles.statusRow}>
-                <span className={connected ? styles.statusConnected : styles.statusDisconnected}>
-                    {connected ? "● Live Stream Connected" : "○ Offline / Reconnecting..."}
-                </span>
+                {connected ? (
+                    <span className={styles.statusConnected}>
+                        <Wifi size={14} />
+                        Live Stream Connected
+                    </span>
+                ) : (
+                    <span className={styles.statusDisconnected}>
+                        <WifiOff size={14} />
+                        Offline / Reconnecting...
+                    </span>
+                )}
             </div>
 
             {/* KPI Cards */}
             <div className={styles.grid}>
                 <div className={`${styles.card} ${isUnderFrequency ? styles.cardDanger : ""}`}>
-                    <div className={styles.cardIcon}>⚡</div>
+                    <div className={styles.cardIcon}>
+                        <Zap size={24} />
+                    </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Grid Voltage</h3>
                         <p className={`${styles.cardValue} ${styles.valueBlue}`}>
@@ -472,7 +516,9 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={styles.card}>
-                    <div className={styles.cardIcon}>📊</div>
+                    <div className={styles.cardIcon}>
+                        <Gauge size={24} />
+                    </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Active Real-Time Load</h3>
                         <p className={`${styles.cardValue} ${styles.valueAmber}`}>
@@ -482,7 +528,9 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={styles.card}>
-                    <div className={styles.cardIcon}>🏭</div>
+                    <div className={styles.cardIcon}>
+                        <Factory size={24} />
+                    </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Gen Capacity</h3>
                         <p className={`${styles.cardValue} ${styles.valueBlue}`}>
@@ -493,7 +541,9 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={`${styles.card} ${isUnderFrequency ? styles.cardDanger : ""}`}>
-                    <div className={styles.cardIcon}>📈</div>
+                    <div className={styles.cardIcon}>
+                        <Activity size={24} />
+                    </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>System Frequency</h3>
                         <p className={`${styles.cardValue} ${isUnderFrequency ? styles.valueDanger : styles.valueSuccess}`}>
@@ -504,7 +554,9 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={styles.card}>
-                    <div className={styles.cardIcon}>🔌</div>
+                    <div className={styles.cardIcon}>
+                        <Plug size={24} />
+                    </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Generator Status</h3>
                         <p className={`${styles.cardValue} ${telemetry?.generatorOn ? styles.valueSuccess : styles.valueMuted}`}>
@@ -514,7 +566,9 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={styles.card}>
-                    <div className={styles.cardIcon}>🌡️</div>
+                    <div className={styles.cardIcon}>
+                        <Thermometer size={24} />
+                    </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Engine Temp</h3>
                         <p className={`${styles.cardValue} ${styles.valueAmber}`}>
@@ -524,7 +578,9 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={styles.card}>
-                    <div className={styles.cardIcon}>⛽</div>
+                    <div className={styles.cardIcon}>
+                        <Fuel size={24} />
+                    </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Fuel Level</h3>
                         <p className={`${styles.cardValue} ${styles.valueBlue}`}>
@@ -534,7 +590,9 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={styles.card}>
-                    <div className={styles.cardIcon}>⏱️</div>
+                    <div className={styles.cardIcon}>
+                        <Clock size={24} />
+                    </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Est. Runtime</h3>
                         <p className={`${styles.cardValue} ${styles.valueSuccess}`}>
@@ -547,16 +605,20 @@ export function LiveOverviewPage() {
             {/* System Status Map */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>🗺️ System Status Map</h2>
+                    <div className={styles.sectionHeaderLeft}>
+                        <Layers size={20} className={styles.sectionIcon} />
+                        <h2 className={styles.sectionTitle}>System Status Map</h2>
+                    </div>
                     <span className={styles.sectionBadge}>{zones.length} Zones</span>
                 </div>
                 {loadingDbData ? (
                     <div className={styles.loadingState}>
-                        <span className={styles.spinner}></span>
+                        <Loader2 size={20} className={styles.spinner} />
                         Loading database hierarchy...
                     </div>
                 ) : zones.length === 0 ? (
                     <div className={styles.emptyState}>
+                        <Database size={40} className={styles.emptyIcon} />
                         <p>No zones found in database. Create a Zone to view telemetry mapping.</p>
                     </div>
                 ) : (
@@ -569,18 +631,23 @@ export function LiveOverviewPage() {
                                 <div key={zone.id} className={styles.zoneCard}>
                                     <div className={styles.zoneHeader}>
                                         <div className={styles.zoneTitle}>
-                                            <span className={styles.zoneIcon}>🏢</span>
+                                            <span className={styles.zoneIcon}>
+                                                <Home size={18} />
+                                            </span>
                                             <h3>{zone.name}</h3>
                                         </div>
                                         <div className={styles.zoneActionsWrapper}>
-                                            <span className={styles.zoneLoadCount}>{zoneLoads.length} loads</span>
+                                            <span className={styles.zoneLoadCount}>
+                                                <Server size={12} />
+                                                {zoneLoads.length} loads
+                                            </span>
                                             <div className={styles.actionButtons}>
                                                 <button
                                                     className={styles.editBtn}
                                                     onClick={() => handleOpenEditZoneModal(zone)}
                                                     title="Edit Zone Name"
                                                 >
-                                                    ✏️
+                                                    <Edit size={14} />
                                                 </button>
                                                 <button
                                                     className={styles.deleteBtn}
@@ -588,7 +655,7 @@ export function LiveOverviewPage() {
                                                     disabled={deletingZoneId === zone.id || hasLoads}
                                                     title={hasLoads ? "Cannot delete zone with existing loads" : "Delete Zone"}
                                                 >
-                                                    {deletingZoneId === zone.id ? "..." : "🗑️"}
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </div>
                                         </div>
@@ -605,12 +672,14 @@ export function LiveOverviewPage() {
                                                         key={load.id}
                                                         className={`${styles.nodeCard} ${isShedded ? styles.nodeShedded : styles.nodeNormal}`}
                                                     >
-                                                        <div className={styles.nodeIcon}>⚡</div>
+                                                        <div className={styles.nodeIcon}>
+                                                            <Cpu size={18} />
+                                                        </div>
                                                         <div className={styles.nodeInfo}>
                                                             <div className={styles.nodeName}>{load.name}</div>
                                                             <div className={styles.nodeMeta}>
                                                                 <span>{load.powerRatingKw} kW</span>
-                                                                <span>·</span>
+                                                                <span className={styles.sep}>·</span>
                                                                 <span className={`${styles.priorityBadge} ${currentPriority === 1 ? styles.priorityP1 :
                                                                         currentPriority === 2 ? styles.priorityP2 :
                                                                             styles.priorityP3
@@ -622,7 +691,7 @@ export function LiveOverviewPage() {
 
                                                         <div className={styles.nodeActionsWrapper}>
                                                             <div className={`${styles.nodeBadge} ${isShedded ? styles.badgeShedded : styles.badgeNormal}`}>
-                                                                {isShedded ? "⛔ Shedded" : "✅ Normal"}
+                                                                {isShedded ? "Shedded" : "Normal"}
                                                             </div>
 
                                                             <div className={styles.actionButtons}>
@@ -631,7 +700,7 @@ export function LiveOverviewPage() {
                                                                     onClick={() => handleOpenEditModal(load)}
                                                                     title="Edit Load"
                                                                 >
-                                                                    ✏️
+                                                                    <Edit size={14} />
                                                                 </button>
                                                                 <button
                                                                     className={styles.deleteBtn}
@@ -639,7 +708,7 @@ export function LiveOverviewPage() {
                                                                     disabled={deletingLoadId === load.id}
                                                                     title="Delete Load"
                                                                 >
-                                                                    {deletingLoadId === load.id ? "..." : "🗑️"}
+                                                                    <Trash2 size={14} />
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -661,7 +730,19 @@ export function LiveOverviewPage() {
             {editingZone && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalCard}>
-                        <h3>✏️ Edit Zone Details</h3>
+                        <div className={styles.modalHeader}>
+                            <div className={styles.modalIconWrapper}>
+                                <Settings2 size={22} />
+                            </div>
+                            <h3>Edit Zone Details</h3>
+                            <button
+                                type="button"
+                                className={styles.modalClose}
+                                onClick={() => setEditingZone(null)}
+                            >
+                                ✕
+                            </button>
+                        </div>
                         <p className={styles.modalSubtitle}>Update zone name</p>
                         <form onSubmit={handleSaveZoneEdit} className={styles.modalForm}>
                             <label>
@@ -695,7 +776,19 @@ export function LiveOverviewPage() {
             {editingLoad && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalCard}>
-                        <h3>✏️ Edit Load Details</h3>
+                        <div className={styles.modalHeader}>
+                            <div className={styles.modalIconWrapper}>
+                                <Cpu size={22} />
+                            </div>
+                            <h3>Edit Load Details</h3>
+                            <button
+                                type="button"
+                                className={styles.modalClose}
+                                onClick={() => setEditingLoad(null)}
+                            >
+                                ✕
+                            </button>
+                        </div>
                         <p className={styles.modalSubtitle}>Update load name, power rating, or priority level</p>
                         <form onSubmit={handleSaveEdit} className={styles.modalForm}>
                             <label>
@@ -749,7 +842,10 @@ export function LiveOverviewPage() {
             {/* Charts Row */}
             <div className={styles.chartsRow}>
                 <div className={styles.chartCard}>
-                    <h3 className={styles.chartTitle}>📈 Real-Time Frequency</h3>
+                    <div className={styles.chartHeader}>
+                        <Activity size={18} className={styles.chartIcon} />
+                        <h3 className={styles.chartTitle}>Real-Time Frequency</h3>
+                    </div>
                     <div className={styles.chartContainer}>{renderFrequencyChart()}</div>
                     <div className={styles.chartFooter}>
                         <span>48.0 Hz</span>
@@ -759,7 +855,10 @@ export function LiveOverviewPage() {
                 </div>
 
                 <div className={styles.chartCard}>
-                    <h3 className={styles.chartTitle}>⚡ Priority Breakdown</h3>
+                    <div className={styles.chartHeader}>
+                        <Layers size={18} className={styles.chartIcon} />
+                        <h3 className={styles.chartTitle}>Priority Breakdown</h3>
+                    </div>
                     <div className={styles.loadBreakdownContainer}>
                         <div className={styles.loadBarRow}>
                             <span>P1 (Critical)</span>
@@ -791,12 +890,15 @@ export function LiveOverviewPage() {
             {/* Alarms */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>🔔 Recent Alarms & Events</h2>
+                    <div className={styles.sectionHeaderLeft}>
+                        <Bell size={20} className={styles.sectionIcon} />
+                        <h2 className={styles.sectionTitle}>Recent Alarms & Events</h2>
+                    </div>
                     <span className={styles.alarmCount}>{alarms.length} events</span>
                 </div>
                 {alarms.length === 0 ? (
                     <div className={styles.noAlarms}>
-                        <span className={styles.noAlarmsIcon}>✅</span>
+                        <CheckCircle size={20} className={styles.noAlarmsIcon} />
                         System operating normally. No active alarms.
                     </div>
                 ) : (

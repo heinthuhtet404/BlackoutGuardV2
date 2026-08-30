@@ -5,6 +5,21 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { CriticalityWizard } from "./CriticalityWizard";
 import type { ZoneTree, PriorityLevel } from "../../types/zone";
+import {
+    Loader2,
+    AlertTriangle,
+    AlertCircle,
+    CheckCircle,
+    Layers,
+    Zap,
+    Power,
+    Shield,
+    Database,
+    ArrowRight,
+    Save,
+    Plus,
+    Edit,
+} from "lucide-react";
 import styles from "./LoadForm.module.css";
 
 interface LoadFormProps {
@@ -145,16 +160,36 @@ export function LoadForm({ loadId, initialValues, onSaved, onCreated }: LoadForm
 
     return (
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
+            {/* Form Header */}
+            <div className={styles.formHeader}>
+                <div className={styles.formHeaderLeft}>
+                    <div className={styles.formHeaderIcon}>
+                        {isEdit ? <Edit size={18} /> : <Plus size={18} />}
+                    </div>
+                    <h3 className={styles.formTitle}>
+                        {isEdit ? "Update Load" : "Create New Load"}
+                    </h3>
+                </div>
+                {isEdit && (
+                    <span className={styles.editBadge}>
+                        <span className={styles.editDot}></span>
+                        Editing
+                    </span>
+                )}
+            </div>
+
             <Input
-                label="Name"
+                label="Load Name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 required
                 data-testid="load-name"
+                placeholder="e.g., ICU Equipment"
             />
 
             <div className={styles.field}>
                 <label className={styles.label} htmlFor="load-zone">
+                    <Layers size={14} className={styles.labelIcon} />
                     Zone
                 </label>
                 <select
@@ -176,7 +211,7 @@ export function LoadForm({ loadId, initialValues, onSaved, onCreated }: LoadForm
             </div>
 
             <Input
-                label="Relay address"
+                label="Relay Address"
                 type="number"
                 min={0}
                 value={relayAddress}
@@ -184,10 +219,11 @@ export function LoadForm({ loadId, initialValues, onSaved, onCreated }: LoadForm
                 required
                 error={relayError}
                 data-testid="load-relay-address"
+                placeholder="e.g., 1"
             />
 
             <Input
-                label="Power rating (kW)"
+                label="Power Rating (kW)"
                 type="number"
                 min={0}
                 step="0.1"
@@ -195,6 +231,7 @@ export function LoadForm({ loadId, initialValues, onSaved, onCreated }: LoadForm
                 onChange={(event) => setPowerRatingKw(event.target.value)}
                 required
                 data-testid="load-power-rating"
+                placeholder="e.g., 10.5"
             />
 
             <label className={styles.checkbox}>
@@ -204,8 +241,20 @@ export function LoadForm({ loadId, initialValues, onSaved, onCreated }: LoadForm
                     onChange={(event) => setIsSheddable(event.target.checked)}
                     data-testid="load-is-sheddable"
                 />
-                Sheddable load
+                <span className={styles.checkboxText}>
+                    <Zap size={14} className={styles.checkboxIcon} />
+                    Sheddable load
+                </span>
             </label>
+
+            <div className={styles.divider}>
+                <span className={styles.dividerLine}></span>
+                <span className={styles.dividerText}>
+                    <Shield size={14} />
+                    Criticality Assessment
+                </span>
+                <span className={styles.dividerLine}></span>
+            </div>
 
             <CriticalityWizard
                 loadId={loadId}
@@ -222,28 +271,49 @@ export function LoadForm({ loadId, initialValues, onSaved, onCreated }: LoadForm
 
             {capacityError && (
                 <div className={styles.capacityError} role="alert" data-testid="capacity-error">
-                    <p>{capacityError}</p>
-                    <Button
+                    <div className={styles.errorHeader}>
+                        <AlertTriangle size={18} className={styles.errorIcon} />
+                        <p>{capacityError}</p>
+                    </div>
+                    <button
                         type="button"
-                        variant="danger"
+                        className={styles.overrideBtn}
                         onClick={() => void submit(true)}
                         disabled={saving}
                         data-testid="override-button"
                     >
+                        <Save size={14} />
                         Save anyway (override)
-                    </Button>
+                    </button>
                 </div>
             )}
 
             {generalError && (
                 <div className={styles.generalError} role="alert" data-testid="general-error">
+                    <AlertCircle size={18} className={styles.errorIcon} />
                     {generalError}
                 </div>
             )}
 
-            <Button type="submit" disabled={saving} data-testid="save-button">
-                {saving ? "Saving..." : isEdit ? "Update Load" : "Create Load"}
-            </Button>
+            <button
+                type="submit"
+                className={styles.submitBtn}
+                disabled={saving}
+                data-testid="save-button"
+            >
+                {saving ? (
+                    <>
+                        <Loader2 size={18} className={styles.spinning} />
+                        Saving...
+                    </>
+                ) : (
+                    <>
+                        <Save size={18} />
+                        {isEdit ? "Update Load" : "Create Load"}
+                        <ArrowRight size={16} className={styles.arrowIcon} />
+                    </>
+                )}
+            </button>
         </form>
     );
 }

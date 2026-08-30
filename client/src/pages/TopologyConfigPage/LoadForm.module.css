@@ -34,61 +34,164 @@
 .form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    padding: 24px 28px;
+    gap: 14px;
+    padding: 22px 24px;
     background: var(--bg-card, #1a1d24);
     border-radius: 16px;
     border: 1px solid var(--border-card, #2a2f38);
     box-shadow: 0 2px 12px var(--shadow, rgba(0, 0, 0, 0.40));
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     transition: all 0.25s ease;
+    max-height: 600px;
+    overflow-y: auto;
 }
 
     .form:hover {
         border-color: rgba(255, 255, 255, 0.04);
     }
 
-    /* ========================================
-   INPUT OVERRIDES (Dark)
-   ======================================== */
-    .form :global(.input-wrapper) {
-        background: var(--bg-input, #13161b) !important;
-        border-color: var(--border-input, #2a2f38) !important;
-        border-radius: 10px !important;
-        transition: all 0.2s ease !important;
+    .form::-webkit-scrollbar {
+        width: 4px;
     }
 
-        .form :global(.input-wrapper):focus-within {
-            border-color: var(--accent-red, #f87171) !important;
-            box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12)) !important;
-        }
+    .form::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-        .form :global(.input-wrapper) input {
-            background: transparent !important;
-            color: var(--text-primary, #e8edf5) !important;
-            font-size: 14px !important;
-        }
+    .form::-webkit-scrollbar-thumb {
+        background: var(--border-soft, #22262e);
+        border-radius: 100px;
+    }
 
-            .form :global(.input-wrapper) input::placeholder {
-                color: var(--text-muted, #64748b) !important;
-            }
+/* ========================================
+   FORM HEADER
+   ======================================== */
+.formHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-soft, #22262e);
+    margin-bottom: 2px;
+    flex-shrink: 0;
+}
 
-            .form :global(.input-wrapper) input:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
+.formHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-    .form :global(.input-label) {
-        color: var(--text-secondary, #94a3b8) !important;
-        font-weight: 500 !important;
+.formHeaderIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent-soft, rgba(248, 113, 113, 0.08));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-red, #f87171);
+}
+
+.formTitle {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary, #e8edf5);
+    margin: 0;
+    letter-spacing: -0.2px;
+}
+
+.editBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--chart-blue-soft, rgba(96, 165, 250, 0.10));
+    color: var(--chart-blue, #60a5fa);
+    border: 1px solid rgba(96, 165, 250, 0.10);
+}
+
+.editDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--chart-blue, #60a5fa);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* ========================================
+   REQUIRED FIELDS - GRID LAYOUT
+   ======================================== */
+.requiredFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+    flex-shrink: 0;
+}
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+    .fieldGroup:last-child {
+        grid-column: 1 / -1;
+    }
+
+/* ========================================
+   INPUT OVERRIDES
+   ======================================== */
+.form :global(.input-wrapper) {
+    background: var(--bg-input, #13161b) !important;
+    border-color: var(--border-input, #2a2f38) !important;
+    border-radius: 10px !important;
+    transition: all 0.2s ease !important;
+}
+
+    .form :global(.input-wrapper):focus-within {
+        border-color: var(--accent-red, #f87171) !important;
+        box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12)) !important;
+    }
+
+    .form :global(.input-wrapper) input {
+        background: transparent !important;
+        color: var(--text-primary, #e8edf5) !important;
         font-size: 14px !important;
     }
 
-    .form :global(.input-error) {
-        color: var(--accent-red, #f87171) !important;
-        font-size: 13px !important;
-        margin-top: 4px !important;
-    }
+        .form :global(.input-wrapper) input::placeholder {
+            color: var(--text-muted, #64748b) !important;
+        }
+
+        .form :global(.input-wrapper) input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+.form :global(.input-label) {
+    color: var(--text-secondary, #94a3b8) !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+}
+
+.form :global(.input-error) {
+    color: var(--accent-red, #f87171) !important;
+    font-size: 13px !important;
+    margin-top: 4px !important;
+}
 
 /* ========================================
    FIELD / SELECT
@@ -97,12 +200,20 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    width: 100%;
 }
 
 .label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 14px;
     font-weight: 500;
     color: var(--text-secondary, #94a3b8);
+}
+
+.labelIcon {
+    color: var(--text-muted, #64748b);
 }
 
 .select {
@@ -144,16 +255,131 @@
     }
 
 /* ========================================
-   CHECKBOX
+   VALIDATION STATUS
    ======================================== */
+.validationStatus {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 2px 0;
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.validText {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--success, #34d399);
+}
+
+.invalidText {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted, #64748b);
+}
+
+/* ========================================
+   TOGGLE ADVANCED
+   ======================================== */
+.toggleAdvanced {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-soft, #22262e);
+    border-radius: 10px;
+    color: var(--text-secondary, #94a3b8);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+    .toggleAdvanced:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+.toggleLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .toggleLeft svg {
+        color: var(--text-muted, #64748b);
+    }
+
+.toggleRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggleBadge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 10px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted, #64748b);
+}
+
+.toggleAdvanced[aria-expanded="true"] {
+    border-color: var(--accent-soft, rgba(248, 113, 113, 0.20));
+    background: rgba(248, 113, 113, 0.03);
+}
+
+/* ========================================
+   ADVANCED SECTION - COLLAPSIBLE
+   ======================================== */
+.advancedSection {
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.advancedClosed {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.advancedOpen {
+    max-height: 800px;
+    opacity: 1;
+    margin: 0;
+    padding: 0;
+}
+
+.advancedContent {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft, #22262e);
+}
+
+/* ========================================
+   SHEDDABLE ROW
+   ======================================== */
+.sheddableRow {
+    padding: 2px 0;
+}
+
 .checkbox {
     display: flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;
-    font-size: 15px;
-    color: var(--text-secondary, #94a3b8);
-    padding: 6px 0;
+    padding: 4px 0;
     user-select: none;
     transition: color 0.2s ease;
 }
@@ -184,15 +410,30 @@
             outline-offset: 2px;
         }
 
+.checkboxText {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-secondary, #94a3b8);
+}
+
+.checkboxIcon {
+    color: var(--text-muted, #64748b);
+}
+
+.checkbox:hover .checkboxText {
+    color: var(--text-primary, #e8edf5);
+}
+
 /* ========================================
    CRITICALITY WIZARD WRAPPER
    ======================================== */
-.form :global(.criticality-wizard) {
+.advancedContent :global(.criticality-wizard) {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-soft, #22262e);
     border-radius: 12px;
-    padding: 16px 20px;
-    margin: 4px 0;
+    padding: 14px 18px;
 }
 
 /* ========================================
@@ -202,7 +443,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 16px 20px;
+    padding: 14px 18px;
     background: var(--warning-soft, rgba(251, 191, 36, 0.08));
     border-radius: 12px;
     border: 1px solid rgba(251, 191, 36, 0.15);
@@ -222,6 +463,17 @@
     }
 }
 
+.errorHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.errorIcon {
+    color: var(--warning, #fbbf24);
+    flex-shrink: 0;
+}
+
 .capacityError p {
     margin: 0;
     color: var(--warning, #fbbf24);
@@ -229,13 +481,12 @@
     line-height: 1.5;
 }
 
-    .capacityError p::before {
-        content: '⚠️ ';
-    }
-
-.capacityError button {
+.overrideBtn {
     align-self: flex-start;
-    padding: 8px 20px !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px !important;
     font-size: 14px !important;
     background: var(--warning, #fbbf24) !important;
     color: var(--text-inverse, #0f1117) !important;
@@ -247,13 +498,13 @@
     font-family: inherit !important;
 }
 
-    .capacityError button:hover:not(:disabled) {
+    .overrideBtn:hover:not(:disabled) {
         background: #f59e0b !important;
         transform: translateY(-1px);
         box-shadow: 0 4px 16px rgba(251, 191, 36, 0.20);
     }
 
-    .capacityError button:disabled {
+    .overrideBtn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
         transform: none !important;
@@ -266,7 +517,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 18px;
+    padding: 12px 16px;
     background: var(--accent-soft, rgba(248, 113, 113, 0.08));
     border-radius: 10px;
     border-left: 4px solid var(--accent-red, #f87171);
@@ -276,65 +527,57 @@
     animation: slideDown 0.3s ease;
 }
 
-    .generalError::before {
-        content: '⚠';
-        font-size: 18px;
+    .generalError .errorIcon {
+        color: var(--accent-red, #f87171);
         flex-shrink: 0;
     }
 
 /* ========================================
    SUBMIT BUTTON
    ======================================== */
-.form button[type="submit"] {
+.submitBtn {
     width: 100%;
-    padding: 14px 24px !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    background: var(--accent-red, #f87171) !important;
-    color: var(--text-inverse, #0f1117) !important;
-    border: none !important;
-    border-radius: 12px !important;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--accent-red, #f87171);
+    color: var(--text-inverse, #0f1117);
+    border: none;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.25s ease !important;
+    transition: all 0.25s ease;
     margin-top: 4px;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    font-family: inherit !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: inherit;
 }
 
-    .form button[type="submit"]:hover:not(:disabled) {
-        background: var(--accent-hover, #ef4444) !important;
+    .submitBtn:hover:not(:disabled) {
+        background: var(--accent-hover, #ef4444);
         transform: translateY(-2px);
         box-shadow: 0 8px 32px var(--accent-glow, rgba(248, 113, 113, 0.20));
     }
 
-    .form button[type="submit"]:disabled {
-        opacity: 0.5;
+    .submitBtn:disabled {
+        opacity: 0.4;
         cursor: not-allowed;
         transform: none !important;
     }
 
-    .form button[type="submit"]:focus-visible {
+    .submitBtn.submitDisabled {
+        background: var(--text-muted, #64748b) !important;
+    }
+
+    .submitBtn:focus-visible {
         outline: 2px solid var(--accent-red, #f87171);
         outline-offset: 2px;
     }
 
-    /* ========================================
-   SAVING STATE - Spinner on button
-   ======================================== */
-    .form button[type="submit"]:disabled::before {
-        content: '';
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 2.5px solid rgba(15, 17, 23, 0.2);
-        border-radius: 50%;
-        border-top-color: #0f1117;
-        animation: spin 0.7s linear infinite;
-        margin-right: 8px;
-    }
+.spinning {
+    animation: spin 0.7s linear infinite;
+}
 
 @keyframes spin {
     to {
@@ -342,20 +585,82 @@
     }
 }
 
+.arrowIcon {
+    transition: transform 0.2s ease;
+}
+
+.submitBtn:hover:not(:disabled) .arrowIcon {
+    transform: translateX(4px);
+}
+
+/* ========================================
+   FORM HINT
+   ======================================== */
+.formHint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted, #64748b);
+    border: 1px dashed var(--border-soft, #22262e);
+}
+
+    .formHint svg {
+        color: var(--text-muted, #64748b);
+        flex-shrink: 0;
+    }
+
 /* ========================================
    RESPONSIVE
    ======================================== */
 @media (max-width: 992px) {
     .form {
-        padding: 20px 24px;
+        padding: 18px 20px;
+        max-height: 550px;
+    }
+
+    .requiredFields {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 14px;
     }
 }
 
 @media (max-width: 768px) {
     .form {
-        padding: 18px 20px;
-        gap: 14px;
+        padding: 16px 18px;
+        gap: 12px;
         border-radius: 12px;
+        max-height: 500px;
+    }
+
+    .formHeader {
+        padding-bottom: 10px;
+    }
+
+    .formHeaderIcon {
+        width: 32px;
+        height: 32px;
+    }
+
+        .formHeaderIcon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+    .formTitle {
+        font-size: 16px;
+    }
+
+    .requiredFields {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .fieldGroup:last-child {
+        grid-column: 1 / -1;
     }
 
     .select {
@@ -365,14 +670,24 @@
         background-position: right 12px center;
     }
 
-    .checkbox {
-        font-size: 14px;
-        gap: 8px;
+    .toggleAdvanced {
+        padding: 8px 14px;
+        font-size: 13px;
     }
 
-        .checkbox input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
+    .toggleBadge {
+        font-size: 10px;
+        padding: 1px 8px;
+    }
+
+    .advancedContent {
+        gap: 12px;
+        padding-top: 12px;
+    }
+
+        .advancedContent :global(.criticality-wizard) {
+            padding: 12px 14px;
+            border-radius: 10px;
         }
 
     .capacityError {
@@ -384,11 +699,11 @@
             font-size: 13px;
         }
 
-        .capacityError button {
-            padding: 6px 16px !important;
-            font-size: 13px !important;
-            border-radius: 6px !important;
-        }
+    .overrideBtn {
+        padding: 6px 14px !important;
+        font-size: 13px !important;
+        border-radius: 6px !important;
+    }
 
     .generalError {
         padding: 12px 16px;
@@ -396,8 +711,8 @@
         border-radius: 8px;
     }
 
-    .form button[type="submit"] {
-        padding: 12px 20px !important;
+    .submitBtn {
+        padding: 11px 18px !important;
         font-size: 15px !important;
         border-radius: 10px !important;
     }
@@ -414,17 +729,58 @@
         border-radius: 8px !important;
     }
 
-    .form :global(.criticality-wizard) {
-        padding: 12px 14px;
-        border-radius: 10px;
+    .validationStatus {
+        font-size: 12px;
+    }
+
+    .formHint {
+        font-size: 12px;
+        padding: 6px 12px;
     }
 }
 
 @media (max-width: 480px) {
     .form {
-        padding: 14px 16px;
-        gap: 12px;
+        padding: 14px 14px;
+        gap: 10px;
         border-radius: 10px;
+        max-height: 450px;
+    }
+
+    .formHeader {
+        padding-bottom: 8px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .formHeaderIcon {
+        width: 28px;
+        height: 28px;
+    }
+
+        .formHeaderIcon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+    .formTitle {
+        font-size: 15px;
+    }
+
+    .editBadge {
+        align-self: flex-start;
+        font-size: 10px;
+        padding: 1px 10px;
+    }
+
+    .requiredFields {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .fieldGroup:last-child {
+        grid-column: 1;
     }
 
     .select {
@@ -439,16 +795,50 @@
         font-size: 13px;
     }
 
+    .toggleAdvanced {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .toggleLeft svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .toggleRight svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .toggleBadge {
+        font-size: 9px;
+        padding: 1px 6px;
+    }
+
+    .advancedContent {
+        gap: 10px;
+        padding-top: 10px;
+    }
+
+        .advancedContent :global(.criticality-wizard) {
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+
     .checkbox {
         font-size: 13px;
-        gap: 6px;
-        padding: 4px 0;
+        gap: 8px;
+        padding: 2px 0;
     }
 
         .checkbox input[type="checkbox"] {
-            width: 15px;
-            height: 15px;
+            width: 16px;
+            height: 16px;
         }
+
+    .checkboxText {
+        font-size: 13px;
+    }
 
     .capacityError {
         padding: 10px 14px;
@@ -461,11 +851,11 @@
             font-size: 12px;
         }
 
-        .capacityError button {
-            padding: 5px 14px !important;
-            font-size: 12px !important;
-            border-radius: 6px !important;
-        }
+    .overrideBtn {
+        padding: 5px 12px !important;
+        font-size: 12px !important;
+        border-radius: 6px !important;
+    }
 
     .generalError {
         padding: 10px 14px;
@@ -475,21 +865,21 @@
         border-left-width: 3px;
     }
 
-        .generalError::before {
-            font-size: 15px;
+        .generalError .errorIcon {
+            width: 16px;
+            height: 16px;
         }
 
-    .form button[type="submit"] {
+    .submitBtn {
         padding: 10px 16px !important;
         font-size: 14px !important;
         border-radius: 8px !important;
+        gap: 8px;
     }
 
-        .form button[type="submit"]:disabled::before {
-            width: 14px;
-            height: 14px;
-            border-width: 2px;
-            margin-right: 6px;
+        .submitBtn svg {
+            width: 16px;
+            height: 16px;
         }
 
     .form :global(.input-wrapper) {
@@ -509,10 +899,19 @@
         font-size: 12px !important;
     }
 
-    .form :global(.criticality-wizard) {
-        padding: 10px 12px;
-        border-radius: 8px;
+    .validationStatus {
+        font-size: 11px;
     }
+
+    .formHint {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+
+        .formHint svg {
+            width: 14px;
+            height: 14px;
+        }
 }
 
 /* ========================================
@@ -521,8 +920,9 @@
 .form :global(.input-wrapper):focus-within,
 .select:focus,
 .checkbox input[type="checkbox"]:focus-visible,
-.capacityError button:focus-visible,
-.form button[type="submit"]:focus-visible {
+.overrideBtn:focus-visible,
+.submitBtn:focus-visible,
+.toggleAdvanced:focus-visible {
     outline: 2px solid var(--accent-red, #f87171);
     outline-offset: 2px;
 }
