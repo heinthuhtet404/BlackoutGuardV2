@@ -9,7 +9,13 @@ public class Facility
     public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public double GeneratorCapacityKw { get; set; }
-    public string TimezoneId { get; set; } = "UTC";  // 👈 NEW
+
+    // ===== NEW COLUMNS FOR STRATEGY A =====
+    public double SolarCapacityKw { get; set; } = 0.0;
+    public bool IsGridOnline { get; set; } = true;
+    // ======================================
+
+    public string TimezoneId { get; set; } = "UTC";
     public DateTime CreatedAt { get; set; }
 
     // Navigation properties

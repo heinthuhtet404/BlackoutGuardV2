@@ -17,6 +17,7 @@ using BlackoutGuard.Infrastructure.Persistence.Repositories;
 using BlackoutGuard.Infrastructure.Simulation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
@@ -33,7 +34,10 @@ if (!builder.Environment.IsEnvironment("Testing"))
     builder.Services.AddDbContext<BlackoutGuardDbContext>(options =>
     {
         options.UseNpgsql(connectionString)
-               .AddInterceptors(new FacilityIdDbInterceptor());
+               .AddInterceptors(new FacilityIdDbInterceptor())
+               // EF Core Pending Model Changes Warning ကြောင့် Application Exception မတက်အောင် Ignore လုပ်ပေးခြင်း
+               .ConfigureWarnings(warnings =>
+                   warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
 
         if (builder.Environment.IsDevelopment())
         {
@@ -135,6 +139,7 @@ builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 // Domain Services & Engine
 builder.Services.AddSingleton<IDecisionStrategy, PriorityBasedLoadSheddingStrategy>();
 builder.Services.AddSingleton<IAlarmGenerator, AlarmRuleEngine>();
+builder.Services.AddScoped<PowerManagementService>(); // <-- PowerSimulatorController မှ သုံးနိုင်ရန် DI Container တွင် Registration ထည့်သွင်းပေးထားပါသည်
 
 // Hosted Services
 builder.Services.AddSingleton<PendingConfigChangeQueue>();
@@ -163,7 +168,6 @@ builder.Services.AddScoped<UpdateUserUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
 builder.Services.AddScoped<EvaluateSheddingUseCase>();
 builder.Services.AddScoped<ExecuteSheddingUseCase>();
-
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<SimulatorDataSource>();
 builder.Services.AddSingleton<IDataSource>(sp => sp.GetRequiredService<SimulatorDataSource>());
@@ -209,6 +213,7 @@ app.UseMiddleware<FacilityContextMiddleware>();
 app.UseMiddleware<FacilityIdMiddleware>();
 app.MapControllers();
 app.MapHub<TelemetryHub>("/hubs/telemetry");
+
 app.MapGet("/api/health", () => Results.Ok("Healthy"))
    .WithName("HealthCheck");
 

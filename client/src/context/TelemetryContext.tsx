@@ -11,6 +11,9 @@ export interface TelemetryUpdate {
     voltage: number;
     totalLoadKw: number;
     generatorOn: boolean;
+    gridOnline?: boolean;              // <-- ထည့်ရန်
+    solarCapacityKw?: number;          // <-- ထည့်ရန်
+    generatorCapacityKw?: number;
     engineTemp: number;
     fuelLevel: number;
     runtimeRemaining: number;
