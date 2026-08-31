@@ -22,6 +22,8 @@ import {
     Key,
     Shield,
     Sparkles,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 import styles from "./RegisterPage.module.css";
 
@@ -40,6 +42,10 @@ export function RegisterPage() {
 
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+
+    // Password show/hide states
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     if (user) {
         return <Navigate to="/overview" replace />;
@@ -125,7 +131,7 @@ export function RegisterPage() {
                                 <span className={styles.featureIcon}>
                                     <BarChart3 size={12} />
                                 </span>
-                                <span>Advanced analytics dashboard</span>
+                                <span>Analytics dashboard</span>
                             </div>
                         </div>
                     </div>
@@ -147,96 +153,131 @@ export function RegisterPage() {
                         <div className={styles.formLeft}>
                             {/* Full Name */}
                             <div className={styles.inputIconWrapper}>
-                                <User size={16} className={styles.inputIcon} />
-                                <Input
-                                    label="Full Name *"
-                                    value={fullName}
-                                    onChange={(e) => setFullName(e.target.value)}
-                                    required
-                                    data-testid="register-fullname"
-                                    placeholder="John Doe"
-                                />
+                                <User className={styles.inputIcon} size={16} />
+                                <div className={styles.inputWrapper}>
+                                    <label>Full Name *</label>
+                                    <input
+                                        type="text"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        required
+                                        data-testid="register-fullname"
+                                        placeholder="John Doe"
+                                    />
+                                </div>
                             </div>
 
                             {/* Email */}
                             <div className={styles.inputIconWrapper}>
-                                <Mail size={16} className={styles.inputIcon} />
-                                <Input
-                                    label="Email Address *"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    data-testid="register-email"
-                                    placeholder="john@example.com"
-                                />
+                                <Mail className={styles.inputIcon} size={16} />
+                                <div className={styles.inputWrapper}>
+                                    <label>Email Address *</label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        data-testid="register-email"
+                                        placeholder="john@example.com"
+                                    />
+                                </div>
                             </div>
 
                             {/* Organization Name */}
                             <div className={styles.inputIconWrapper}>
-                                <Briefcase size={16} className={styles.inputIcon} />
-                                <Input
-                                    label="Organization Name *"
-                                    value={organizationName}
-                                    onChange={(e) => setOrganizationName(e.target.value)}
-                                    required
-                                    data-testid="register-organization"
-                                    placeholder="Acme Corp"
-                                />
+                                <Briefcase className={styles.inputIcon} size={16} />
+                                <div className={styles.inputWrapper}>
+                                    <label>Organization Name *</label>
+                                    <input
+                                        type="text"
+                                        value={organizationName}
+                                        onChange={(e) => setOrganizationName(e.target.value)}
+                                        required
+                                        data-testid="register-organization"
+                                        placeholder="Acme Corp"
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         <div className={styles.formRight}>
-                            {/* Password */}
+                            {/* Password with Toggle */}
                             <div className={styles.inputIconWrapper}>
-                                <Key size={16} className={styles.inputIcon} />
-                                <Input
-                                    label="Password *"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    data-testid="register-password"
-                                    placeholder="••••••••"
-                                />
+                                <Key className={styles.inputIcon} size={16} />
+                                <div className={styles.inputWrapper}>
+                                    <label>Password *</label>
+                                    <div className={styles.passwordWrapper}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                            data-testid="register-password"
+                                            placeholder="••••••••"
+                                            className={styles.passwordInput}
+                                        />
+                                        <button
+                                            type="button"
+                                            className={styles.toggleButton}
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            tabIndex={-1}
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff size={18} className={styles.toggleIcon} />
+                                            ) : (
+                                                <Eye size={18} className={styles.toggleIcon} />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Confirm Password */}
+                            {/* Confirm Password with Toggle */}
                             <div className={styles.inputIconWrapper}>
-                                <Lock size={16} className={styles.inputIcon} />
-                                <Input
-                                    label="Confirm Password *"
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    required
-                                    data-testid="register-confirm-password"
-                                    placeholder="••••••••"
-                                />
+                                <Lock className={styles.inputIcon} size={16} />
+                                <div className={styles.inputWrapper}>
+                                    <label>Confirm Password *</label>
+                                    <div className={styles.passwordWrapper}>
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            required
+                                            data-testid="register-confirm-password"
+                                            placeholder="••••••••"
+                                            className={styles.passwordInput}
+                                        />
+                                        <button
+                                            type="button"
+                                            className={styles.toggleButton}
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            tabIndex={-1}
+                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showConfirmPassword ? (
+                                                <EyeOff size={18} className={styles.toggleIcon} />
+                                            ) : (
+                                                <Eye size={18} className={styles.toggleIcon} />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-
-                            {/* Generator Capacity (hidden but preserved for functionality) */}
-                            {/* <Input
-                                label="Generator Capacity (kW) *"
-                                type="number"
-                                value={generatorCapacity}
-                                onChange={(e) => setGeneratorCapacity(e.target.value)}
-                                required
-                                data-testid="register-capacity"
-                                placeholder="e.g., 100"
-                                className={styles.hiddenInput}
-                            /> */}
 
                             {/* Facility Location */}
                             <div className={styles.inputIconWrapper}>
-                                <MapPin size={16} className={styles.inputIcon} />
-                                <Input
-                                    label="Facility Location (Optional)"
-                                    value={facilityLocation}
-                                    onChange={(e) => setFacilityLocation(e.target.value)}
-                                    data-testid="register-location"
-                                    placeholder="City, Country"
-                                />
+                                <MapPin className={styles.inputIcon} size={16} />
+                                <div className={styles.inputWrapper}>
+                                    <label>Facility Location (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={facilityLocation}
+                                        onChange={(e) => setFacilityLocation(e.target.value)}
+                                        data-testid="register-location"
+                                        placeholder="City, Country"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>

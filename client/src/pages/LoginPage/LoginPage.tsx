@@ -116,43 +116,48 @@ export function LoginPage() {
                     {/* Email Input */}
                     <div className={styles.inputGroup}>
                         <div className={styles.inputIconWrapper}>
-                            <Mail size={16} className={styles.inputIcon} />
-                            <Input
-                                label="Email Address"
-                                type="email"
-                                placeholder="user@hospital.com"
-                                value={email}
-                                onChange={(event) => setEmail(event.target.value)}
-                                required
-                                data-testid="login-email"
-                            />
+                            <Mail className={styles.inputIcon} size={16} />
+                            <div className={styles.inputWrapper}>
+                                <label>Email Address</label>
+                                <input
+                                    type="email"
+                                    placeholder="user@hospital.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    data-testid="login-email"
+                                />
+                            </div>
                         </div>
                     </div>
 
                     {/* Password Input with Show/Hide Toggle */}
                     <div className={styles.inputGroup}>
-                        <div className={styles.passwordWrapper}>
-                            <div className={styles.inputIconWrapper}>
-                                <Lock size={16} className={styles.inputIcon} />
-                                <Input
-                                    label="Password"
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••••••"
-                                    value={password}
-                                    onChange={(event) => setPassword(event.target.value)}
-                                    required
-                                    data-testid="login-password"
-                                />
+                        <div className={styles.inputIconWrapper}>
+                            <Lock className={styles.inputIcon} size={16} />
+                            <div className={styles.inputWrapper}>
+                                <label>Password</label>
+                                <div className={styles.passwordWrapper}>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="••••••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        data-testid="login-password"
+                                        className={styles.passwordInput}
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.eyeButton}
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        tabIndex={-1}
+                                        aria-label={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
-                            <button
-                                type="button"
-                                className={styles.eyeButton}
-                                onClick={() => setShowPassword(!showPassword)}
-                                tabIndex={-1}
-                                aria-label={showPassword ? "Hide password" : "Show password"}
-                            >
-                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
                         </div>
                     </div>
 
@@ -188,7 +193,7 @@ export function LoginPage() {
 
                         <div className={styles.divider}>
                             <span className={styles.dividerLine}></span>
-                            <span className={styles.dividerText}>or</span>
+                            {/* <span className={styles.dividerText}>or</span> */}
                             <span className={styles.dividerLine}></span>
                         </div>
 

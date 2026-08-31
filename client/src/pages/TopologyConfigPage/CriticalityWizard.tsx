@@ -298,10 +298,10 @@ export function CriticalityWizard({
             </div>
 
             {/* Formula */}
-            <div className={styles.formula} data-testid="formula-reference">
+            {/* <div className={styles.formula} data-testid="formula-reference">
                 <HelpCircle size={12} className={styles.formulaIcon} />
                 Score = ((Q1 × 0.5) + (Q2 × 0.3) + (Q3 × 0.2)) × 10
-            </div>
+            </div> */}
 
             {/* Error */}
             {error && (

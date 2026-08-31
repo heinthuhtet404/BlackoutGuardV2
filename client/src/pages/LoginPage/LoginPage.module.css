@@ -217,7 +217,7 @@
 }
 
 /* ========================================
-   INPUT GROUPS
+   INPUT GROUPS - FIXED
    ======================================== */
 .inputGroup {
     margin-bottom: 4px;
@@ -225,63 +225,103 @@
 
 .inputIconWrapper {
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .inputIcon {
     position: absolute;
     left: 14px;
-    top: 38px;
+    top: 55%;
+/*    transform: translateY(-50%);*/
     color: var(--text-muted, #64748b);
     z-index: 2;
+    pointer-events: none;
+    width: 18px;
+    height: 18px;
 }
 
-.inputGroup :global(.input-wrapper) {
+/* ========================================
+   INPUT WRAPPER - FIXED
+   ======================================== */
+.inputWrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+    .inputWrapper label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary, #94a3b8);
+        margin-bottom: 2px;
+    }
+
+    .inputWrapper input {
+        width: 100%;
+        padding: 10px 14px 10px 44px !important;
+        background: var(--bg-input, #13161b) !important;
+        border: 1px solid var(--border-input, #2a2f38) !important;
+        border-radius: 10px !important;
+        color: var(--text-primary, #e8edf5) !important;
+        font-size: 15px !important;
+        transition: all 0.2s ease !important;
+        outline: none !important;
+        box-sizing: border-box !important;
+        height: 46px;
+    }
+
+        .inputWrapper input:focus {
+            border-color: var(--accent-red, #f87171) !important;
+            box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12)) !important;
+        }
+
+        .inputWrapper input::placeholder {
+            color: var(--text-muted, #64748b) !important;
+        }
+
+/* ========================================
+   PASSWORD WRAPPER - FIXED
+   ======================================== */
+.passwordWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.passwordInput {
+    width: 100%;
+    padding: 10px 50px 10px 44px !important;
     background: var(--bg-input, #13161b) !important;
-    border-color: var(--border-input, #2a2f38) !important;
+    border: 1px solid var(--border-input, #2a2f38) !important;
     border-radius: 10px !important;
+    color: var(--text-primary, #e8edf5) !important;
+    font-size: 15px !important;
     transition: all 0.2s ease !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    height: 46px;
 }
 
-    .inputGroup :global(.input-wrapper):focus-within {
+    .passwordInput:focus {
         border-color: var(--accent-red, #f87171) !important;
         box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12)) !important;
     }
 
-    .inputGroup :global(.input-wrapper) input {
-        background: transparent !important;
-        color: var(--text-primary, #e8edf5) !important;
-        padding-left: 42px !important;
-    }
-
-        .inputGroup :global(.input-wrapper) input::placeholder {
-            color: var(--text-muted, #64748b) !important;
-        }
-
-.inputGroup :global(.input-label) {
-    color: var(--text-secondary, #94a3b8) !important;
-}
-
-.passwordWrapper {
-    position: relative;
-}
-
-    .passwordWrapper :global(.input-wrapper) {
-        position: relative;
-    }
-
-    .passwordWrapper input {
-        padding-right: 44px !important;
+    .passwordInput::placeholder {
+        color: var(--text-muted, #64748b) !important;
     }
 
 .eyeButton {
     position: absolute;
     right: 12px;
-    bottom: 10px;
+    top: 50%;
+    transform: translateY(-50%);
     background: none;
     border: none;
     color: var(--text-muted, #64748b);
     cursor: pointer;
-    padding: 6px;
+    padding: 4px;
     border-radius: 6px;
     transition: all 0.2s ease;
     display: flex;
@@ -293,6 +333,10 @@
     .eyeButton:hover {
         color: var(--text-secondary, #94a3b8);
         background: rgba(255, 255, 255, 0.05);
+    }
+
+    .eyeButton:focus {
+        outline: none;
     }
 
     .eyeButton svg {
@@ -596,18 +640,27 @@
 
     .inputIcon {
         left: 12px;
-        top: 34px;
-        width: 14px;
-        height: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
     }
 
-    .inputGroup :global(.input-wrapper) input {
-        padding-left: 36px !important;
+    .inputWrapper input {
+        padding: 8px 12px 8px 38px !important;
+        height: 42px;
+        font-size: 14px !important;
+    }
+
+    .passwordInput {
+        padding: 8px 44px 8px 38px !important;
+        height: 42px;
+        font-size: 14px !important;
     }
 
     .eyeButton {
-        bottom: 8px;
         right: 10px;
+        padding: 4px;
     }
 
         .eyeButton svg {
@@ -707,13 +760,31 @@
 
     .inputIcon {
         left: 10px;
-        top: 30px;
-        width: 12px;
-        height: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 14px;
+        height: 14px;
     }
 
-    .inputGroup :global(.input-wrapper) input {
-        padding-left: 32px !important;
-        font-size: 14px !important;
+    .inputWrapper input {
+        padding: 8px 10px 8px 34px !important;
+        height: 38px;
+        font-size: 13px !important;
     }
+
+    .passwordInput {
+        padding: 8px 38px 8px 34px !important;
+        height: 38px;
+        font-size: 13px !important;
+    }
+
+    .eyeButton {
+        right: 8px;
+        padding: 3px;
+    }
+
+        .eyeButton svg {
+            width: 14px;
+            height: 14px;
+        }
 }

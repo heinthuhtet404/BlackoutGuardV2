@@ -68,6 +68,28 @@
     font-weight: 400;
 }
 
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.headerIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(248, 113, 113, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(248, 113, 113, 0.08);
+}
+
+.headerIcon {
+    color: var(--accent-red, #f87171);
+}
+
 .systemModeBanner {
     display: inline-flex;
     align-items: center;
@@ -207,15 +229,15 @@
     }
 
 .cardIcon {
-    font-size: 28px;
-    flex-shrink: 0;
-    width: 44px;
-    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.03);
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary, #94a3b8);
+    flex-shrink: 0;
 }
 
 .cardContent {
@@ -318,6 +340,17 @@
     margin-bottom: 18px;
 }
 
+.sectionHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sectionIcon {
+    color: var(--text-secondary, #94a3b8);
+    flex-shrink: 0;
+}
+
 .sectionTitle {
     font-size: 18px;
     font-weight: 600;
@@ -369,6 +402,12 @@
     font-size: 15px;
 }
 
+.emptyIcon {
+    color: var(--text-muted, #64748b);
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
 /* ========================================
    ZONE LIST
    ======================================== */
@@ -415,7 +454,14 @@
     }
 
 .zoneIcon {
-    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary, #94a3b8);
 }
 
 .zoneActionsWrapper {
@@ -432,6 +478,9 @@
     border-radius: 100px;
     border: 1px solid rgba(255, 255, 255, 0.04);
     font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* ========================================
@@ -439,23 +488,27 @@
    ======================================== */
 .nodeGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 14px;
     align-items: stretch;
 }
 
+/* ========================================
+   NODE CARD - OPTIMIZED
+   ======================================== */
 .nodeCard {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 14px 18px;
+    gap: 12px;
+    padding: 12px 16px;
     background: var(--bg-card, #1a1d24);
     border-radius: 12px;
     border: 1px solid var(--border-card, #2a2f38);
     transition: all 0.25s ease;
-    min-height: 72px;
+    min-height: 64px;
     box-sizing: border-box;
     position: relative;
+    width: 100%;
 }
 
     .nodeCard:hover {
@@ -478,17 +531,19 @@
     border-color: var(--border-soft, #22262e);
 }
 
-/* ----- Node Icon ----- */
+/* ========================================
+   NODE ICON
+   ======================================== */
 .nodeIcon {
-    font-size: 20px;
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
     border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary, #94a3b8);
     transition: all 0.2s ease;
 }
 
@@ -496,13 +551,22 @@
     background: rgba(255, 255, 255, 0.07);
 }
 
-/* ----- Node Info (Name + Meta) ----- */
+.nodeIcon svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+/* ========================================
+   NODE INFO
+   ======================================== */
 .nodeInfo {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
+    overflow: hidden;
 }
 
 .nodeName {
@@ -513,6 +577,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     letter-spacing: -0.2px;
+    max-width: 100%;
 }
 
 .nodeMeta {
@@ -521,23 +586,34 @@
     gap: 6px;
     font-size: 12px;
     color: var(--text-secondary, #94a3b8);
+    flex-wrap: nowrap;
+    overflow: hidden;
 }
 
     .nodeMeta .sep {
         color: var(--text-muted, #64748b);
         font-size: 10px;
+        flex-shrink: 0;
+    }
+
+    .nodeMeta span:not(.sep) {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
 /* Priority Badge */
 .priorityBadge {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     padding: 0 8px;
     height: 18px;
     border-radius: 4px;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.3px;
+    flex-shrink: 0;
 }
 
 .priorityP1 {
@@ -555,15 +631,27 @@
     color: #34d399;
 }
 
-/* ----- Node Badge (Status) ----- */
+/* ========================================
+   NODE ACTIONS WRAPPER
+   ======================================== */
+.nodeActionsWrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+/* Status Badge */
 .nodeBadge {
     font-size: 10px;
     font-weight: 600;
-    padding: 2px 12px;
+    padding: 3px 12px;
     border-radius: 100px;
     white-space: nowrap;
     letter-spacing: 0.2px;
     flex-shrink: 0;
+    line-height: 1.4;
 }
 
 .badgeNormal {
@@ -589,33 +677,17 @@
     }
 }
 
-.noLoads {
-    color: var(--text-muted, #64748b);
-    font-size: 14px;
-    padding: 12px 0;
-    margin: 0;
-    text-align: center;
-    grid-column: 1 / -1;
-}
-
 /* ========================================
-   NODE ACTIONS - Right side
+   ACTION BUTTONS
    ======================================== */
-.nodeActionsWrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    margin-left: 4px;
-}
-
 .actionButtons {
     display: flex;
     gap: 4px;
     opacity: 0;
-    transform: scale(0.85);
+    transform: scale(0.9);
     transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     pointer-events: none;
+    flex-shrink: 0;
 }
 
 .nodeCard:hover .actionButtons,
@@ -627,21 +699,27 @@
 
 .editBtn,
 .deleteBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: 1px solid var(--border-soft, #2a2f38);
     border-radius: 6px;
-    padding: 4px 8px;
+    padding: 4px 6px;
     cursor: pointer;
-    font-size: 13px;
     transition: all 0.2s ease;
     color: var(--text-secondary, #94a3b8);
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 30px;
-    min-height: 30px;
+    min-width: 28px;
+    min-height: 28px;
+    flex-shrink: 0;
 }
+
+    .editBtn svg,
+    .deleteBtn svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+    }
 
     .editBtn:hover {
         background: rgba(96, 165, 250, 0.15);
@@ -688,6 +766,15 @@
     min-height: 26px;
 }
 
+.noLoads {
+    color: var(--text-muted, #64748b);
+    font-size: 14px;
+    padding: 12px 0;
+    margin: 0;
+    text-align: center;
+    grid-column: 1 / -1;
+}
+
 /* ========================================
    CHARTS ROW
    ======================================== */
@@ -711,11 +798,23 @@
         border-color: rgba(255, 255, 255, 0.04);
     }
 
+.chartHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.chartIcon {
+    color: var(--text-secondary, #94a3b8);
+    flex-shrink: 0;
+}
+
 .chartTitle {
     font-size: 15px;
     font-weight: 600;
     color: var(--text-primary, #e8edf5);
-    margin: 0 0 14px 0;
+    margin: 0;
     letter-spacing: -0.2px;
 }
 
@@ -912,12 +1011,53 @@
     }
 }
 
-.modalCard h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary, #e8edf5);
-    margin: 0 0 4px 0;
+.modalHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
 }
+
+    .modalHeader h3 {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary, #e8edf5);
+        margin: 0;
+    }
+
+.modalIconWrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(248, 113, 113, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--accent-red, #f87171);
+}
+
+    .modalIconWrapper svg {
+        width: 18px;
+        height: 18px;
+    }
+
+.modalClose {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+    .modalClose:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary, #e8edf5);
+    }
 
 .modalSubtitle {
     font-size: 14px;
@@ -1063,6 +1203,12 @@
         font-size: 14px;
     }
 
+    .headerIconWrapper {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
     .systemModeBanner {
         font-size: 11px;
         padding: 6px 16px;
@@ -1087,10 +1233,15 @@
     }
 
     .cardIcon {
-        font-size: 22px;
         width: 38px;
         height: 38px;
+        border-radius: 10px;
     }
+
+        .cardIcon svg {
+            width: 20px;
+            height: 20px;
+        }
 
     .cardLabel {
         font-size: 12px;
@@ -1105,36 +1256,46 @@
         font-size: 16px;
     }
 
-    /* Node Grid - 2 columns */
     .nodeGrid {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
     }
 
     .nodeCard {
-        padding: 12px 14px;
-        min-height: 64px;
-        gap: 12px;
+        padding: 10px 14px;
+        min-height: 56px;
+        gap: 10px;
         border-radius: 10px;
     }
 
-    .nodeName {
-        font-size: 14px;
-    }
-
-    .nodeMeta {
-        font-size: 11px;
-    }
-
     .nodeIcon {
-        font-size: 18px;
         width: 34px;
         height: 34px;
         border-radius: 8px;
     }
 
+        .nodeIcon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+    .nodeName {
+        font-size: 13px;
+    }
+
+    .nodeMeta {
+        font-size: 11px;
+        gap: 4px;
+    }
+
+    .priorityBadge {
+        font-size: 9px;
+        height: 16px;
+        padding: 0 6px;
+    }
+
     .nodeBadge {
-        font-size: 10px;
+        font-size: 9px;
         padding: 2px 10px;
     }
 
@@ -1145,13 +1306,25 @@
         pointer-events: auto;
     }
 
+    .nodeCard:hover .actionButtons {
+        opacity: 1;
+    }
+
     .editBtn,
     .deleteBtn {
-        padding: 3px 7px;
-        font-size: 12px;
-        min-width: 28px;
-        min-height: 28px;
-        border-radius: 6px;
+        min-width: 26px;
+        min-height: 26px;
+        padding: 3px 5px;
+    }
+
+        .editBtn svg,
+        .deleteBtn svg {
+            width: 13px;
+            height: 13px;
+        }
+
+    .nodeActionsWrapper {
+        gap: 6px;
     }
 
     .zoneCard {
@@ -1209,6 +1382,17 @@
     .modalCard {
         padding: 22px 24px;
     }
+
+    .modalIconWrapper {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+
+        .modalIconWrapper svg {
+            width: 18px;
+            height: 18px;
+        }
 }
 
 @media (max-width: 480px) {
@@ -1229,6 +1413,17 @@
         font-size: 13px;
     }
 
+    .headerIconWrapper {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+        .headerIconWrapper svg {
+            width: 20px;
+            height: 20px;
+        }
+
     .systemModeBanner {
         font-size: 10px;
         padding: 5px 14px;
@@ -1246,11 +1441,15 @@
     }
 
     .cardIcon {
-        font-size: 20px;
         width: 34px;
         height: 34px;
         border-radius: 8px;
     }
+
+        .cardIcon svg {
+            width: 18px;
+            height: 18px;
+        }
 
     .cardLabel {
         font-size: 11px;
@@ -1275,57 +1474,78 @@
         padding: 2px 10px;
     }
 
-    /* Node Grid - 1 column */
     .nodeGrid {
         grid-template-columns: 1fr;
         gap: 10px;
     }
 
     .nodeCard {
-        padding: 12px 14px;
-        min-height: 60px;
-        gap: 12px;
+        padding: 10px 12px;
+        min-height: 52px;
+        gap: 10px;
         border-radius: 10px;
     }
 
+    .nodeIcon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+    }
+
+        .nodeIcon svg {
+            width: 14px;
+            height: 14px;
+        }
+
     .nodeName {
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .nodeMeta {
         font-size: 11px;
         gap: 4px;
+        flex-wrap: wrap;
     }
 
-    .nodeIcon {
-        font-size: 17px;
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+        .nodeMeta span:not(.sep) {
+            font-size: 10px;
+        }
+
+    .priorityBadge {
+        font-size: 9px;
+        height: 15px;
+        padding: 0 5px;
     }
 
     .nodeBadge {
-        font-size: 10px;
-        padding: 2px 10px;
-    }
-
-    .nodeActionsWrapper {
-        gap: 6px;
+        font-size: 9px;
+        padding: 2px 8px;
     }
 
     /* Action buttons always visible on mobile */
     .actionButtons {
         opacity: 0.8;
-        gap: 4px;
+        transform: scale(1);
+        pointer-events: auto;
+        gap: 3px;
     }
 
     .editBtn,
     .deleteBtn {
-        padding: 2px 6px;
-        font-size: 12px;
-        min-width: 26px;
-        min-height: 26px;
-        border-radius: 6px;
+        min-width: 24px;
+        min-height: 24px;
+        padding: 2px 4px;
+        border-radius: 5px;
+    }
+
+        .editBtn svg,
+        .deleteBtn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+    .nodeActionsWrapper {
+        gap: 5px;
     }
 
     .zoneCard {
@@ -1342,8 +1562,14 @@
     }
 
     .zoneIcon {
-        font-size: 18px;
+        width: 28px;
+        height: 28px;
     }
+
+        .zoneIcon svg {
+            width: 16px;
+            height: 16px;
+        }
 
     .zoneLoadCount {
         font-size: 11px;
@@ -1433,9 +1659,9 @@
         border-radius: 14px;
     }
 
-        .modalCard h3 {
-            font-size: 18px;
-        }
+    .modalHeader h3 {
+        font-size: 18px;
+    }
 
     .modalForm label {
         font-size: 13px;
@@ -1461,7 +1687,7 @@
     }
 }
 
-/* Extra Small - Zone Actions */
+/* Extra Small */
 @media (max-width: 380px) {
     .zoneHeader {
         flex-direction: column;
@@ -1477,6 +1703,78 @@
     .zoneLoadCount {
         font-size: 11px;
     }
+
+    .nodeCard {
+        padding: 8px 10px;
+        min-height: 48px;
+        gap: 8px;
+        border-radius: 8px;
+        flex-wrap: wrap;
+    }
+
+    .nodeIcon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+    }
+
+        .nodeIcon svg {
+            width: 13px;
+            height: 13px;
+        }
+
+    .nodeName {
+        font-size: 12px;
+    }
+
+    .nodeMeta {
+        font-size: 10px;
+        gap: 3px;
+        flex-wrap: wrap;
+    }
+
+        .nodeMeta span:not(.sep) {
+            font-size: 10px;
+        }
+
+    .priorityBadge {
+        font-size: 8px;
+        height: 14px;
+        padding: 0 4px;
+    }
+
+    .nodeBadge {
+        font-size: 8px;
+        padding: 1px 6px;
+    }
+
+    .nodeActionsWrapper {
+        gap: 4px;
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+        padding-top: 4px;
+        border-top: 1px solid var(--border-soft, #22262e);
+    }
+
+    .actionButtons {
+        opacity: 1;
+        gap: 3px;
+    }
+
+    .editBtn,
+    .deleteBtn {
+        min-width: 22px;
+        min-height: 22px;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+        .editBtn svg,
+        .deleteBtn svg {
+            width: 11px;
+            height: 11px;
+        }
 }
 
 /* ========================================
@@ -1498,286 +1796,3 @@
     .page::-webkit-scrollbar-thumb:hover {
         background: var(--border-card, #2a2f38);
     }
-
-
-/* Add these styles to your existing CSS */
-
-/* ========================================
-   HEADER ICON
-   ======================================== */
-.headerLeft {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.headerIconWrapper {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: rgba(248, 113, 113, 0.10);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border: 1px solid rgba(248, 113, 113, 0.08);
-}
-
-.headerIcon {
-    color: var(--accent-red, #f87171);
-}
-
-/* ========================================
-   SECTION HEADER WITH ICON
-   ======================================== */
-.sectionHeaderLeft {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.sectionIcon {
-    color: var(--text-secondary, #94a3b8);
-    flex-shrink: 0;
-}
-
-/* ========================================
-   CHART HEADER WITH ICON
-   ======================================== */
-.chartHeader {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-}
-
-.chartIcon {
-    color: var(--text-secondary, #94a3b8);
-    flex-shrink: 0;
-}
-
-/* ========================================
-   EMPTY STATE ICON
-   ======================================== */
-.emptyIcon {
-    color: var(--text-muted, #64748b);
-    margin-bottom: 12px;
-    opacity: 0.5;
-}
-
-/* ========================================
-   ZONE ICON
-   ======================================== */
-.zoneIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--text-secondary, #94a3b8);
-}
-
-.zoneLoadCount {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* ========================================
-   MODAL HEADER
-   ======================================== */
-.modalHeader {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 4px;
-}
-
-    .modalHeader h3 {
-        flex: 1;
-        margin: 0;
-    }
-
-.modalIconWrapper {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: rgba(248, 113, 113, 0.08);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: var(--accent-red, #f87171);
-}
-
-.modalClose {
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--text-muted, #64748b);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    line-height: 1;
-}
-
-    .modalClose:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text-primary, #e8edf5);
-    }
-
-/* ========================================
-   KPI CARD ICON
-   ======================================== */
-.cardIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--text-secondary, #94a3b8);
-    flex-shrink: 0;
-}
-
-/* ========================================
-   NODE ICON
-   ======================================== */
-.nodeIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--text-secondary, #94a3b8);
-    flex-shrink: 0;
-    transition: all 0.2s ease;
-}
-
-.nodeCard:hover .nodeIcon {
-    background: rgba(255, 255, 255, 0.07);
-}
-
-/* ========================================
-   EDIT/DELETE BUTTONS WITH ICONS
-   ======================================== */
-.editBtn,
-.deleteBtn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: 1px solid var(--border-soft, #2a2f38);
-    border-radius: 6px;
-    padding: 4px 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-secondary, #94a3b8);
-    min-width: 30px;
-    min-height: 30px;
-}
-
-    .editBtn:hover {
-        background: rgba(96, 165, 250, 0.15);
-        border-color: var(--chart-blue, #60a5fa);
-        color: var(--chart-blue, #60a5fa);
-        transform: scale(1.08);
-    }
-
-    .deleteBtn:hover {
-        background: rgba(248, 113, 113, 0.15);
-        border-color: var(--accent-red, #f87171);
-        color: var(--accent-red, #f87171);
-        transform: scale(1.08);
-    }
-
-    .deleteBtn:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-        transform: none !important;
-    }
-
-/* ========================================
-   RESPONSIVE ADJUSTMENTS
-   ======================================== */
-@media (max-width: 768px) {
-    .headerIconWrapper {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-    }
-
-    .cardIcon {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-    }
-
-        .cardIcon svg {
-            width: 20px;
-            height: 20px;
-        }
-
-    .nodeIcon {
-        width: 34px;
-        height: 34px;
-        border-radius: 8px;
-    }
-
-        .nodeIcon svg {
-            width: 16px;
-            height: 16px;
-        }
-
-    .modalIconWrapper {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-    }
-
-        .modalIconWrapper svg {
-            width: 18px;
-            height: 18px;
-        }
-}
-
-@media (max-width: 480px) {
-    .headerIconWrapper {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-    }
-
-        .headerIconWrapper svg {
-            width: 20px;
-            height: 20px;
-        }
-
-    .cardIcon {
-        width: 34px;
-        height: 34px;
-        border-radius: 8px;
-    }
-
-        .cardIcon svg {
-            width: 18px;
-            height: 18px;
-        }
-
-    .nodeIcon {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-    }
-
-        .nodeIcon svg {
-            width: 14px;
-            height: 14px;
-        }
-}
