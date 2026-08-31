@@ -55,7 +55,7 @@ interface ZoneDto {
     id: string;
     facilityId: string;
     name: string;
-    type: string; // "building", "floor", "room"
+    type: string;
     parentZoneId?: string | null;
     loads?: LoadDto[];
     children?: ZoneDto[];
@@ -94,7 +94,6 @@ export function LiveOverviewPage() {
     const [freqHistory, setFreqHistory] = useState<number[]>([]);
     const [alarms, setAlarms] = useState<AlarmLog[]>([]);
 
-    // Edit Load Modal State
     const [editingLoad, setEditingLoad] = useState<LoadDto | null>(null);
     const [editName, setEditName] = useState("");
     const [editPower, setEditPower] = useState<number>(0);
@@ -102,7 +101,6 @@ export function LiveOverviewPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [deletingLoadId, setDeletingLoadId] = useState<string | null>(null);
 
-    // Edit Zone Modal & Delete Zone State
     const [editingZone, setEditingZone] = useState<ZoneDto | null>(null);
     const [editZoneName, setEditZoneName] = useState("");
     const [isSavingZone, setIsSavingZone] = useState(false);
@@ -238,7 +236,6 @@ export function LiveOverviewPage() {
         return loadStatusMap.get(load.id) || "Normal";
     };
 
-    // Helper: Update Load inside Zones Tree recursively
     const updateZoneLoadsRecursive = (
         zoneList: ZoneDto[],
         targetLoadId: string,
@@ -277,7 +274,6 @@ export function LiveOverviewPage() {
         });
     };
 
-    // Helper: Update/Delete Zone itself inside Zones Tree recursively
     const updateZoneRecursive = (
         zoneList: ZoneDto[],
         targetZoneId: string,
@@ -333,7 +329,6 @@ export function LiveOverviewPage() {
         });
     };
 
-    // Load Handlers
     const handleDeleteLoad = async (loadId: string) => {
         if (!window.confirm("Are you sure you want to delete this load from database?")) return;
 
@@ -382,7 +377,6 @@ export function LiveOverviewPage() {
         }
     };
 
-    // Zone Handlers
     const handleOpenEditZoneModal = (zone: ZoneDto) => {
         setEditingZone(zone);
         setEditZoneName(zone.name);
@@ -672,6 +666,12 @@ export function LiveOverviewPage() {
                                                         key={load.id}
                                                         className={`${styles.nodeCard} ${isShedded ? styles.nodeShedded : styles.nodeNormal}`}
                                                     >
+                                                        {/* Shedded pulse background */}
+                                                        {isShedded && <div className={styles.shedPulseBg} />}
+
+                                                        {/* Normal glow effect */}
+                                                        {!isShedded && <div className={styles.normalGlowBg} />}
+
                                                         <div className={styles.nodeIcon}>
                                                             <Cpu size={18} />
                                                         </div>
@@ -680,7 +680,8 @@ export function LiveOverviewPage() {
                                                             <div className={styles.nodeMeta}>
                                                                 <span>{load.powerRatingKw} kW</span>
                                                                 <span className={styles.sep}>·</span>
-                                                                <span className={`${styles.priorityBadge} ${currentPriority === 1 ? styles.priorityP1 :
+                                                                <span className={`${styles.priorityBadge} 
+                                                                    ${currentPriority === 1 ? styles.priorityP1 :
                                                                         currentPriority === 2 ? styles.priorityP2 :
                                                                             styles.priorityP3
                                                                     }`}>
@@ -691,7 +692,8 @@ export function LiveOverviewPage() {
 
                                                         <div className={styles.nodeActionsWrapper}>
                                                             <div className={`${styles.nodeBadge} ${isShedded ? styles.badgeShedded : styles.badgeNormal}`}>
-                                                                {isShedded ? "Shedded" : "Normal"}
+                                                                <span className={styles.badgeDot} />
+                                                                {isShedded ? "Shedded" : "Active"}
                                                             </div>
 
                                                             <div className={styles.actionButtons}>
@@ -907,10 +909,10 @@ export function LiveOverviewPage() {
                             <div
                                 key={alarm.id}
                                 className={`${styles.alarmItem} ${alarm.type === "critical"
-                                        ? styles.alarmCritical
-                                        : alarm.type === "warning"
-                                            ? styles.alarmWarning
-                                            : styles.alarmSuccess
+                                    ? styles.alarmCritical
+                                    : alarm.type === "warning"
+                                        ? styles.alarmWarning
+                                        : styles.alarmSuccess
                                     }`}
                             >
                                 <span className={styles.alarmTime}>{alarm.time}</span>
