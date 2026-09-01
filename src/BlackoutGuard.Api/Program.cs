@@ -35,13 +35,12 @@ if (!builder.Environment.IsEnvironment("Testing"))
     {
         options.UseNpgsql(connectionString)
                .AddInterceptors(new FacilityIdDbInterceptor())
-               // EF Core Pending Model Changes Warning ကြောင့် Application Exception မတက်အောင် Ignore လုပ်ပေးခြင်း
                .ConfigureWarnings(warnings =>
                    warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
 
         if (builder.Environment.IsDevelopment())
         {
-            options.EnableSensitiveDataLogging(); // Debugging အတွက် Parameter Value များကို ရုပ်လုံးဖော်ပြပေးမည်
+            options.EnableSensitiveDataLogging();
         }
     });
 }
@@ -75,13 +74,16 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// ✅ CORS Policy ကို Explicit Name ဖြင့် သတ်မှတ်ပေးခြင်း
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-        policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+    options.AddPolicy("AllowAllOrigins", policy =>
+    {
+        policy.SetIsOriginAllowed(_ => true) // Local Development တွင် Origin မည်သည်မဆို ခွင့်ပြုမည်
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials());
+              .AllowCredentials();
+    });
 });
 
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -139,7 +141,7 @@ builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 // Domain Services & Engine
 builder.Services.AddSingleton<IDecisionStrategy, PriorityBasedLoadSheddingStrategy>();
 builder.Services.AddSingleton<IAlarmGenerator, AlarmRuleEngine>();
-builder.Services.AddScoped<PowerManagementService>(); // <-- PowerSimulatorController မှ သုံးနိုင်ရန် DI Container တွင် Registration ထည့်သွင်းပေးထားပါသည်
+builder.Services.AddScoped<PowerManagementService>();
 
 // Hosted Services
 builder.Services.AddSingleton<PendingConfigChangeQueue>();
@@ -206,11 +208,18 @@ using (var scope = app.Services.CreateScope())
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors();
+
+// ✅ UseRouting, UseCors, UseAuthentication အစီအစဉ်များ မှန်ကန်စေရန် ညှိယူခြင်း
+app.UseRouting();
+
+app.UseCors("AllowAllOrigins"); // 👈 CORS ကို Routing ပြီးလျှင် အတည်ပြုပေးရပါမည်
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseMiddleware<FacilityContextMiddleware>();
 app.UseMiddleware<FacilityIdMiddleware>();
+
 app.MapControllers();
 app.MapHub<TelemetryHub>("/hubs/telemetry");
 

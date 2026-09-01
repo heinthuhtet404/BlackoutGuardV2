@@ -1,6 +1,7 @@
 using BlackoutGuard.Application.Services;
 using BlackoutGuard.Domain.Entities;
 using BlackoutGuard.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,6 +13,7 @@ namespace BlackoutGuard.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/simulator")]
+[Authorize(Roles = "Admin")]
 public class PowerSimulatorController : ControllerBase
 {
     private readonly BlackoutGuardDbContext _context;
@@ -30,6 +32,67 @@ public class PowerSimulatorController : ControllerBase
     {
         _context = context;
         _powerService = powerService;
+    }
+
+    /// <summary>
+    /// Front-end Simulator UI မှ DB ထဲရှိ Facility Configuration ကို ဆွဲယူသည့် GET Endpoint
+    /// </summary>
+    [HttpGet("config")]
+    public async Task<IActionResult> GetFacilityConfig()
+    {
+        var facility = await _context.Facilities.FirstOrDefaultAsync();
+
+        if (facility == null)
+        {
+            return NotFound(new { message = "No facility found in the database." });
+        }
+
+        return Ok(new
+        {
+            gridOnline = facility.IsGridOnline,
+            solarCapacityKw = facility.SolarCapacityKw,
+            generatorCapacityKw = facility.GeneratorCapacityKw
+        });
+    }
+
+    /// <summary>
+    /// Front-end Simulator UI မှ Grid State, Solar/Generator Capacities များကို
+    /// Database (facilities table) ထဲသို့ Save/Update လုပ်ပေးသော API Endpoint
+    /// </summary>
+    [HttpPost("config")]
+    public async Task<IActionResult> UpdateFacilityConfig([FromBody] FacilityConfigUpdateRequest request)
+    {
+        var facility = await _context.Facilities.FirstOrDefaultAsync();
+
+        if (facility == null)
+        {
+            return NotFound(new { message = "No facility found in the database to update configuration." });
+        }
+
+        // 1. Database Persistence Model ကို Update လုပ်ခြင်း
+        facility.IsGridOnline = request.GridOnline;
+        facility.SolarCapacityKw = request.SolarCapacityKw;
+        facility.GeneratorCapacityKw = request.GeneratorCapacityKw;
+
+        await _context.SaveChangesAsync();
+
+        // 2. Simulator Static State ကိုပါ Database Update တန်ဖိုးဖြင့် လိုက်ပြောင်းပေးခြင်း
+        CurrentState = CurrentState with
+        {
+            FacilityId = facility.Id,
+            IsGridAvailable = facility.IsGridOnline,
+            SolarOutputKw = facility.SolarCapacityKw,
+            GeneratorOutputKw = facility.GeneratorCapacityKw
+        };
+
+        return Ok(new
+        {
+            message = "Facility power configuration updated successfully in Database.",
+            facilityId = facility.Id,
+            gridOnline = facility.IsGridOnline,
+            solarCapacityKw = facility.SolarCapacityKw,
+            generatorCapacityKw = facility.GeneratorCapacityKw
+        });
     }
 
     [HttpGet("state")]
@@ -59,8 +122,8 @@ public class PowerSimulatorController : ControllerBase
 
         return Ok(new
         {
-            PowerState = CurrentState with { ActiveSource = activeSource },
-            Loads = updatedDomainLoads
+            powerState = CurrentState with { ActiveSource = activeSource },
+            loads = updatedDomainLoads
         });
     }
 
@@ -92,49 +155,9 @@ public class PowerSimulatorController : ControllerBase
 
         return Ok(new
         {
-            Message = "Power state updated successfully.",
-            ActiveSource = activeSource,
-            Loads = updatedDomainLoads
-        });
-    }
-
-    /// <summary>
-    /// Front-end Simulator UI မှ Grid State, Solar/Generator Capacities များကို
-    /// Database (facilities table) ထဲသို့ Save/Update လုပ်ပေးသော API Endpoint
-    /// </summary>
-    [HttpPost("config")]
-    public async Task<IActionResult> UpdateFacilityConfig([FromBody] FacilityConfigUpdateRequest request)
-    {
-        var facility = await _context.Facilities.FirstOrDefaultAsync();
-
-        if (facility == null)
-        {
-            return NotFound(new { Message = "No facility found in the database to update configuration." });
-        }
-
-        // 1. Database Persistence Model ကို Update လုပ်ခြင်း
-        facility.IsGridOnline = request.GridOnline;
-        facility.SolarCapacityKw = request.SolarCapacityKw;
-        facility.GeneratorCapacityKw = request.GeneratorCapacityKw;
-
-        await _context.SaveChangesAsync();
-
-        // 2. Simulator Static State ကိုပါ Database Update တန်ဖိုးဖြင့် လိုက်ပြောင်းပေးခြင်း
-        CurrentState = CurrentState with
-        {
-            FacilityId = facility.Id,
-            IsGridAvailable = facility.IsGridOnline,
-            SolarOutputKw = facility.SolarCapacityKw,
-            GeneratorOutputKw = facility.GeneratorCapacityKw
-        };
-
-        return Ok(new
-        {
-            Message = "Facility power configuration updated successfully in Database.",
-            FacilityId = facility.Id,
-            GridOnline = facility.IsGridOnline,
-            SolarCapacityKw = facility.SolarCapacityKw,
-            GeneratorCapacityKw = facility.GeneratorCapacityKw
+            message = "Power state updated successfully.",
+            activeSource = activeSource,
+            loads = updatedDomainLoads
         });
     }
 

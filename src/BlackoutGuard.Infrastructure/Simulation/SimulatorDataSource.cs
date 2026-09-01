@@ -14,6 +14,11 @@ public class SimulatorDataSource : IDataSource
     private Action<GridState>? _dataCallback;
     private volatile bool _isConnected;
 
+    // ⚡ Config Variable များကို ထည့်သွင်းခြင်း (Default values ထားပေးထားသည်)
+    private bool _gridOnline = true;
+    private double _solarCapacityKw = 50.0;
+    private double _generatorCapacityKw = 100.0;
+
     public bool IsConnected => _isConnected;
 
     public SimulatorDataSource(ILogger<SimulatorDataSource> logger)
@@ -35,6 +40,34 @@ public class SimulatorDataSource : IDataSource
         return Task.CompletedTask;
     }
 
+    // ⚡ 1. Controller မှ GET /simulator/config ခေါ်သည့်အခါ ပြန်ပေးမည့် Method
+    public SimulatorConfigModel GetConfig()
+    {
+        lock (_lock)
+        {
+            return new SimulatorConfigModel
+            {
+                GridOnline = _gridOnline,
+                SolarCapacityKw = _solarCapacityKw,
+                GeneratorCapacityKw = _generatorCapacityKw
+            };
+        }
+    }
+
+    // ⚡ 2. Controller မှ POST /simulator/config ခေါ်သည့်အခါ Update လုပ်ပေးမည့် Method
+    public void UpdateConfig(bool gridOnline, double solarCapacityKw, double generatorCapacityKw)
+    {
+        lock (_lock)
+        {
+            _gridOnline = gridOnline;
+            _solarCapacityKw = solarCapacityKw;
+            _generatorCapacityKw = generatorCapacityKw;
+        }
+
+        _logger.LogInformation("Simulator config updated: GridOnline={GridOnline}, Solar={Solar}kW, Gen={Gen}kW",
+            gridOnline, solarCapacityKw, generatorCapacityKw);
+    }
+
     public void UpdateSimulatedTelemetry(GridState newState)
     {
         lock (_lock)
@@ -43,7 +76,6 @@ public class SimulatorDataSource : IDataSource
         }
     }
 
-    // ✅ ဒီ Method ကို ထည့်ပါ
     public void UpdateTelemetry(double frequency, double voltage, double totalLoad, bool generatorOn)
     {
         lock (_lock)
@@ -88,4 +120,12 @@ public class SimulatorDataSource : IDataSource
     {
         _dataCallback = callback;
     }
+}
+
+// ⚡ 3. Simulator Config Model DTO Class
+public class SimulatorConfigModel
+{
+    public bool GridOnline { get; set; }
+    public double SolarCapacityKw { get; set; }
+    public double GeneratorCapacityKw { get; set; }
 }

@@ -37,11 +37,14 @@ function extractNativeInit(init?: ApiInit): RequestInit {
 
 /**
   Constructs a standard Headers object with optional Authorization & JSON headers.
+  Only attach Content-Type: application/json if there is actual body payload or HTTP Method allows body.
  */
-function buildHeaders(init?: ApiInit): Headers {
+function buildHeaders(method: string, init?: ApiInit, hasBody?: boolean): Headers {
     const headers = new Headers(init?.headers);
 
-    if (!headers.has("Content-Type")) {
+    // FIX: Only set Content-Type if request actually sends a payload (POST/PUT/PATCH)
+    // To prevent Kestrel BadHttpRequestException on empty GET requests.
+    if (hasBody && !headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");
     }
 
@@ -127,8 +130,9 @@ async function request<T>(
     const cleanPath = path ? (path.startsWith("/") ? path : `/${path}`) : "";
     const fullUrl = `${API_BASE_URL}${cleanPath}`;
 
+    const hasBody = body !== undefined;
     const nativeInit = extractNativeInit(init);
-    const headers = buildHeaders(init);
+    const headers = buildHeaders(method, init, hasBody);
 
     const requestOptions: RequestInit = {
         ...nativeInit,
@@ -136,7 +140,7 @@ async function request<T>(
         headers,
     };
 
-    if (body !== undefined) {
+    if (hasBody) {
         try {
             requestOptions.body = JSON.stringify(body);
         } catch (err) {
@@ -150,7 +154,11 @@ async function request<T>(
     let response: Response;
     try {
         response = await fetch(fullUrl, requestOptions);
-    } catch (err) {
+    } catch (err: unknown) {
+        // Handle explicit request aborts smoothly
+        if (err instanceof Error && err.name === "AbortError") {
+            throw err;
+        }
         console.error(`[API Network Error] ${method} ${fullUrl}:`, err);
         throw new ApiError(
             0,
@@ -171,7 +179,7 @@ async function request<T>(
         try {
             const retryInit: ApiInit = { ...init, skipAuthRefresh: true };
             const retryNativeInit = extractNativeInit(retryInit);
-            const retryHeaders = buildHeaders(retryInit);
+            const retryHeaders = buildHeaders(method, retryInit, hasBody);
 
             const retryOptions: RequestInit = {
                 ...retryNativeInit,
@@ -179,7 +187,7 @@ async function request<T>(
                 headers: retryHeaders,
             };
 
-            if (body !== undefined) {
+            if (hasBody) {
                 retryOptions.body = JSON.stringify(body);
             }
 
@@ -211,7 +219,7 @@ export function get<T>(path: string, init?: ApiInit): Promise<T> {
 
 export function post<T>(
     path: string,
-    body: unknown,
+    body?: unknown,
     init?: ApiInit
 ): Promise<T> {
     return request<T>("POST", path, body, init);
@@ -219,7 +227,7 @@ export function post<T>(
 
 export function put<T>(
     path: string,
-    body: unknown,
+    body?: unknown,
     init?: ApiInit
 ): Promise<T> {
     return request<T>("PUT", path, body, init);

@@ -2,24 +2,77 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using BlackoutGuard.Infrastructure.Simulation;
-using BlackoutGuard.Api.Hubs; // 👈 သင့် TelemetryHub တည်ရှိရာ Namespace ထည့်ပေးပါ
+using BlackoutGuard.Api.Hubs;
+using System.Threading.Tasks;
 
 namespace BlackoutGuard.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/simulator")]
+[Route("api/v1/simulator-data")]
 [Authorize(Roles = "Admin")]
 public class SimulatorController : ControllerBase
 {
     private readonly SimulatorDataSource _simulator;
-    private readonly IHubContext<TelemetryHub> _hubContext; // 👈 1. SignalR HubContext ထည့်သွင်းခြင်း
+    private readonly IHubContext<TelemetryHub> _hubContext;
+    // 💡 DB အသုံးပြုနေပါက မိမိ၏ DbContext ကို Inject လုပ်နိုင်ပါတယ် (ဥပမာ- AppDbContext)
+    // private readonly AppDbContext _context;
 
     public SimulatorController(
         SimulatorDataSource simulator,
-        IHubContext<TelemetryHub> hubContext) // 👈 2. Dependency Injection ခေါ်ယူခြင်း
+        IHubContext<TelemetryHub> hubContext)
     {
         _simulator = simulator;
         _hubContext = hubContext;
+    }
+
+    /// <summary>
+    /// 1. DB သို့မဟုတ် Simulator State ထံမှ Config များ ပြန်ထုတ်ပေးသည့် GET Endpoint
+    /// </summary>
+    [HttpGet("config")]
+    public async Task<IActionResult> GetConfig()
+    {
+        // DB သို့မဟုတ် SimulatorDataSource ထဲမှ လက်ရှိ Config ကို ယူယူပါ
+        // ဥပမာ - var config = await _context.SimulatorConfigs.FirstOrDefaultAsync();
+
+        var config = _simulator.GetConfig(); // မိမိ၏ Simulator State သို့မဟုတ် DB မှ Data ဆွဲထုတ်ပါ
+
+        if (config == null)
+        {
+            // DB ထဲမှာ မရှိသေးပါက Default တန်ဖိုးများ ပြန်ပေးမည်
+            return Ok(new
+            {
+                gridOnline = true,
+                solarCapacityKw = 50.0,
+                generatorCapacityKw = 100.0
+            });
+        }
+
+        return Ok(new
+        {
+            gridOnline = config.GridOnline,
+            solarCapacityKw = config.SolarCapacityKw,
+            generatorCapacityKw = config.GeneratorCapacityKw
+        });
+    }
+
+    /// <summary>
+    /// 2. Frontend မှ ပြောင်းလဲလိုက်သော Config များကို DB သို့ သိမ်းဆည်းသည့် POST Endpoint
+    /// </summary>
+    [HttpPost("config")]
+    public async Task<IActionResult> UpdateConfig([FromBody] SimulatorConfigRequest request)
+    {
+        // DB သို့မဟုတ် State ထဲသို့ Save လုပ်ပါ
+        _simulator.UpdateConfig(request.GridOnline, request.SolarCapacityKw, request.GeneratorCapacityKw);
+
+        // SignalR မှတစ်ဆင့် Online ဖြစ်နေသော Client များအားလုံးဆီ အသိပေးပါ (Option)
+        await _hubContext.Clients.All.SendAsync("ConfigUpdated", new
+        {
+            gridOnline = request.GridOnline,
+            solarCapacityKw = request.SolarCapacityKw,
+            generatorCapacityKw = request.GeneratorCapacityKw
+        });
+
+        return Ok(new { message = "Configuration updated successfully" });
     }
 
     [HttpPost("telemetry")]
@@ -65,6 +118,14 @@ public class SimulatorController : ControllerBase
         }
         return BadRequest(new { error = "Unknown fault preset" });
     }
+}
+
+// Request Models
+public class SimulatorConfigRequest
+{
+    public bool GridOnline { get; set; }
+    public double SolarCapacityKw { get; set; }
+    public double GeneratorCapacityKw { get; set; }
 }
 
 public class SimulatorTelemetryRequest

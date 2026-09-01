@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useRole } from "../../auth/useRole";
-import { post } from "../../api/apiClient";
+import { post, get } from "../../api/apiClient";
 import { useTelemetry } from "../../context/TelemetryContext";
 import { useToast } from "../../components/ui/toastContext";
 import {
@@ -30,23 +30,27 @@ import styles from "./SimulatorPanel.module.css";
 const FREQ_MIN = 45.0;
 const FREQ_MAX = 55.0;
 
-// Generator & Solar Capacity ranges (kW)
 const CAP_MIN = 0;
 const CAP_MAX = 2000;
 
-const DEBOUNCE_MS = 200;
+const DEBOUNCE_MS = 300;
 
 let globalAutoInterval: ReturnType<typeof setInterval> | null = null;
 let globalIsAutoSimulating = true;
+
+let autoSimAbortController: AbortController | null = null;
+let freqAbortController: AbortController | null = null;
+let solarAbortController: AbortController | null = null;
+let genCapAbortController: AbortController | null = null;
 
 const currentValuesRef = {
     frequency: 50.0,
     loadKw: 80,
     voltage: 230.0,
     generatorOn: true,
-    gridOnline: true,       // Grid State
-    solarCapacityKw: 50,    // Solar Capacity (kW)
-    generatorCapacityKw: 100 // Generator Capacity (kW)
+    gridOnline: true,
+    solarCapacityKw: 50,
+    generatorCapacityKw: 100,
 };
 
 function startGlobalAutoSimulation() {
@@ -74,6 +78,11 @@ function startGlobalAutoSimulation() {
         currentValuesRef.loadKw = newLoad;
         currentValuesRef.voltage = newVolt;
 
+        if (autoSimAbortController) {
+            autoSimAbortController.abort();
+        }
+        autoSimAbortController = new AbortController();
+
         void post("/simulator/telemetry", {
             frequency: newFreq,
             voltage: newVolt,
@@ -83,10 +92,10 @@ function startGlobalAutoSimulation() {
             gridOnline: currentValuesRef.gridOnline,
             solarCapacityKw: currentValuesRef.solarCapacityKw,
             generatorCapacityKw: currentValuesRef.generatorCapacityKw,
-        }).catch((err: unknown) => {
-            console.warn("Auto-telemetry push failed:", err);
+        }, { signal: autoSimAbortController.signal }).catch((err: unknown) => {
+            if (err instanceof Error && err.name === "AbortError") return;
         });
-    }, 1000);
+    }, 2000);
 }
 
 export function SimulatorPanel() {
@@ -103,31 +112,83 @@ function SimulatorPanelContent() {
     const { telemetry, connected } = useTelemetry();
     const { showToast } = useToast();
 
+    const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+
     const [frequency, setFrequency] = useState(currentValuesRef.frequency);
     const [loadKw] = useState(currentValuesRef.loadKw);
     const [voltage] = useState(currentValuesRef.voltage);
     const [generatorOn] = useState(currentValuesRef.generatorOn);
 
-    // States for DB Persistence
-    const [gridOnline, setGridOnline] = useState(currentValuesRef.gridOnline);
-    const [solarCapacityKw, setSolarCapacityKw] = useState(currentValuesRef.solarCapacityKw);
-    const [generatorCapacityKw, setGeneratorCapacityKw] = useState(currentValuesRef.generatorCapacityKw);
+    // Main Grid, Solar Capacity, Generator Capacity States
+    const [gridOnline, setGridOnline] = useState<boolean>(currentValuesRef.gridOnline);
+    const [solarCapacityKw, setSolarCapacityKw] = useState<number>(currentValuesRef.solarCapacityKw);
+    const [generatorCapacityKw, setGeneratorCapacityKw] = useState<number>(currentValuesRef.generatorCapacityKw);
 
     const [injectingFault, setInjectingFault] = useState(false);
     const [isAutoSimulating, setIsAutoSimulating] = useState(globalIsAutoSimulating);
     const isInitialSynced = useRef(false);
 
+    // Refresh လုပ်ရင် DB ကနေ Main Grid Power, Solar Capacity, Generator Capacity တို့ကို ပြန်ဆွဲယူမည့် Effect
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchInitialConfig = async () => {
+            setIsLoadingConfig(true);
+            try {
+                // DB Config Endpoint ကို ခေါ်ယူခြင်း
+                const config = await get<{
+                    gridOnline?: boolean;
+                    solarCapacityKw?: number;
+                    generatorCapacityKw?: number;
+                }>("/simulator/config").catch(() => null);
+
+                if (config && isMounted) {
+                    if (typeof config.gridOnline === "boolean") {
+                        setGridOnline(config.gridOnline);
+                        currentValuesRef.gridOnline = config.gridOnline;
+                    }
+                    if (typeof config.solarCapacityKw === "number") {
+                        setSolarCapacityKw(config.solarCapacityKw);
+                        currentValuesRef.solarCapacityKw = config.solarCapacityKw;
+                    }
+                    if (typeof config.generatorCapacityKw === "number") {
+                        setGeneratorCapacityKw(config.generatorCapacityKw);
+                        currentValuesRef.generatorCapacityKw = config.generatorCapacityKw;
+                    }
+                }
+            } catch (err: unknown) {
+                console.warn("DB fetch fallback:", err);
+            } finally {
+                if (isMounted) {
+                    setIsLoadingConfig(false);
+                }
+            }
+        };
+
+        void fetchInitialConfig();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
     useEffect(() => {
         if (telemetry && !isInitialSynced.current) {
             setFrequency(telemetry.frequency);
-            if (telemetry.gridOnline !== undefined) setGridOnline(telemetry.gridOnline);
-            if (telemetry.solarCapacityKw !== undefined) setSolarCapacityKw(telemetry.solarCapacityKw);
-            if (telemetry.generatorCapacityKw !== undefined) setGeneratorCapacityKw(telemetry.generatorCapacityKw);
-
             currentValuesRef.frequency = telemetry.frequency;
-            currentValuesRef.gridOnline = telemetry.gridOnline ?? true;
-            currentValuesRef.solarCapacityKw = telemetry.solarCapacityKw ?? 50;
-            currentValuesRef.generatorCapacityKw = telemetry.generatorCapacityKw ?? 100;
+
+            if (telemetry.gridOnline !== undefined) {
+                setGridOnline(telemetry.gridOnline);
+                currentValuesRef.gridOnline = telemetry.gridOnline;
+            }
+            if (telemetry.solarCapacityKw !== undefined) {
+                setSolarCapacityKw(telemetry.solarCapacityKw);
+                currentValuesRef.solarCapacityKw = telemetry.solarCapacityKw;
+            }
+            if (telemetry.generatorCapacityKw !== undefined) {
+                setGeneratorCapacityKw(telemetry.generatorCapacityKw);
+                currentValuesRef.generatorCapacityKw = telemetry.generatorCapacityKw;
+            }
 
             isInitialSynced.current = true;
         }
@@ -158,25 +219,32 @@ function SimulatorPanelContent() {
             if (freqTimer.current) clearTimeout(freqTimer.current);
             if (solarTimer.current) clearTimeout(solarTimer.current);
             if (genCapTimer.current) clearTimeout(genCapTimer.current);
+            if (freqAbortController) freqAbortController.abort();
+            if (solarAbortController) solarAbortController.abort();
+            if (genCapAbortController) genCapAbortController.abort();
         };
     }, []);
 
-    // DB Update Function for Grid, Solar, and Generator capacities
-    const updateDatabaseConfig = async (configPayload: Record<string, unknown>) => {
+    // DB သို့ အချက်အလက်များ သိမ်းဆည်းသည့် Helper
+    const updateDatabaseConfig = async (configPayload: Record<string, unknown>, signal?: AbortSignal) => {
         try {
-            // Simulator config update endpoint (Adjust endpoint path if your backend uses a different API route)
-            await post("/simulator/config", configPayload);
+            await post("/simulator/config", configPayload, { signal });
             showToast("DB Updated Successfully", "success");
         } catch (err: unknown) {
-            showToast(err instanceof Error ? err.message : "Failed to update Database", "error");
+            if (err instanceof Error && err.name === "AbortError") return;
+            showToast("Failed to update Database", "error");
         }
     };
 
     const handleFrequencyChange = (value: number) => {
         setFrequency(value);
         currentValuesRef.frequency = value;
+
         if (freqTimer.current) clearTimeout(freqTimer.current);
+        if (freqAbortController) freqAbortController.abort();
+
         freqTimer.current = setTimeout(() => {
+            freqAbortController = new AbortController();
             void post("/simulator/telemetry", {
                 frequency: value,
                 voltage,
@@ -186,17 +254,15 @@ function SimulatorPanelContent() {
                 gridOnline,
                 solarCapacityKw,
                 generatorCapacityKw,
-            }).catch((err: unknown) => {
-                showToast(err instanceof Error ? err.message : "Failed to set frequency", "error");
-            });
+            }, { signal: freqAbortController.signal }).catch(() => { });
         }, DEBOUNCE_MS);
     };
 
+    // 1. Main Grid Power Toggle -> Update DB
     const handleGridToggle = (value: boolean) => {
         setGridOnline(value);
         currentValuesRef.gridOnline = value;
 
-        // DB တွင် တိုက်ရိုက် သွားပြင်ရန် API Call ခေါ်ယူခြင်း
         void updateDatabaseConfig({
             gridOnline: value,
             solarCapacityKw,
@@ -204,33 +270,39 @@ function SimulatorPanelContent() {
         });
     };
 
+    // 2. Solar Capacity Change -> Update DB
     const handleSolarCapacityChange = (value: number) => {
         setSolarCapacityKw(value);
         currentValuesRef.solarCapacityKw = value;
 
         if (solarTimer.current) clearTimeout(solarTimer.current);
+        if (solarAbortController) solarAbortController.abort();
+
         solarTimer.current = setTimeout(() => {
-            // Slider ရွှေ့ပြီးပါက DB တွင် သွား update လုပ်မည်
+            solarAbortController = new AbortController();
             void updateDatabaseConfig({
                 gridOnline,
                 solarCapacityKw: value,
                 generatorCapacityKw,
-            });
+            }, solarAbortController.signal);
         }, DEBOUNCE_MS);
     };
 
+    // 3. Generator Capacity Change -> Update DB
     const handleGeneratorCapacityChange = (value: number) => {
         setGeneratorCapacityKw(value);
         currentValuesRef.generatorCapacityKw = value;
 
         if (genCapTimer.current) clearTimeout(genCapTimer.current);
+        if (genCapAbortController) genCapAbortController.abort();
+
         genCapTimer.current = setTimeout(() => {
-            // Slider ရွှေ့ပြီးပါက DB တွင် သွား update လုပ်မည်
+            genCapAbortController = new AbortController();
             void updateDatabaseConfig({
                 gridOnline,
                 solarCapacityKw,
                 generatorCapacityKw: value,
-            });
+            }, genCapAbortController.signal);
         }, DEBOUNCE_MS);
     };
 
@@ -238,11 +310,20 @@ function SimulatorPanelContent() {
         setInjectingFault(true);
         void post("/simulator/fault", { preset: "frequency_drop" })
             .then(() => showToast("Fault injected: frequency_drop"))
-            .catch((err: unknown) =>
-                showToast(err instanceof Error ? err.message : "Fault injection failed", "error")
-            )
+            .catch(() => showToast("Fault injection failed", "error"))
             .finally(() => setInjectingFault(false));
     };
+
+    if (isLoadingConfig) {
+        return (
+            <div className={styles.page} style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+                <div style={{ textAlign: "center", color: "var(--text-muted, #888)" }}>
+                    <Loader2 size={36} className={styles.spinning} style={{ marginBottom: "1rem" }} />
+                    <p>Loading Simulator Settings...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.page} data-testid="simulator-panel">
@@ -362,7 +443,7 @@ function SimulatorPanelContent() {
                     </button>
                 </div>
 
-                {/* Grid Power Switch */}
+                {/* Main Grid Power Switch */}
                 <div className={styles.generatorRow} style={{ marginTop: "1rem", marginBottom: "1rem" }}>
                     <div className={styles.generatorInfo}>
                         <div className={styles.generatorIconWrapper}>
