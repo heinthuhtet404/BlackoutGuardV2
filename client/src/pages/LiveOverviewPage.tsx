@@ -249,36 +249,73 @@ export function LiveOverviewPage() {
     const loadStatusMap = useMemo(() => {
         const statusMap = new Map<string, "Normal" | "Shedded">();
 
+        // ၁။ Initial State - Load အားလုံးကို Normal (စိမ်း) အဖြစ် သတ်မှတ်ထားမည်
         allLoads.forEach((load) => {
             statusMap.set(load.id, "Normal");
         });
 
+        // ============================================
+        // ၁. Grid မီးလာလျှင် အကုန်စိမ်း
+        // ============================================
         if (isGridOnline) {
             return statusMap;
         }
 
+        // ============================================
+        // ၂. Available Power Source (Capacity) ကို စစ်ဆေးခြင်း
+        // ============================================
         let availableCapacity = 0;
-        let powerSource = "";
 
-        if (solarCapacityKw > 0) {
-            availableCapacity = solarCapacityKw;
-            powerSource = "Solar";
-        } else if (generatorCapacityKw > 0) {
-            availableCapacity = generatorCapacityKw;
-            powerSource = "Generator";
-        } else {
+        const hasSolar = solarCapacityKw > 0;
+        const hasGenerator = generatorCapacityKw > 0;
+
+        // Solar လည်းမရှိ၊ Generator လည်းမရှိပါက ( Power Source ဘာမှမရှိပါက )
+        if (!hasSolar && !hasGenerator) {
             allLoads.forEach((load) => {
                 statusMap.set(load.id, "Shedded");
             });
             return statusMap;
         }
 
-        if (totalConfiguredKw <= availableCapacity) {
+        // A. Solar ဖြင့် လုံလောက်မှု ရှိ/မရှိ စစ်ဆေးခြင်း
+        if (hasSolar && solarCapacityKw >= totalConfiguredKw) {
+            // Solar Capacity က Load အားလုံးအတွက် လုံလောက်သဖြင့် အကုန်စိမ်းမည်
             return statusMap;
         }
 
+        // B. Solar Capacity မလုံလောက်ပါက Available Capacity ကို တွက်ချက်ခြင်း
+        if (hasSolar && hasGenerator) {
+            // Solar ရော Generator ပါရှိပါက ၎င်းတို့ နှစ်ခုပေါင်း Capacity အထိ အသုံးပြုမည်
+            availableCapacity = solarCapacityKw + generatorCapacityKw;
+        } else if (hasSolar) {
+            // Solar သီးသန့်ပဲရှိပါက Solar Capacity ဖြင့်သာ Shedding တွက်မည်
+            availableCapacity = solarCapacityKw;
+        } else if (hasGenerator) {
+            // Solar မရှိဘဲ Generator သီးသန့်ပဲရှိပါက Generator Capacity ဖြင့် Shedding တွက်မည်
+            availableCapacity = generatorCapacityKw;
+        }
+
+        // ============================================
+        // ၃. Available Capacity မလုံလောက်ပါက Load Shedding လုပ်ဆောင်ခြင်း
+        // ============================================
+
+        // လိုအပ်နေသည့် Excess Power ပမာဏ
         let excessPower = totalConfiguredKw - availableCapacity;
 
+        // Capacity ဖြင့် လုံးဝ မလုံလောက်ပါက (သို့မဟုတ် Available Capacity 0 ဖြစ်နေပါက)
+        if (excessPower >= totalConfiguredKw || availableCapacity <= 0) {
+            allLoads.forEach((load) => {
+                statusMap.set(load.id, "Shedded");
+            });
+            return statusMap;
+        }
+
+        // Available Capacity က Load Total ထက်ကြီး သို့မဟုတ် ညီပါက Shedding လုပ်ရန် မလိုပါ
+        if (excessPower <= 0) {
+            return statusMap;
+        }
+
+        // Priority အမြင့်ဆုံး (Priority Number ကြီးသော) Load ကို စတင် Shedded လုပ်မည်
         const sortedLoads = [...allLoads].sort(
             (a, b) => getLoadPriorityNum(b) - getLoadPriorityNum(a)
         );
