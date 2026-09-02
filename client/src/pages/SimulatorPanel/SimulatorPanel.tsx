@@ -358,7 +358,7 @@ function SimulatorPanelContent() {
                     </span>
                 </div>
                 <div className={styles.telemetryGrid}>
-                    <div className={styles.metric}>
+                    {/* <div className={styles.metric}>
                         <span className={styles.metricLabel}>
                             <TrendingUp size={12} />
                             Frequency
@@ -384,7 +384,7 @@ function SimulatorPanelContent() {
                         <span className={styles.metricValue} data-testid="telemetry-load">
                             {telemetry ? `${telemetry.totalLoadKw.toFixed(1)} kW` : "—"}
                         </span>
-                    </div>
+                    </div> */}
                     <div className={styles.metric}>
                         <span className={styles.metricLabel}>
                             <Power size={12} />
@@ -558,7 +558,7 @@ function SimulatorPanelContent() {
                 )}
 
                 {/* Inject Fault Button */}
-                <button
+                {/* <button
                     type="button"
                     className={styles.faultButton}
                     onClick={handleInjectFault}
@@ -576,7 +576,7 @@ function SimulatorPanelContent() {
                             Inject Fault (frequency_drop)
                         </>
                     )}
-                </button>
+                </button> */}
             </section>
         </div>
     );

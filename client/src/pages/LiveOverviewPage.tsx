@@ -120,7 +120,7 @@ export function LiveOverviewPage() {
     const [deletingZoneId, setDeletingZoneId] = useState<string | null>(null);
 
     // ============================================
-    // State for smooth decreasing values
+    // State for smooth decreasing fuel and runtime
     // ============================================
     const [simulatedFuelLevel, setSimulatedFuelLevel] = useState<number>(85);
     const [simulatedRuntime, setSimulatedRuntime] = useState<number>(12);
@@ -159,8 +159,8 @@ export function LiveOverviewPage() {
                             id: "0e6efd17-9662-4de1-8871-2d5ce7190f0a",
                             tenantId: "0e6efd17-9662-4de1-8871-2d5ce7190f0a",
                             name: "Main Facility",
-                            generatorCapacityKw: 396,
-                            solarCapacityKw: 392,
+                            generatorCapacityKw: 196,
+                            solarCapacityKw: 344,
                             isGridOnline: true,
                             timezoneId: "UTC",
                             createdAt: new Date().toISOString()
@@ -180,40 +180,44 @@ export function LiveOverviewPage() {
     }, []);
 
     // ============================================
-    // Simulate real-time decreasing values
-    // Fuel level and runtime decrease slowly over time
+    // Simulate real-time decreasing fuel and runtime
+    // Only runs when Grid is OFF AND Generator exists
     // ============================================
     useEffect(() => {
-        // Only run when generator is ON
-        if (!telemetry?.generatorOn) return;
+        const isGridOnline = facility?.isGridOnline ?? true;
+        const hasGenerator = (facility?.generatorCapacityKw || 0) > 0;
+
+        if (isGridOnline || !hasGenerator) {
+            return;
+        }
 
         const interval = setInterval(() => {
-            // Decrease fuel level slowly (0.05% per second)
             setSimulatedFuelLevel((prev) => {
                 const newValue = Math.max(0, prev - 0.05);
                 return Math.round(newValue * 10) / 10;
             });
 
-            // Decrease runtime slowly (0.01 hours per second)
             setSimulatedRuntime((prev) => {
                 const newValue = Math.max(0, prev - 0.01);
                 return Math.round(newValue * 10) / 10;
             });
-        }, 1000); // Update every second
+        }, 1000);
 
         return () => clearInterval(interval);
-    }, [telemetry?.generatorOn]);
+    }, [facility?.isGridOnline, facility?.generatorCapacityKw]);
 
     // ============================================
-    // Reset fuel and runtime when generator turns off
+    // Reset fuel and runtime when Grid turns ON or Generator is removed
     // ============================================
     useEffect(() => {
-        if (!telemetry?.generatorOn) {
-            // Reset to initial values when generator is OFF
+        const isGridOnline = facility?.isGridOnline ?? true;
+        const hasGenerator = (facility?.generatorCapacityKw || 0) > 0;
+
+        if (isGridOnline || !hasGenerator) {
             setSimulatedFuelLevel(85);
             setSimulatedRuntime(12);
         }
-    }, [telemetry?.generatorOn]);
+    }, [facility?.isGridOnline, facility?.generatorCapacityKw]);
 
     // Fetch Zones and Loads
     useEffect(() => {
@@ -271,17 +275,14 @@ export function LiveOverviewPage() {
     }, [latestDecision]);
 
     // ============================================
-    // Core Variables
+    // Core Variables - All from DB
     // ============================================
     const isUnderFrequency = telemetry ? telemetry.frequency < 49.5 : false;
     const isGridOnline = facility?.isGridOnline ?? true;
     const generatorCapacityKw = facility?.generatorCapacityKw || 0;
     const solarCapacityKw = facility?.solarCapacityKw || 0;
-
-    // ============================================
-    // Total Available Capacity (Solar + Generator)
-    // ============================================
     const totalAvailableCapacity = solarCapacityKw + generatorCapacityKw;
+    const hasGenerator = generatorCapacityKw > 0;
 
     // ============================================
     // Load Calculations
@@ -366,22 +367,20 @@ export function LiveOverviewPage() {
     }, [allLoads, loadStatusMap]);
 
     // ============================================
-    // ✅ Generator Metrics based on Total Available Capacity
+    // Generator Metrics - Based ONLY on DB Data
     // ============================================
     const generatorMetrics = useMemo(() => {
-        // Generator OFF → return null for all metrics
-        if (!telemetry?.generatorOn) {
+        const shouldShowGeneratorMetrics = !isGridOnline && hasGenerator;
+
+        if (!shouldShowGeneratorMetrics) {
             return {
                 engineTemp: null,
                 fuelLevel: null,
-                runtimeRemaining: null
+                runtimeRemaining: null,
+                isActive: false
             };
         }
 
-        // ============================================
-        // 1. Engine Temperature
-        // Based on load percentage of total available capacity
-        // ============================================
         const baseTemp = 85;
         const loadPercent = totalAvailableCapacity > 0
             ? (realTimeLoadKw / totalAvailableCapacity) * 100
@@ -389,16 +388,8 @@ export function LiveOverviewPage() {
         const loadFactor = (loadPercent / 10) * 3;
         const engineTemp = Math.min(baseTemp + loadFactor, 150);
 
-        // ============================================
-        // 2. Fuel Level
-        // Smoothly decreasing over time when generator is ON
-        // ============================================
         const fuelLevel = simulatedFuelLevel;
 
-        // ============================================
-        // 3. Est Runtime
-        // Based on remaining fuel and consumption rate
-        // ============================================
         const totalFuelCapacity = 500;
         const baseConsumption = 5;
         const loadConsumption = (realTimeLoadKw / 100) * 10;
@@ -409,9 +400,10 @@ export function LiveOverviewPage() {
         return {
             engineTemp: Math.round(engineTemp * 10) / 10,
             fuelLevel: Math.round(fuelLevel * 10) / 10,
-            runtimeRemaining: Math.round(runtimeRemaining * 10) / 10
+            runtimeRemaining: Math.round(runtimeRemaining * 10) / 10,
+            isActive: true
         };
-    }, [telemetry, realTimeLoadKw, totalAvailableCapacity, simulatedFuelLevel]);
+    }, [isGridOnline, hasGenerator, realTimeLoadKw, totalAvailableCapacity, simulatedFuelLevel]);
 
     // ============================================
     // System Mode
@@ -721,6 +713,7 @@ export function LiveOverviewPage() {
                 {connected ? (
                     <span className={styles.statusConnected}>
                         <Wifi size={14} />
+                        <span className={styles.liveDot}></span>
                         Live Stream Connected
                     </span>
                 ) : (
@@ -733,14 +726,14 @@ export function LiveOverviewPage() {
 
             {/* KPI Cards */}
             <div className={styles.grid}>
-                {/* Total Available Capacity (Solar + Generator) */}
-                <div className={styles.card}>
+                {/* Total Available Capacity */}
+                <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
                         <Zap size={24} />
                     </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Total Available Capacity</h3>
-                        <p className={`${styles.cardValue} ${styles.valueBlue}`}>
+                        <p className={`${styles.cardValue} ${styles.valueBlue} ${styles.valuePulse}`}>
                             {loadingFacility ? "..." : `${totalAvailableCapacity.toFixed(1)} kW`}
                         </p>
                         <span className={styles.cardSubText}>
@@ -751,13 +744,13 @@ export function LiveOverviewPage() {
                 </div>
 
                 {/* Active Real-Time Load */}
-                <div className={styles.card}>
+                <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
                         <Gauge size={24} />
                     </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Active Real-Time Load</h3>
-                        <p className={`${styles.cardValue} ${styles.valueAmber}`}>
+                        <p className={`${styles.cardValue} ${styles.valueAmber} ${styles.valuePulse}`}>
                             {loadingDbData ? "..." : `${realTimeLoadKw.toFixed(1)} kW`}
                         </p>
                         <span className={styles.cardSubText}>
@@ -767,13 +760,13 @@ export function LiveOverviewPage() {
                 </div>
 
                 {/* Power Source */}
-                <div className={styles.card}>
+                <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
                         <Factory size={24} />
                     </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Power Source</h3>
-                        <p className={`${styles.cardValue} ${facility?.isGridOnline ? styles.valueSuccess : styles.valueDanger}`}>
+                        <p className={`${styles.cardValue} ${facility?.isGridOnline ? styles.valueSuccess : styles.valueDanger} ${styles.valuePulse}`}>
                             {loadingFacility ? "..." : facility?.isGridOnline ? "Grid Connected" : "Grid Disconnected"}
                         </p>
                         <span className={styles.cardSubText}>
@@ -785,13 +778,13 @@ export function LiveOverviewPage() {
                 </div>
 
                 {/* Solar Capacity */}
-                <div className={styles.card}>
+                <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
                         <Activity size={24} />
                     </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Solar Capacity</h3>
-                        <p className={`${styles.cardValue} ${facility?.solarCapacityKw && facility.solarCapacityKw > 0 ? styles.valueSuccess : styles.valueMuted}`}>
+                        <p className={`${styles.cardValue} ${facility?.solarCapacityKw && facility.solarCapacityKw > 0 ? styles.valueSuccess : styles.valueMuted} ${styles.valuePulse}`}>
                             {loadingFacility ? "..." : facility?.solarCapacityKw ? `${facility.solarCapacityKw} kW` : "Not Available"}
                         </p>
                         {facility?.solarCapacityKw && facility.solarCapacityKw > 0 && (
@@ -804,13 +797,13 @@ export function LiveOverviewPage() {
                 </div>
 
                 {/* Generator Capacity */}
-                <div className={styles.card}>
+                <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
                         <Plug size={24} />
                     </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Generator Capacity</h3>
-                        <p className={`${styles.cardValue} ${facility?.generatorCapacityKw && facility.generatorCapacityKw > 0 ? styles.valueAmber : styles.valueMuted}`}>
+                        <p className={`${styles.cardValue} ${facility?.generatorCapacityKw && facility.generatorCapacityKw > 0 ? styles.valueAmber : styles.valueMuted} ${styles.valuePulse}`}>
                             {loadingFacility ? "..." : facility?.generatorCapacityKw ? `${facility.generatorCapacityKw} kW` : "Not Available"}
                         </p>
                         {facility?.generatorCapacityKw && facility.generatorCapacityKw > 0 && (
@@ -822,8 +815,8 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
-                {/* ✅ Engine Temp - Based on Total Available Capacity */}
-                <div className={styles.card}>
+                {/* Engine Temp */}
+                <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
                         <Thermometer size={24} />
                     </div>
@@ -832,7 +825,7 @@ export function LiveOverviewPage() {
                         <p className={`${styles.cardValue} ${generatorMetrics.engineTemp !== null
                                 ? generatorMetrics.engineTemp > 120 ? styles.valueDanger : styles.valueAmber
                                 : styles.valueMuted
-                            }`}>
+                            } ${styles.valuePulse}`}>
                             {generatorMetrics.engineTemp !== null
                                 ? `${generatorMetrics.engineTemp.toFixed(1)} °C`
                                 : "—"}
@@ -844,13 +837,15 @@ export function LiveOverviewPage() {
                             <span className={styles.cardSubText}>Normal operating temp</span>
                         )}
                         {generatorMetrics.engineTemp === null && (
-                            <span className={styles.cardSubText}>Generator is OFF</span>
+                            <span className={styles.cardSubText}>
+                                {isGridOnline ? "Grid is ON" : "No generator available"}
+                            </span>
                         )}
                     </div>
                 </div>
 
-                {/* ✅ Fuel Level - Smoothly decreasing */}
-                <div className={styles.card}>
+                {/* Fuel Level */}
+                <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
                         <Fuel size={24} />
                     </div>
@@ -859,7 +854,7 @@ export function LiveOverviewPage() {
                         <p className={`${styles.cardValue} ${generatorMetrics.fuelLevel !== null
                                 ? generatorMetrics.fuelLevel < 20 ? styles.valueDanger : styles.valueBlue
                                 : styles.valueMuted
-                            }`}>
+                            } ${styles.valuePulse}`}>
                             {generatorMetrics.fuelLevel !== null
                                 ? `${generatorMetrics.fuelLevel.toFixed(0)} %`
                                 : "—"}
@@ -871,13 +866,15 @@ export function LiveOverviewPage() {
                             <span className={styles.cardSubText}>Fuel level adequate</span>
                         )}
                         {generatorMetrics.fuelLevel === null && (
-                            <span className={styles.cardSubText}>Generator is OFF</span>
+                            <span className={styles.cardSubText}>
+                                {isGridOnline ? "Grid is ON" : "No generator available"}
+                            </span>
                         )}
                     </div>
                 </div>
 
-                {/* ✅ Est Runtime - Based on fuel and load */}
-                <div className={styles.card}>
+                {/* Est Runtime */}
+                <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
                         <Clock size={24} />
                     </div>
@@ -886,7 +883,7 @@ export function LiveOverviewPage() {
                         <p className={`${styles.cardValue} ${generatorMetrics.runtimeRemaining !== null
                                 ? generatorMetrics.runtimeRemaining < 1 ? styles.valueDanger : styles.valueSuccess
                                 : styles.valueMuted
-                            }`}>
+                            } ${styles.valuePulse}`}>
                             {generatorMetrics.runtimeRemaining !== null
                                 ? `${generatorMetrics.runtimeRemaining.toFixed(1)} hrs`
                                 : "—"}
@@ -898,14 +895,16 @@ export function LiveOverviewPage() {
                             <span className={styles.cardSubText}>Runtime remaining</span>
                         )}
                         {generatorMetrics.runtimeRemaining === null && (
-                            <span className={styles.cardSubText}>Generator is OFF</span>
+                            <span className={styles.cardSubText}>
+                                {isGridOnline ? "Grid is ON" : "No generator available"}
+                            </span>
                         )}
                     </div>
                 </div>
             </div>
 
             {/* System Status Map */}
-            <div className={styles.sectionCard}>
+            <div className={`${styles.sectionCard} ${styles.sectionAnimate}`}>
                 <div className={styles.sectionHeader}>
                     <div className={styles.sectionHeaderLeft}>
                         <Layers size={20} className={styles.sectionIcon} />
@@ -930,7 +929,7 @@ export function LiveOverviewPage() {
                             const hasLoads = zoneLoads.length > 0;
 
                             return (
-                                <div key={zone.id} className={styles.zoneCard}>
+                                <div key={zone.id} className={`${styles.zoneCard} ${styles.zoneAnimate}`}>
                                     <div className={styles.zoneHeader}>
                                         <div className={styles.zoneTitle}>
                                             <span className={styles.zoneIcon}>
@@ -972,7 +971,7 @@ export function LiveOverviewPage() {
                                                 return (
                                                     <div
                                                         key={load.id}
-                                                        className={`${styles.nodeCard} ${isShedded ? styles.nodeShedded : styles.nodeNormal}`}
+                                                        className={`${styles.nodeCard} ${isShedded ? styles.nodeShedded : styles.nodeNormal} ${styles.nodeAnimate}`}
                                                     >
                                                         {isShedded && <div className={styles.shedPulseBg} />}
                                                         {!isShedded && <div className={styles.normalGlowBg} />}
@@ -1147,7 +1146,7 @@ export function LiveOverviewPage() {
             )}
 
             {/* Charts Row */}
-            <div className={styles.chartsRow}>
+            <div className={`${styles.chartsRow} ${styles.chartAnimate}`}>
                 <div className={styles.chartCard}>
                     <div className={styles.chartHeader}>
                         <Layers size={18} className={styles.chartIcon} />
@@ -1159,7 +1158,7 @@ export function LiveOverviewPage() {
                             <span>{p1Kw.toFixed(1)} kW ({p1Pct}%)</span>
                         </div>
                         <div className={styles.progressBg}>
-                            <div className={styles.progressFillP1} style={{ width: `${p1Pct}%` }}></div>
+                            <div className={`${styles.progressFillP1} ${styles.progressAnimate}`} style={{ width: `${p1Pct}%` }}></div>
                         </div>
 
                         <div className={styles.loadBarRow}>
@@ -1167,7 +1166,7 @@ export function LiveOverviewPage() {
                             <span>{p2Kw.toFixed(1)} kW ({p2Pct}%)</span>
                         </div>
                         <div className={styles.progressBg}>
-                            <div className={styles.progressFillP2} style={{ width: `${p2Pct}%` }}></div>
+                            <div className={`${styles.progressFillP2} ${styles.progressAnimate}`} style={{ width: `${p2Pct}%` }}></div>
                         </div>
 
                         <div className={styles.loadBarRow}>
@@ -1175,14 +1174,14 @@ export function LiveOverviewPage() {
                             <span>{p3Kw.toFixed(1)} kW ({p3Pct}%)</span>
                         </div>
                         <div className={styles.progressBg}>
-                            <div className={styles.progressFillP3} style={{ width: `${p3Pct}%` }}></div>
+                            <div className={`${styles.progressFillP3} ${styles.progressAnimate}`} style={{ width: `${p3Pct}%` }}></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Alarms */}
-            <div className={styles.sectionCard}>
+            <div className={`${styles.sectionCard} ${styles.sectionAnimate}`}>
                 <div className={styles.sectionHeader}>
                     <div className={styles.sectionHeaderLeft}>
                         <Bell size={20} className={styles.sectionIcon} />
@@ -1197,7 +1196,7 @@ export function LiveOverviewPage() {
                     </div>
                 ) : (
                     <div className={styles.alarmList}>
-                        {alarms.map((alarm) => (
+                        {alarms.map((alarm, index) => (
                             <div
                                 key={alarm.id}
                                 className={`${styles.alarmItem} ${alarm.type === "critical"
@@ -1205,7 +1204,8 @@ export function LiveOverviewPage() {
                                     : alarm.type === "warning"
                                         ? styles.alarmWarning
                                         : styles.alarmSuccess
-                                    }`}
+                                    } ${styles.alarmAnimate}`}
+                                style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <span className={styles.alarmTime}>{alarm.time}</span>
                                 <span className={styles.alarmMessage}>{alarm.message}</span>

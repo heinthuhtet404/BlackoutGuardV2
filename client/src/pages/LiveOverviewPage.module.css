@@ -29,7 +29,7 @@
 }
 
 /* ========================================
-   PAGE
+   PAGE - WITH AMBIENT BACKGROUND
    ======================================== */
 .page {
     padding: 24px 32px;
@@ -38,7 +38,103 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     max-width: 1440px;
     margin: 0 auto;
-    background-image: radial-gradient(ellipse at 80% 20%, rgba(248, 113, 113, 0.02) 0%, transparent 50%), radial-gradient(ellipse at 20% 80%, rgba(52, 211, 153, 0.015) 0%, transparent 50%);
+    position: relative;
+    overflow: hidden;
+    animation: pageFadeIn 0.5s ease-out;
+}
+
+    /* Ambient Background Gradient - Always moving */
+    .page::before {
+        content: '';
+        position: fixed;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(ellipse at 80% 20%, rgba(248, 113, 113, 0.03) 0%, transparent 50%), radial-gradient(ellipse at 20% 80%, rgba(52, 211, 153, 0.02) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(96, 165, 250, 0.015) 0%, transparent 40%);
+        animation: ambientGradient 20s ease-in-out infinite alternate;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+@keyframes ambientGradient {
+    0% {
+        transform: rotate(0deg) scale(1);
+        opacity: 0.5;
+    }
+
+    25% {
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: rotate(180deg) scale(1.1);
+        opacity: 0.6;
+    }
+
+    75% {
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: rotate(360deg) scale(1);
+        opacity: 0.5;
+    }
+}
+
+/* Floating Particles - Always moving */
+.page::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.05), transparent), radial-gradient(2px 2px at 40% 70%, rgba(255, 255, 255, 0.04), transparent), radial-gradient(2px 2px at 60% 20%, rgba(255, 255, 255, 0.06), transparent), radial-gradient(2px 2px at 80% 80%, rgba(255, 255, 255, 0.04), transparent), radial-gradient(2px 2px at 10% 90%, rgba(255, 255, 255, 0.05), transparent), radial-gradient(2px 2px at 90% 10%, rgba(255, 255, 255, 0.03), transparent), radial-gradient(2px 2px at 50% 50%, rgba(255, 255, 255, 0.04), transparent);
+    background-size: 200px 200px;
+    animation: floatingParticles 30s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+@keyframes floatingParticles {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    25% {
+        transform: translate(-20px, 10px) scale(1.02);
+    }
+
+    50% {
+        transform: translate(10px, -20px) scale(0.98);
+    }
+
+    75% {
+        transform: translate(-10px, 20px) scale(1.01);
+    }
+
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+@keyframes pageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page > * {
+    position: relative;
+    z-index: 1;
 }
 
 /* ========================================
@@ -59,6 +155,19 @@
     color: var(--text-primary, #e8edf5);
     margin: 0;
     letter-spacing: -0.3px;
+    animation: headingFadeIn 0.6s ease-out;
+}
+
+@keyframes headingFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .headingSub {
@@ -84,12 +193,26 @@
     justify-content: center;
     flex-shrink: 0;
     border: 1px solid rgba(248, 113, 113, 0.08);
+    animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(248, 113, 113, 0.08);
+    }
 }
 
 .headerIcon {
     color: var(--accent-red, #f87171);
 }
 
+/* ========================================
+   SYSTEM MODE BANNER
+   ======================================== */
 .systemModeBanner {
     display: inline-flex;
     align-items: center;
@@ -103,6 +226,43 @@
     white-space: nowrap;
     border: 1px solid transparent;
     font-family: inherit;
+    animation: bannerSlideIn 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+    /* Banner shimmer effect - Always moving */
+    .systemModeBanner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 200%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+        animation: bannerShimmer 4s ease-in-out infinite;
+    }
+
+@keyframes bannerShimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes bannerSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
 }
 
 .modeDot {
@@ -111,6 +271,8 @@
     border-radius: 50%;
     display: inline-block;
     animation: pulse 1.5s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
 }
 
 @keyframes pulse {
@@ -165,6 +327,9 @@
         background: var(--text-muted, #64748b);
     }
 
+/* ========================================
+   STATUS ROW
+   ======================================== */
 .statusRow {
     margin-bottom: 24px;
     padding: 6px 0 2px 0;
@@ -176,7 +341,31 @@
     font-weight: 500;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+}
+
+.liveDot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success, #34d399);
+    animation: livePulse 1s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+}
+
+@keyframes livePulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+    }
+
+    50% {
+        opacity: 0.3;
+        transform: scale(0.6);
+        box-shadow: 0 0 4px rgba(52, 211, 153, 0.1);
+    }
 }
 
 .statusDisconnected {
@@ -207,16 +396,130 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    transition: all 0.25s ease;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     min-height: 120px;
     box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
 }
 
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px var(--shadow-heavy, rgba(0, 0, 0, 0.50));
-        border-color: rgba(255, 255, 255, 0.06);
+    /* Ambient Card Glow - Always moving */
+    .card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.02) 0%, transparent 60%);
+        animation: cardGlow 8s ease-in-out infinite alternate;
+        pointer-events: none;
+        z-index: 0;
     }
+
+@keyframes cardGlow {
+    0% {
+        transform: rotate(0deg) scale(0.8);
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: rotate(360deg) scale(1.2);
+        opacity: 0.3;
+    }
+}
+
+/* Card Shimmer - Always moving */
+.card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.015), transparent);
+    animation: cardShimmer 6s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes cardShimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.cardAnimate {
+    animation: cardFadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+    .cardAnimate:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .cardAnimate:nth-child(2) {
+        animation-delay: 0.10s;
+    }
+
+    .cardAnimate:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .cardAnimate:nth-child(4) {
+        animation-delay: 0.20s;
+    }
+
+    .cardAnimate:nth-child(5) {
+        animation-delay: 0.25s;
+    }
+
+    .cardAnimate:nth-child(6) {
+        animation-delay: 0.30s;
+    }
+
+    .cardAnimate:nth-child(7) {
+        animation-delay: 0.35s;
+    }
+
+    .cardAnimate:nth-child(8) {
+        animation-delay: 0.40s;
+    }
+
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.card:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 8px 40px var(--shadow-heavy, rgba(0, 0, 0, 0.50));
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+    .card:hover::after {
+        animation-duration: 2s;
+    }
+
+.card > * {
+    position: relative;
+    z-index: 1;
+}
 
 .cardDanger {
     border-color: var(--accent-red, #f87171);
@@ -225,7 +528,7 @@
 
     .cardDanger:hover {
         border-color: var(--accent-red, #f87171);
-        box-shadow: 0 8px 32px rgba(248, 113, 113, 0.08);
+        box-shadow: 0 8px 40px rgba(248, 113, 113, 0.15);
     }
 
 .cardIcon {
@@ -238,6 +541,12 @@
     background: rgba(255, 255, 255, 0.04);
     color: var(--text-secondary, #94a3b8);
     flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.card:hover .cardIcon {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.05);
 }
 
 .cardContent {
@@ -259,6 +568,7 @@
     text-overflow: ellipsis;
 }
 
+/* Breathing text effect - Always moving */
 .cardValue {
     font-size: 24px;
     font-weight: 700;
@@ -266,7 +576,29 @@
     margin: 0;
     letter-spacing: -0.3px;
     line-height: 1.2;
+    animation: textBreath 4s ease-in-out infinite;
 }
+
+@keyframes textBreath {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.85;
+        transform: scale(0.995);
+    }
+}
+
+.valuePulse {
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+    .valuePulse:hover {
+        animation: none;
+        transform: scale(1.02);
+    }
 
 .cardSubText {
     font-size: 12px;
@@ -324,11 +656,73 @@
     box-shadow: 0 2px 12px var(--shadow, rgba(0, 0, 0, 0.40));
     border: 1px solid var(--border-card, #2a2f38);
     margin-bottom: 24px;
-    transition: all 0.25s ease;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-    .sectionCard:hover {
-        border-color: rgba(255, 255, 255, 0.04);
+    /* Section border glow - Always moving */
+    .sectionCard::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border-radius: 18px;
+        background: conic-gradient(from 0deg, transparent, rgba(248, 113, 113, 0.03), transparent, rgba(52, 211, 153, 0.02), transparent);
+        animation: borderGlow 10s linear infinite;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.5;
+    }
+
+@keyframes borderGlow {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.sectionCard > * {
+    position: relative;
+    z-index: 1;
+}
+
+.sectionAnimate {
+    animation: sectionFadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+    .sectionAnimate:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .sectionAnimate:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+@keyframes sectionFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sectionCard:hover {
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+    .sectionCard:hover::before {
+        opacity: 0.8;
     }
 
 .sectionHeader {
@@ -422,13 +816,89 @@
     border-radius: 14px;
     padding: 20px 24px;
     background: rgba(255, 255, 255, 0.015);
-    transition: all 0.25s ease;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-    .zoneCard:hover {
-        border-color: rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.025);
+    /* Zone ambient pulse */
+    .zoneCard::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(ellipse at 30% 50%, rgba(248, 113, 113, 0.02), transparent 70%);
+        animation: zoneAmbient 8s ease-in-out infinite alternate;
+        pointer-events: none;
+        z-index: 0;
     }
+
+@keyframes zoneAmbient {
+    0% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+
+    100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+}
+
+.zoneCard > * {
+    position: relative;
+    z-index: 1;
+}
+
+.zoneAnimate {
+    animation: zoneFadeIn 0.4s ease-out forwards;
+    opacity: 0;
+}
+
+    .zoneAnimate:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .zoneAnimate:nth-child(2) {
+        animation-delay: 0.10s;
+    }
+
+    .zoneAnimate:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .zoneAnimate:nth-child(4) {
+        animation-delay: 0.20s;
+    }
+
+    .zoneAnimate:nth-child(5) {
+        animation-delay: 0.25s;
+    }
+
+@keyframes zoneFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.zoneCard:hover {
+    border-color: rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.025);
+    transform: translateX(4px);
+}
 
 .zoneHeader {
     display: flex;
@@ -504,7 +974,7 @@
     background: var(--bg-card, #1a1d24);
     border-radius: 12px;
     border: 1px solid var(--border-card, #2a2f38);
-    transition: all 0.25s ease;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     min-height: 64px;
     box-sizing: border-box;
     position: relative;
@@ -512,10 +982,51 @@
     overflow: hidden;
 }
 
-    .nodeCard:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px var(--shadow, rgba(0, 0, 0, 0.40));
+.nodeAnimate {
+    animation: nodeFadeIn 0.3s ease-out forwards;
+    opacity: 0;
+}
+
+    .nodeAnimate:nth-child(1) {
+        animation-delay: 0.05s;
     }
+
+    .nodeAnimate:nth-child(2) {
+        animation-delay: 0.08s;
+    }
+
+    .nodeAnimate:nth-child(3) {
+        animation-delay: 0.11s;
+    }
+
+    .nodeAnimate:nth-child(4) {
+        animation-delay: 0.14s;
+    }
+
+    .nodeAnimate:nth-child(5) {
+        animation-delay: 0.17s;
+    }
+
+    .nodeAnimate:nth-child(6) {
+        animation-delay: 0.20s;
+    }
+
+@keyframes nodeFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.nodeCard:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 8px 32px var(--shadow, rgba(0, 0, 0, 0.40));
+}
 
 /* ========================================
    NORMAL STATE - Green / Active
@@ -527,10 +1038,9 @@
 
     .nodeNormal:hover {
         border-color: rgba(52, 211, 153, 0.5);
-        box-shadow: 0 8px 24px rgba(52, 211, 153, 0.08);
+        box-shadow: 0 8px 32px rgba(52, 211, 153, 0.10);
     }
 
-/* Green glow background animation */
 .normalGlowBg {
     position: absolute;
     top: -50%;
@@ -555,7 +1065,6 @@
     }
 }
 
-/* Green border pulse animation */
 .nodeNormal::after {
     content: '';
     position: absolute;
@@ -565,13 +1074,13 @@
     bottom: 0;
     border-radius: 12px;
     border: 2px solid rgba(52, 211, 153, 0);
-    animation: normalBorderPulse 2s ease-in-out infinite;
+    animation: normalBorderPulse 2.5s ease-in-out infinite;
     z-index: 0;
     pointer-events: none;
 }
 
 .nodeNormal:hover::after {
-    animation-duration: 1s;
+    animation-duration: 1.2s;
 }
 
 @keyframes normalBorderPulse {
@@ -581,7 +1090,7 @@
     }
 
     50% {
-        border-color: rgba(52, 211, 153, 0.25);
+        border-color: rgba(52, 211, 153, 0.20);
         transform: scale(1.02);
     }
 
@@ -591,7 +1100,6 @@
     }
 }
 
-/* Inner content stays above animations */
 .nodeNormal .nodeIcon,
 .nodeNormal .nodeInfo,
 .nodeNormal .nodeActionsWrapper {
@@ -609,10 +1117,9 @@
 
     .nodeShedded:hover {
         border-color: var(--accent-red, #f87171);
-        box-shadow: 0 8px 24px rgba(248, 113, 113, 0.15);
+        box-shadow: 0 8px 32px rgba(248, 113, 113, 0.18);
     }
 
-/* Red pulse background */
 .shedPulseBg {
     position: absolute;
     top: -50%;
@@ -637,7 +1144,6 @@
     }
 }
 
-/* Red border blink animation */
 .nodeShedded::after {
     content: '';
     position: absolute;
@@ -664,25 +1170,24 @@
     }
 
     25% {
-        border-color: rgba(248, 113, 113, 0.2);
+        border-color: rgba(248, 113, 113, 0.15);
         opacity: 0.3;
-        transform: scale(0.98);
+        transform: scale(0.97);
     }
 
     50% {
         border-color: var(--accent-red, #f87171);
         opacity: 1;
-        transform: scale(1.02);
+        transform: scale(1.03);
     }
 
     75% {
-        border-color: rgba(248, 113, 113, 0.2);
+        border-color: rgba(248, 113, 113, 0.15);
         opacity: 0.3;
-        transform: scale(0.98);
+        transform: scale(0.97);
     }
 }
 
-/* Inner content stays above animations */
 .nodeShedded .nodeIcon,
 .nodeShedded .nodeInfo,
 .nodeShedded .nodeActionsWrapper {
@@ -703,11 +1208,12 @@
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.04);
     color: var(--text-secondary, #94a3b8);
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .nodeCard:hover .nodeIcon {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.05);
 }
 
 .nodeIcon svg {
@@ -761,7 +1267,6 @@
         text-overflow: ellipsis;
     }
 
-/* Priority Badge */
 .priorityBadge {
     display: inline-flex;
     align-items: center;
@@ -802,7 +1307,7 @@
 }
 
 /* ========================================
-   NODE BADGE - With Dot
+   NODE BADGE
    ======================================== */
 .nodeBadge {
     font-size: 10px;
@@ -826,7 +1331,6 @@
     flex-shrink: 0;
 }
 
-/* Normal Badge - Green */
 .badgeNormal {
     background: var(--success-soft, rgba(52, 211, 153, 0.12));
     color: var(--success, #34d399);
@@ -853,7 +1357,6 @@
     }
 }
 
-/* Shedded Badge - Red */
 .badgeShedded {
     background: var(--accent-soft, rgba(248, 113, 113, 0.12));
     color: var(--accent-red, #f87171);
@@ -958,7 +1461,6 @@
             color: var(--text-secondary, #94a3b8);
         }
 
-/* Zone Action Buttons - Always visible */
 .zoneActionsWrapper .actionButtons {
     opacity: 0.6;
     transform: scale(1);
@@ -996,17 +1498,42 @@
     margin-bottom: 24px;
 }
 
+.chartAnimate {
+    animation: chartFadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+    .chartAnimate:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .chartAnimate:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+@keyframes chartFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .chartCard {
     background: var(--bg-card, #1a1d24);
     border-radius: 16px;
     padding: 20px 24px;
     box-shadow: 0 2px 12px var(--shadow, rgba(0, 0, 0, 0.40));
     border: 1px solid var(--border-card, #2a2f38);
-    transition: all 0.25s ease;
+    transition: all 0.3s ease;
 }
 
     .chartCard:hover {
-        border-color: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.06);
     }
 
 .chartHeader {
@@ -1081,27 +1608,111 @@
     background: rgba(255, 255, 255, 0.05);
     border-radius: 100px;
     overflow: hidden;
+    position: relative;
+}
+
+    /* Progress bar ambient glow */
+    .progressBg::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: 0;
+        right: 0;
+        bottom: -2px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.02), transparent);
+        animation: progressShimmer 3s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+@keyframes progressShimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 .progressFillP1 {
     height: 100%;
-    background: var(--accent-red, #f87171);
+    background: linear-gradient(90deg, var(--accent-red, #f87171), #fca5a5);
     border-radius: 100px;
-    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+}
+
+    .progressFillP1::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+        animation: progressGlow 2s ease-in-out infinite;
+    }
+
+@keyframes progressGlow {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 .progressFillP2 {
     height: 100%;
-    background: var(--chart-blue, #60a5fa);
+    background: linear-gradient(90deg, var(--chart-blue, #60a5fa), #93c5fd);
     border-radius: 100px;
-    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
 }
+
+    .progressFillP2::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+        animation: progressGlow 2.5s ease-in-out infinite;
+    }
 
 .progressFillP3 {
     height: 100%;
-    background: var(--text-muted, #64748b);
+    background: linear-gradient(90deg, var(--text-muted, #64748b), #94a3b8);
     border-radius: 100px;
-    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+}
+
+    .progressFillP3::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+        animation: progressGlow 3s ease-in-out infinite;
+    }
+
+.progressAnimate {
+    animation: progressGrow 0.8s ease-out;
+}
+
+@keyframes progressGrow {
+    from {
+        width: 0 !important;
+    }
+
+    to {
+        width: var(--progress-width, 0%);
+    }
 }
 
 /* ========================================
@@ -1121,12 +1732,29 @@
     border-radius: 10px;
     font-size: 14px;
     border-left: 4px solid transparent;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-    .alarmItem:hover {
-        transform: translateX(4px);
+.alarmAnimate {
+    animation: alarmSlideIn 0.4s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes alarmSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-15px);
     }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.alarmItem:hover {
+    transform: translateX(6px);
+}
 
 .alarmCritical {
     background: rgba(248, 113, 113, 0.06);
@@ -1186,10 +1814,10 @@
     justify-content: center;
     z-index: 1000;
     padding: 20px;
-    animation: fadeIn 0.25s ease;
+    animation: modalFadeIn 0.25s ease;
 }
 
-@keyframes fadeIn {
+@keyframes modalFadeIn {
     from {
         opacity: 0;
     }
@@ -1207,10 +1835,10 @@
     width: 100%;
     max-width: 440px;
     box-shadow: 0 24px 80px var(--shadow-heavy, rgba(0, 0, 0, 0.60));
-    animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: modalSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes slideUp {
+@keyframes modalSlideUp {
     from {
         opacity: 0;
         transform: translateY(20px) scale(0.97);
@@ -1371,8 +1999,8 @@
 
     .saveBtn:hover:not(:disabled) {
         background: var(--accent-hover, #ef4444);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px var(--accent-glow, rgba(248, 113, 113, 0.20));
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px var(--accent-glow, rgba(248, 113, 113, 0.25));
     }
 
     .saveBtn:disabled {
@@ -1896,7 +2524,6 @@
     }
 }
 
-/* Extra Small */
 @media (max-width: 380px) {
     .zoneHeader {
         flex-direction: column;
