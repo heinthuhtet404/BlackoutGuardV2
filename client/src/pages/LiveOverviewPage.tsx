@@ -119,16 +119,19 @@ export function LiveOverviewPage() {
     const [isSavingZone, setIsSavingZone] = useState(false);
     const [deletingZoneId, setDeletingZoneId] = useState<string | null>(null);
 
-    // ✅ FIXED: Use correct endpoint /simulator/config
+    // ============================================
+    // State for smooth decreasing values
+    // ============================================
+    const [simulatedFuelLevel, setSimulatedFuelLevel] = useState<number>(85);
+    const [simulatedRuntime, setSimulatedRuntime] = useState<number>(12);
+
+    // Fetch Facility Data
     useEffect(() => {
         const fetchFacility = async () => {
             try {
-                // Try to get facility from facilities endpoint first
-                // If that fails, try simulator config endpoint
                 let facilityData = null;
 
                 try {
-                    // Try the new FacilitiesController endpoint
                     const data = await get<FacilityDto[]>("/facilities");
                     if (data && data.length > 0) {
                         facilityData = data[0];
@@ -137,11 +140,9 @@ export function LiveOverviewPage() {
                     console.log("Facilities endpoint failed, trying simulator config...");
                 }
 
-                // If facilities endpoint failed, try simulator config
                 if (!facilityData) {
                     try {
                         const configData = await get<any>("/simulator/config");
-                        // Map simulator config to FacilityDto
                         facilityData = {
                             id: configData.id || "current-facility",
                             tenantId: configData.tenantId || "current-tenant",
@@ -154,7 +155,6 @@ export function LiveOverviewPage() {
                         };
                     } catch (err) {
                         console.error("Simulator config also failed:", err);
-                        // Use mock data as fallback
                         facilityData = {
                             id: "0e6efd17-9662-4de1-8871-2d5ce7190f0a",
                             tenantId: "0e6efd17-9662-4de1-8871-2d5ce7190f0a",
@@ -179,6 +179,43 @@ export function LiveOverviewPage() {
         fetchFacility();
     }, []);
 
+    // ============================================
+    // Simulate real-time decreasing values
+    // Fuel level and runtime decrease slowly over time
+    // ============================================
+    useEffect(() => {
+        // Only run when generator is ON
+        if (!telemetry?.generatorOn) return;
+
+        const interval = setInterval(() => {
+            // Decrease fuel level slowly (0.05% per second)
+            setSimulatedFuelLevel((prev) => {
+                const newValue = Math.max(0, prev - 0.05);
+                return Math.round(newValue * 10) / 10;
+            });
+
+            // Decrease runtime slowly (0.01 hours per second)
+            setSimulatedRuntime((prev) => {
+                const newValue = Math.max(0, prev - 0.01);
+                return Math.round(newValue * 10) / 10;
+            });
+        }, 1000); // Update every second
+
+        return () => clearInterval(interval);
+    }, [telemetry?.generatorOn]);
+
+    // ============================================
+    // Reset fuel and runtime when generator turns off
+    // ============================================
+    useEffect(() => {
+        if (!telemetry?.generatorOn) {
+            // Reset to initial values when generator is OFF
+            setSimulatedFuelLevel(85);
+            setSimulatedRuntime(12);
+        }
+    }, [telemetry?.generatorOn]);
+
+    // Fetch Zones and Loads
     useEffect(() => {
         const fetchZonesAndLoads = async () => {
             try {
@@ -194,6 +231,7 @@ export function LiveOverviewPage() {
         fetchZonesAndLoads();
     }, []);
 
+    // Telemetry Effects
     useEffect(() => {
         if (!telemetry) return;
 
@@ -232,12 +270,22 @@ export function LiveOverviewPage() {
         setAlarms((prev) => [newAlarm, ...prev.slice(0, 4)]);
     }, [latestDecision]);
 
+    // ============================================
+    // Core Variables
+    // ============================================
     const isUnderFrequency = telemetry ? telemetry.frequency < 49.5 : false;
     const isGridOnline = facility?.isGridOnline ?? true;
     const generatorCapacityKw = facility?.generatorCapacityKw || 0;
     const solarCapacityKw = facility?.solarCapacityKw || 0;
 
-    // ✅ MOVED: All useMemo hooks must be defined BEFORE getSystemMode
+    // ============================================
+    // Total Available Capacity (Solar + Generator)
+    // ============================================
+    const totalAvailableCapacity = solarCapacityKw + generatorCapacityKw;
+
+    // ============================================
+    // Load Calculations
+    // ============================================
     const allLoads = useMemo(() => {
         return zones.flatMap((z) => getAllZoneLoads(z));
     }, [zones]);
@@ -246,84 +294,65 @@ export function LiveOverviewPage() {
         return allLoads.reduce((sum, l) => sum + (l.powerRatingKw || 0), 0);
     }, [allLoads]);
 
+    // ============================================
+    // Capacity Allocation Approach
+    // ============================================
     const loadStatusMap = useMemo(() => {
         const statusMap = new Map<string, "Normal" | "Shedded">();
 
-        // ၁။ Initial State - Load အားလုံးကို Normal (စိမ်း) အဖြစ် သတ်မှတ်ထားမည်
-        allLoads.forEach((load) => {
-            statusMap.set(load.id, "Normal");
-        });
-
-        // ============================================
-        // ၁. Grid မီးလာလျှင် အကုန်စိမ်း
-        // ============================================
         if (isGridOnline) {
-            return statusMap;
-        }
-
-        // ============================================
-        // ၂. Available Power Source (Capacity) ကို စစ်ဆေးခြင်း
-        // ============================================
-        let availableCapacity = 0;
-
-        const hasSolar = solarCapacityKw > 0;
-        const hasGenerator = generatorCapacityKw > 0;
-
-        // Solar လည်းမရှိ၊ Generator လည်းမရှိပါက ( Power Source ဘာမှမရှိပါက )
-        if (!hasSolar && !hasGenerator) {
             allLoads.forEach((load) => {
-                statusMap.set(load.id, "Shedded");
+                statusMap.set(load.id, "Normal");
             });
             return statusMap;
         }
 
-        // A. Solar ဖြင့် လုံလောက်မှု ရှိ/မရှိ စစ်ဆေးခြင်း
-        if (hasSolar && solarCapacityKw >= totalConfiguredKw) {
-            // Solar Capacity က Load အားလုံးအတွက် လုံလောက်သဖြင့် အကုန်စိမ်းမည်
-            return statusMap;
-        }
+        let availableCapacity = 0;
 
-        // B. Solar Capacity မလုံလောက်ပါက Available Capacity ကို တွက်ချက်ခြင်း
-        if (hasSolar && hasGenerator) {
-            // Solar ရော Generator ပါရှိပါက ၎င်းတို့ နှစ်ခုပေါင်း Capacity အထိ အသုံးပြုမည်
+        if (solarCapacityKw > 0 && generatorCapacityKw > 0) {
             availableCapacity = solarCapacityKw + generatorCapacityKw;
-        } else if (hasSolar) {
-            // Solar သီးသန့်ပဲရှိပါက Solar Capacity ဖြင့်သာ Shedding တွက်မည်
+        } else if (solarCapacityKw > 0) {
             availableCapacity = solarCapacityKw;
-        } else if (hasGenerator) {
-            // Solar မရှိဘဲ Generator သီးသန့်ပဲရှိပါက Generator Capacity ဖြင့် Shedding တွက်မည်
+        } else if (generatorCapacityKw > 0) {
             availableCapacity = generatorCapacityKw;
         }
 
-        // ============================================
-        // ၃. Available Capacity မလုံလောက်ပါက Load Shedding လုပ်ဆောင်ခြင်း
-        // ============================================
-
-        // လိုအပ်နေသည့် Excess Power ပမာဏ
-        let excessPower = totalConfiguredKw - availableCapacity;
-
-        // Capacity ဖြင့် လုံးဝ မလုံလောက်ပါက (သို့မဟုတ် Available Capacity 0 ဖြစ်နေပါက)
-        if (excessPower >= totalConfiguredKw || availableCapacity <= 0) {
+        if (availableCapacity <= 0) {
             allLoads.forEach((load) => {
                 statusMap.set(load.id, "Shedded");
             });
             return statusMap;
         }
 
-        // Available Capacity က Load Total ထက်ကြီး သို့မဟုတ် ညီပါက Shedding လုပ်ရန် မလိုပါ
-        if (excessPower <= 0) {
+        if (totalConfiguredKw <= availableCapacity) {
+            allLoads.forEach((load) => {
+                statusMap.set(load.id, "Normal");
+            });
             return statusMap;
         }
 
-        // Priority အမြင့်ဆုံး (Priority Number ကြီးသော) Load ကို စတင် Shedded လုပ်မည်
-        const sortedLoads = [...allLoads].sort(
-            (a, b) => getLoadPriorityNum(b) - getLoadPriorityNum(a)
-        );
+        allLoads.forEach((load) => {
+            statusMap.set(load.id, "Shedded");
+        });
+
+        const sortedLoads = [...allLoads].sort((a, b) => {
+            const priorityA = getLoadPriorityNum(a);
+            const priorityB = getLoadPriorityNum(b);
+
+            if (priorityA !== priorityB) {
+                return priorityA - priorityB;
+            }
+            return (b.powerRatingKw || 0) - (a.powerRatingKw || 0);
+        });
+
+        let remainingCapacity = availableCapacity;
 
         for (const load of sortedLoads) {
-            if (excessPower <= 0) break;
-            statusMap.set(load.id, "Shedded");
-            excessPower -= load.powerRatingKw || 0;
+            const loadPower = load.powerRatingKw || 0;
+            if (loadPower <= remainingCapacity) {
+                statusMap.set(load.id, "Normal");
+                remainingCapacity -= loadPower;
+            }
         }
 
         return statusMap;
@@ -336,7 +365,57 @@ export function LiveOverviewPage() {
         }, 0);
     }, [allLoads, loadStatusMap]);
 
-    // ✅ MOVED: getSystemMode now defined AFTER realTimeLoadKw is initialized
+    // ============================================
+    // ✅ Generator Metrics based on Total Available Capacity
+    // ============================================
+    const generatorMetrics = useMemo(() => {
+        // Generator OFF → return null for all metrics
+        if (!telemetry?.generatorOn) {
+            return {
+                engineTemp: null,
+                fuelLevel: null,
+                runtimeRemaining: null
+            };
+        }
+
+        // ============================================
+        // 1. Engine Temperature
+        // Based on load percentage of total available capacity
+        // ============================================
+        const baseTemp = 85;
+        const loadPercent = totalAvailableCapacity > 0
+            ? (realTimeLoadKw / totalAvailableCapacity) * 100
+            : 0;
+        const loadFactor = (loadPercent / 10) * 3;
+        const engineTemp = Math.min(baseTemp + loadFactor, 150);
+
+        // ============================================
+        // 2. Fuel Level
+        // Smoothly decreasing over time when generator is ON
+        // ============================================
+        const fuelLevel = simulatedFuelLevel;
+
+        // ============================================
+        // 3. Est Runtime
+        // Based on remaining fuel and consumption rate
+        // ============================================
+        const totalFuelCapacity = 500;
+        const baseConsumption = 5;
+        const loadConsumption = (realTimeLoadKw / 100) * 10;
+        const consumptionRate = baseConsumption + loadConsumption;
+        const remainingFuel = (fuelLevel / 100) * totalFuelCapacity;
+        const runtimeRemaining = remainingFuel / consumptionRate;
+
+        return {
+            engineTemp: Math.round(engineTemp * 10) / 10,
+            fuelLevel: Math.round(fuelLevel * 10) / 10,
+            runtimeRemaining: Math.round(runtimeRemaining * 10) / 10
+        };
+    }, [telemetry, realTimeLoadKw, totalAvailableCapacity, simulatedFuelLevel]);
+
+    // ============================================
+    // System Mode
+    // ============================================
     const getSystemMode = () => {
         if (!connected) return { text: "SYSTEM OFFLINE", className: styles.modeOffline };
 
@@ -365,9 +444,9 @@ export function LiveOverviewPage() {
 
     const systemMode = getSystemMode();
 
-    const availableCapacity = isGridOnline ? totalConfiguredKw : (solarCapacityKw > 0 ? solarCapacityKw : generatorCapacityKw);
-    const capacityUsagePct = availableCapacity > 0 ? Math.round((realTimeLoadKw / availableCapacity) * 100) : 0;
-
+    // ============================================
+    // Priority Breakdown
+    // ============================================
     const { p1Kw, p2Kw, p3Kw, p1Pct, p2Pct, p3Pct } = useMemo(() => {
         let p1 = 0, p2 = 0, p3 = 0;
 
@@ -387,9 +466,12 @@ export function LiveOverviewPage() {
     }, [allLoads, totalConfiguredKw]);
 
     const getLoadStatus = (load: LoadDto) => {
-        return loadStatusMap.get(load.id) || "Normal";
+        return loadStatusMap.get(load.id) || "Shedded";
     };
 
+    // ============================================
+    // Zone/Load CRUD Operations
+    // ============================================
     const updateZoneLoadsRecursive = (
         zoneList: ZoneDto[],
         targetLoadId: string,
@@ -651,20 +733,24 @@ export function LiveOverviewPage() {
 
             {/* KPI Cards */}
             <div className={styles.grid}>
-                {/* Grid Voltage - Unchanged */}
-                <div className={`${styles.card} ${isUnderFrequency ? styles.cardDanger : ""}`}>
+                {/* Total Available Capacity (Solar + Generator) */}
+                <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Zap size={24} />
                     </div>
                     <div className={styles.cardContent}>
-                        <h3 className={styles.cardLabel}>Grid Voltage</h3>
+                        <h3 className={styles.cardLabel}>Total Available Capacity</h3>
                         <p className={`${styles.cardValue} ${styles.valueBlue}`}>
-                            {telemetry ? `${telemetry.voltage.toFixed(1)} V` : "—"}
+                            {loadingFacility ? "..." : `${totalAvailableCapacity.toFixed(1)} kW`}
                         </p>
+                        <span className={styles.cardSubText}>
+                            {loadingFacility ? "Loading..." :
+                                `Solar: ${solarCapacityKw} kW | Generator: ${generatorCapacityKw} kW`}
+                        </span>
                     </div>
                 </div>
 
-                {/* Active Real-Time Load - Unchanged */}
+                {/* Active Real-Time Load */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Gauge size={24} />
@@ -674,10 +760,13 @@ export function LiveOverviewPage() {
                         <p className={`${styles.cardValue} ${styles.valueAmber}`}>
                             {loadingDbData ? "..." : `${realTimeLoadKw.toFixed(1)} kW`}
                         </p>
+                        <span className={styles.cardSubText}>
+                            {loadingDbData ? "Loading..." : `${((realTimeLoadKw / totalConfiguredKw) * 100).toFixed(0)}% of total load`}
+                        </span>
                     </div>
                 </div>
 
-                {/* Power Source - FIXED: Shows isGridOnline from DB */}
+                {/* Power Source */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Factory size={24} />
@@ -695,7 +784,7 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
-                {/* Solar Capacity - FIXED: Shows SolarCapacityKw from DB */}
+                {/* Solar Capacity */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Activity size={24} />
@@ -714,7 +803,7 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
-                {/* Generator Capacity - FIXED: Shows GeneratorCapacityKw from DB */}
+                {/* Generator Capacity */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Plug size={24} />
@@ -733,47 +822,89 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
-                {/* Engine Temp - Unchanged */}
+                {/* ✅ Engine Temp - Based on Total Available Capacity */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Thermometer size={24} />
                     </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Engine Temp</h3>
-                        <p className={`${styles.cardValue} ${styles.valueAmber}`}>
-                            {telemetry?.engineTemp !== undefined ? `${telemetry.engineTemp.toFixed(1)} °C` : "—"}
+                        <p className={`${styles.cardValue} ${generatorMetrics.engineTemp !== null
+                                ? generatorMetrics.engineTemp > 120 ? styles.valueDanger : styles.valueAmber
+                                : styles.valueMuted
+                            }`}>
+                            {generatorMetrics.engineTemp !== null
+                                ? `${generatorMetrics.engineTemp.toFixed(1)} °C`
+                                : "—"}
                         </p>
+                        {generatorMetrics.engineTemp !== null && generatorMetrics.engineTemp > 120 && (
+                            <span className={styles.warning}>⚠️ Overheating!</span>
+                        )}
+                        {generatorMetrics.engineTemp !== null && generatorMetrics.engineTemp <= 120 && (
+                            <span className={styles.cardSubText}>Normal operating temp</span>
+                        )}
+                        {generatorMetrics.engineTemp === null && (
+                            <span className={styles.cardSubText}>Generator is OFF</span>
+                        )}
                     </div>
                 </div>
 
-                {/* Fuel Level - Unchanged */}
+                {/* ✅ Fuel Level - Smoothly decreasing */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Fuel size={24} />
                     </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Fuel Level</h3>
-                        <p className={`${styles.cardValue} ${styles.valueBlue}`}>
-                            {telemetry?.fuelLevel !== undefined ? `${telemetry.fuelLevel.toFixed(0)} %` : "—"}
+                        <p className={`${styles.cardValue} ${generatorMetrics.fuelLevel !== null
+                                ? generatorMetrics.fuelLevel < 20 ? styles.valueDanger : styles.valueBlue
+                                : styles.valueMuted
+                            }`}>
+                            {generatorMetrics.fuelLevel !== null
+                                ? `${generatorMetrics.fuelLevel.toFixed(0)} %`
+                                : "—"}
                         </p>
+                        {generatorMetrics.fuelLevel !== null && generatorMetrics.fuelLevel < 20 && (
+                            <span className={styles.warning}>⚠️ Low fuel!</span>
+                        )}
+                        {generatorMetrics.fuelLevel !== null && generatorMetrics.fuelLevel >= 20 && (
+                            <span className={styles.cardSubText}>Fuel level adequate</span>
+                        )}
+                        {generatorMetrics.fuelLevel === null && (
+                            <span className={styles.cardSubText}>Generator is OFF</span>
+                        )}
                     </div>
                 </div>
 
-                {/* Est. Runtime - Unchanged */}
+                {/* ✅ Est Runtime - Based on fuel and load */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Clock size={24} />
                     </div>
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Est. Runtime</h3>
-                        <p className={`${styles.cardValue} ${styles.valueSuccess}`}>
-                            {telemetry?.runtimeRemaining !== undefined ? `${telemetry.runtimeRemaining.toFixed(1)} hrs` : "—"}
+                        <p className={`${styles.cardValue} ${generatorMetrics.runtimeRemaining !== null
+                                ? generatorMetrics.runtimeRemaining < 1 ? styles.valueDanger : styles.valueSuccess
+                                : styles.valueMuted
+                            }`}>
+                            {generatorMetrics.runtimeRemaining !== null
+                                ? `${generatorMetrics.runtimeRemaining.toFixed(1)} hrs`
+                                : "—"}
                         </p>
+                        {generatorMetrics.runtimeRemaining !== null && generatorMetrics.runtimeRemaining < 1 && (
+                            <span className={styles.warning}>⚠️ Low runtime!</span>
+                        )}
+                        {generatorMetrics.runtimeRemaining !== null && generatorMetrics.runtimeRemaining >= 1 && (
+                            <span className={styles.cardSubText}>Runtime remaining</span>
+                        )}
+                        {generatorMetrics.runtimeRemaining === null && (
+                            <span className={styles.cardSubText}>Generator is OFF</span>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* System Status Map - Rest of the component remains the same */}
+            {/* System Status Map */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
                     <div className={styles.sectionHeaderLeft}>
@@ -1017,19 +1148,6 @@ export function LiveOverviewPage() {
 
             {/* Charts Row */}
             <div className={styles.chartsRow}>
-                <div className={styles.chartCard}>
-                    <div className={styles.chartHeader}>
-                        <Activity size={18} className={styles.chartIcon} />
-                        <h3 className={styles.chartTitle}>Real-Time Frequency</h3>
-                    </div>
-                    <div className={styles.chartContainer}>{renderFrequencyChart()}</div>
-                    <div className={styles.chartFooter}>
-                        <span>48.0 Hz</span>
-                        <span className={styles.chartTarget}>Target: 50.0 Hz</span>
-                        <span>52.0 Hz</span>
-                    </div>
-                </div>
-
                 <div className={styles.chartCard}>
                     <div className={styles.chartHeader}>
                         <Layers size={18} className={styles.chartIcon} />
