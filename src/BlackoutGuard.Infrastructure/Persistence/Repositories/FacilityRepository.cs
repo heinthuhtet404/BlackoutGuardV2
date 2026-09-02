@@ -21,8 +21,8 @@ public class FacilityRepository : IFacilityRepository
 
         return facility is null ? null : new FacilityDto
         {
-            Id = facility.Id,
-            TenantId = facility.TenantId,
+            Id = facility.Id.ToString(),
+            TenantId = facility.TenantId.ToString(),
             Name = facility.Name,
             GeneratorCapacityKW = facility.GeneratorCapacityKw
         };

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace BlackoutGuard.Api.Controllers;
 
@@ -34,24 +35,49 @@ public class PowerSimulatorController : ControllerBase
         _powerService = powerService;
     }
 
+    private Guid? GetFacilityIdFromClaims()
+    {
+        var claimValue = User.FindFirstValue("facility_id") ??
+                         User.FindFirstValue("FacilityId");
+
+        if (string.IsNullOrEmpty(claimValue))
+            return null;
+
+        return Guid.TryParse(claimValue, out var facilityId) ? facilityId : null;
+    }
+
     /// <summary>
     /// Front-end Simulator UI မှ DB ထဲရှိ Facility Configuration ကို ဆွဲယူသည့် GET Endpoint
     /// </summary>
     [HttpGet("config")]
     public async Task<IActionResult> GetFacilityConfig()
     {
-        var facility = await _context.Facilities.FirstOrDefaultAsync();
+        var facilityId = GetFacilityIdFromClaims();
+
+        if (facilityId == null)
+        {
+            return Unauthorized(new { error = "Missing or invalid facility_id claim." });
+        }
+
+        var facility = await _context.Facilities
+            .FirstOrDefaultAsync(f => f.Id == facilityId);
 
         if (facility == null)
         {
             return NotFound(new { message = "No facility found in the database." });
         }
 
+        // Return full facility info for frontend
         return Ok(new
         {
+            id = facility.Id.ToString(),
+            tenantId = facility.TenantId.ToString(),
+            name = facility.Name,
             gridOnline = facility.IsGridOnline,
             solarCapacityKw = facility.SolarCapacityKw,
-            generatorCapacityKw = facility.GeneratorCapacityKw
+            generatorCapacityKw = facility.GeneratorCapacityKw,
+            timezoneId = facility.TimezoneId ?? "UTC",
+            createdAt = facility.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         });
     }
 
@@ -62,7 +88,15 @@ public class PowerSimulatorController : ControllerBase
     [HttpPost("config")]
     public async Task<IActionResult> UpdateFacilityConfig([FromBody] FacilityConfigUpdateRequest request)
     {
-        var facility = await _context.Facilities.FirstOrDefaultAsync();
+        var facilityId = GetFacilityIdFromClaims();
+
+        if (facilityId == null)
+        {
+            return Unauthorized(new { error = "Missing or invalid facility_id claim." });
+        }
+
+        var facility = await _context.Facilities
+            .FirstOrDefaultAsync(f => f.Id == facilityId);
 
         if (facility == null)
         {
@@ -98,8 +132,17 @@ public class PowerSimulatorController : ControllerBase
     [HttpGet("state")]
     public async Task<IActionResult> GetCurrentStatus()
     {
+        var facilityId = GetFacilityIdFromClaims();
+
+        if (facilityId == null)
+        {
+            return Unauthorized(new { error = "Missing or invalid facility_id claim." });
+        }
+
         // 1. Database ထဲရှိ Active Facility ၏ Power Configuration ကို ရယူခြင်း
-        var facility = await _context.Facilities.FirstOrDefaultAsync();
+        var facility = await _context.Facilities
+            .FirstOrDefaultAsync(f => f.Id == facilityId);
+
         if (facility != null)
         {
             CurrentState = CurrentState with
@@ -111,8 +154,10 @@ public class PowerSimulatorController : ControllerBase
             };
         }
 
-        // 2. Fetch DB Models from Infrastructure
-        var dbLoads = await _context.Loads.ToListAsync();
+        // 2. Fetch DB Models from Infrastructure (filtered by facility)
+        var dbLoads = await _context.Loads
+            .Where(l => l.FacilityId == facilityId)
+            .ToListAsync();
 
         // 3. Map Infrastructure Models -> Domain Entities
         var domainLoads = dbLoads.Select(MapToDomain).ToList();
@@ -130,10 +175,19 @@ public class PowerSimulatorController : ControllerBase
     [HttpPost("update-source")]
     public async Task<IActionResult> UpdatePowerSource([FromBody] PowerSourceState request)
     {
+        var facilityId = GetFacilityIdFromClaims();
+
+        if (facilityId == null)
+        {
+            return Unauthorized(new { error = "Missing or invalid facility_id claim." });
+        }
+
         CurrentState = request;
 
-        // 1. Fetch DB Models from Infrastructure
-        var dbLoads = await _context.Loads.ToListAsync();
+        // 1. Fetch DB Models from Infrastructure (filtered by facility)
+        var dbLoads = await _context.Loads
+            .Where(l => l.FacilityId == facilityId)
+            .ToListAsync();
 
         // 2. Map Infrastructure Models -> Domain Entities
         var domainLoads = dbLoads.Select(MapToDomain).ToList();

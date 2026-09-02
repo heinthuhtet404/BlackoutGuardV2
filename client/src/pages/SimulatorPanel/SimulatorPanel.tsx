@@ -480,7 +480,7 @@ function SimulatorPanelContent() {
                 ) : (
                     <>
                         {/* Target Frequency Slider */}
-                        <div className={styles.controlGroup}>
+                        {/* <div className={styles.controlGroup}>
                             <div className={styles.controlHeader}>
                                 <label className={styles.controlLabel}>
                                     <TrendingUp size={14} className={styles.controlIcon} />
@@ -503,7 +503,7 @@ function SimulatorPanelContent() {
                                 <span className={styles.sliderTarget}>Target: 50.0 Hz</span>
                                 <span>{FREQ_MAX} Hz</span>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Solar Power Capacity Slider */}
                         <div className={styles.controlGroup}>

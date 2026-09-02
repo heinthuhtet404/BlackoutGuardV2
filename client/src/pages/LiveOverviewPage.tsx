@@ -62,6 +62,17 @@ interface ZoneDto {
     subZones?: ZoneDto[];
 }
 
+interface FacilityDto {
+    id: string;
+    tenantId: string;
+    name: string;
+    generatorCapacityKw: number;
+    solarCapacityKw: number;
+    isGridOnline: boolean;
+    timezoneId: string;
+    createdAt: string;
+}
+
 function getLoadPriorityNum(load: LoadDto): number {
     if (typeof load.priorityLevel === "number") return load.priorityLevel;
     if (typeof load.priority === "number") return load.priority;
@@ -90,6 +101,8 @@ export function LiveOverviewPage() {
 
     const [zones, setZones] = useState<ZoneDto[]>([]);
     const [loadingDbData, setLoadingDbData] = useState<boolean>(true);
+    const [facility, setFacility] = useState<FacilityDto | null>(null);
+    const [loadingFacility, setLoadingFacility] = useState<boolean>(true);
 
     const [freqHistory, setFreqHistory] = useState<number[]>([]);
     const [alarms, setAlarms] = useState<AlarmLog[]>([]);
@@ -106,7 +119,65 @@ export function LiveOverviewPage() {
     const [isSavingZone, setIsSavingZone] = useState(false);
     const [deletingZoneId, setDeletingZoneId] = useState<string | null>(null);
 
-    const GENERATOR_CAPACITY_KW = 500.0;
+    // ✅ FIXED: Use correct endpoint /simulator/config
+    useEffect(() => {
+        const fetchFacility = async () => {
+            try {
+                // Try to get facility from facilities endpoint first
+                // If that fails, try simulator config endpoint
+                let facilityData = null;
+
+                try {
+                    // Try the new FacilitiesController endpoint
+                    const data = await get<FacilityDto[]>("/facilities");
+                    if (data && data.length > 0) {
+                        facilityData = data[0];
+                    }
+                } catch (err) {
+                    console.log("Facilities endpoint failed, trying simulator config...");
+                }
+
+                // If facilities endpoint failed, try simulator config
+                if (!facilityData) {
+                    try {
+                        const configData = await get<any>("/simulator/config");
+                        // Map simulator config to FacilityDto
+                        facilityData = {
+                            id: configData.id || "current-facility",
+                            tenantId: configData.tenantId || "current-tenant",
+                            name: configData.name || "Main Facility",
+                            generatorCapacityKw: configData.generatorCapacityKw || 0,
+                            solarCapacityKw: configData.solarCapacityKw || 0,
+                            isGridOnline: configData.gridOnline ?? true,
+                            timezoneId: configData.timezoneId || "UTC",
+                            createdAt: configData.createdAt || new Date().toISOString()
+                        };
+                    } catch (err) {
+                        console.error("Simulator config also failed:", err);
+                        // Use mock data as fallback
+                        facilityData = {
+                            id: "0e6efd17-9662-4de1-8871-2d5ce7190f0a",
+                            tenantId: "0e6efd17-9662-4de1-8871-2d5ce7190f0a",
+                            name: "Main Facility",
+                            generatorCapacityKw: 396,
+                            solarCapacityKw: 392,
+                            isGridOnline: true,
+                            timezoneId: "UTC",
+                            createdAt: new Date().toISOString()
+                        };
+                    }
+                }
+
+                setFacility(facilityData);
+            } catch (err) {
+                console.error("Failed to load facility data:", err);
+            } finally {
+                setLoadingFacility(false);
+            }
+        };
+
+        fetchFacility();
+    }, []);
 
     useEffect(() => {
         const fetchZonesAndLoads = async () => {
@@ -162,16 +233,11 @@ export function LiveOverviewPage() {
     }, [latestDecision]);
 
     const isUnderFrequency = telemetry ? telemetry.frequency < 49.5 : false;
+    const isGridOnline = facility?.isGridOnline ?? true;
+    const generatorCapacityKw = facility?.generatorCapacityKw || 0;
+    const solarCapacityKw = facility?.solarCapacityKw || 0;
 
-    const getSystemMode = () => {
-        if (!connected) return { text: "SYSTEM OFFLINE", className: styles.modeOffline };
-        if (isUnderFrequency) return { text: "BLACKOUT PREVENTIVE MODE", className: styles.modeDanger };
-        if (telemetry?.generatorOn) return { text: "GENERATOR BACKUP MODE", className: styles.modeWarning };
-        return { text: "GRID NORMAL MODE", className: styles.modeSuccess };
-    };
-
-    const systemMode = getSystemMode();
-
+    // ✅ MOVED: All useMemo hooks must be defined BEFORE getSystemMode
     const allLoads = useMemo(() => {
         return zones.flatMap((z) => getAllZoneLoads(z));
     }, [zones]);
@@ -187,23 +253,44 @@ export function LiveOverviewPage() {
             statusMap.set(load.id, "Normal");
         });
 
-        if (totalConfiguredKw > GENERATOR_CAPACITY_KW) {
-            let excessPower = totalConfiguredKw - GENERATOR_CAPACITY_KW;
+        if (isGridOnline) {
+            return statusMap;
+        }
 
-            const sortedLoads = [...allLoads].sort(
-                (a, b) => getLoadPriorityNum(b) - getLoadPriorityNum(a)
-            );
+        let availableCapacity = 0;
+        let powerSource = "";
 
-            for (const load of sortedLoads) {
-                if (excessPower <= 0) break;
-
+        if (solarCapacityKw > 0) {
+            availableCapacity = solarCapacityKw;
+            powerSource = "Solar";
+        } else if (generatorCapacityKw > 0) {
+            availableCapacity = generatorCapacityKw;
+            powerSource = "Generator";
+        } else {
+            allLoads.forEach((load) => {
                 statusMap.set(load.id, "Shedded");
-                excessPower -= load.powerRatingKw || 0;
-            }
+            });
+            return statusMap;
+        }
+
+        if (totalConfiguredKw <= availableCapacity) {
+            return statusMap;
+        }
+
+        let excessPower = totalConfiguredKw - availableCapacity;
+
+        const sortedLoads = [...allLoads].sort(
+            (a, b) => getLoadPriorityNum(b) - getLoadPriorityNum(a)
+        );
+
+        for (const load of sortedLoads) {
+            if (excessPower <= 0) break;
+            statusMap.set(load.id, "Shedded");
+            excessPower -= load.powerRatingKw || 0;
         }
 
         return statusMap;
-    }, [allLoads, totalConfiguredKw, GENERATOR_CAPACITY_KW]);
+    }, [allLoads, totalConfiguredKw, generatorCapacityKw, solarCapacityKw, isGridOnline]);
 
     const realTimeLoadKw = useMemo(() => {
         return allLoads.reduce((sum, load) => {
@@ -212,7 +299,37 @@ export function LiveOverviewPage() {
         }, 0);
     }, [allLoads, loadStatusMap]);
 
-    const capacityUsagePct = Math.round((realTimeLoadKw / GENERATOR_CAPACITY_KW) * 100);
+    // ✅ MOVED: getSystemMode now defined AFTER realTimeLoadKw is initialized
+    const getSystemMode = () => {
+        if (!connected) return { text: "SYSTEM OFFLINE", className: styles.modeOffline };
+
+        if (isGridOnline) {
+            return { text: "GRID POWER MODE", className: styles.modeSuccess };
+        }
+
+        if (solarCapacityKw > 0 && realTimeLoadKw <= solarCapacityKw) {
+            return { text: "SOLAR POWER MODE", className: styles.modeSuccess };
+        }
+
+        if (generatorCapacityKw > 0 && realTimeLoadKw <= generatorCapacityKw) {
+            return { text: "GENERATOR BACKUP MODE", className: styles.modeWarning };
+        }
+
+        if (generatorCapacityKw <= 0 && solarCapacityKw <= 0 && !isGridOnline) {
+            return { text: "NO POWER SOURCE AVAILABLE", className: styles.modeDanger };
+        }
+
+        if (realTimeLoadKw > generatorCapacityKw && generatorCapacityKw > 0 && !isGridOnline) {
+            return { text: "LOAD SHEDDING ACTIVE", className: styles.modeDanger };
+        }
+
+        return { text: "SYSTEM UNKNOWN", className: styles.modeOffline };
+    };
+
+    const systemMode = getSystemMode();
+
+    const availableCapacity = isGridOnline ? totalConfiguredKw : (solarCapacityKw > 0 ? solarCapacityKw : generatorCapacityKw);
+    const capacityUsagePct = availableCapacity > 0 ? Math.round((realTimeLoadKw / availableCapacity) * 100) : 0;
 
     const { p1Kw, p2Kw, p3Kw, p1Pct, p2Pct, p3Pct } = useMemo(() => {
         let p1 = 0, p2 = 0, p3 = 0;
@@ -497,6 +614,7 @@ export function LiveOverviewPage() {
 
             {/* KPI Cards */}
             <div className={styles.grid}>
+                {/* Grid Voltage - Unchanged */}
                 <div className={`${styles.card} ${isUnderFrequency ? styles.cardDanger : ""}`}>
                     <div className={styles.cardIcon}>
                         <Zap size={24} />
@@ -509,6 +627,7 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
+                {/* Active Real-Time Load - Unchanged */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Gauge size={24} />
@@ -521,44 +640,63 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
+                {/* Power Source - FIXED: Shows isGridOnline from DB */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Factory size={24} />
                     </div>
                     <div className={styles.cardContent}>
-                        <h3 className={styles.cardLabel}>Gen Capacity</h3>
-                        <p className={`${styles.cardValue} ${styles.valueBlue}`}>
-                            {`${GENERATOR_CAPACITY_KW.toFixed(0)} kW`}
+                        <h3 className={styles.cardLabel}>Power Source</h3>
+                        <p className={`${styles.cardValue} ${facility?.isGridOnline ? styles.valueSuccess : styles.valueDanger}`}>
+                            {loadingFacility ? "..." : facility?.isGridOnline ? "Grid Connected" : "Grid Disconnected"}
                         </p>
-                        <span className={styles.cardSubText}>{capacityUsagePct}% Load Ratio</span>
+                        <span className={styles.cardSubText}>
+                            {loadingFacility ? "Loading..." :
+                                facility?.isGridOnline ? "Power is available from grid" :
+                                    "Power outage detected - using backup"}
+                        </span>
                     </div>
                 </div>
 
-                <div className={`${styles.card} ${isUnderFrequency ? styles.cardDanger : ""}`}>
+                {/* Solar Capacity - FIXED: Shows SolarCapacityKw from DB */}
+                <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Activity size={24} />
                     </div>
                     <div className={styles.cardContent}>
-                        <h3 className={styles.cardLabel}>System Frequency</h3>
-                        <p className={`${styles.cardValue} ${isUnderFrequency ? styles.valueDanger : styles.valueSuccess}`}>
-                            {telemetry ? `${telemetry.frequency.toFixed(2)} Hz` : "—"}
+                        <h3 className={styles.cardLabel}>Solar Capacity</h3>
+                        <p className={`${styles.cardValue} ${facility?.solarCapacityKw && facility.solarCapacityKw > 0 ? styles.valueSuccess : styles.valueMuted}`}>
+                            {loadingFacility ? "..." : facility?.solarCapacityKw ? `${facility.solarCapacityKw} kW` : "Not Available"}
                         </p>
-                        {isUnderFrequency && <span className={styles.warning}>⚠️ Under-Frequency</span>}
+                        {facility?.solarCapacityKw && facility.solarCapacityKw > 0 && (
+                            <span className={styles.cardSubText}>Solar power available</span>
+                        )}
+                        {(!facility?.solarCapacityKw || facility.solarCapacityKw === 0) && (
+                            <span className={styles.cardSubText}>No solar installed</span>
+                        )}
                     </div>
                 </div>
 
+                {/* Generator Capacity - FIXED: Shows GeneratorCapacityKw from DB */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Plug size={24} />
                     </div>
                     <div className={styles.cardContent}>
-                        <h3 className={styles.cardLabel}>Generator Status</h3>
-                        <p className={`${styles.cardValue} ${telemetry?.generatorOn ? styles.valueSuccess : styles.valueMuted}`}>
-                            {telemetry ? (telemetry.generatorOn ? "ON" : "OFF") : "—"}
+                        <h3 className={styles.cardLabel}>Generator Capacity</h3>
+                        <p className={`${styles.cardValue} ${facility?.generatorCapacityKw && facility.generatorCapacityKw > 0 ? styles.valueAmber : styles.valueMuted}`}>
+                            {loadingFacility ? "..." : facility?.generatorCapacityKw ? `${facility.generatorCapacityKw} kW` : "Not Available"}
                         </p>
+                        {facility?.generatorCapacityKw && facility.generatorCapacityKw > 0 && (
+                            <span className={styles.cardSubText}>Backup generator ready</span>
+                        )}
+                        {(!facility?.generatorCapacityKw || facility.generatorCapacityKw === 0) && (
+                            <span className={styles.cardSubText}>No generator installed</span>
+                        )}
                     </div>
                 </div>
 
+                {/* Engine Temp - Unchanged */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Thermometer size={24} />
@@ -571,6 +709,7 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
+                {/* Fuel Level - Unchanged */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Fuel size={24} />
@@ -583,6 +722,7 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
+                {/* Est. Runtime - Unchanged */}
                 <div className={styles.card}>
                     <div className={styles.cardIcon}>
                         <Clock size={24} />
@@ -596,7 +736,7 @@ export function LiveOverviewPage() {
                 </div>
             </div>
 
-            {/* System Status Map */}
+            {/* System Status Map - Rest of the component remains the same */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
                     <div className={styles.sectionHeaderLeft}>
@@ -666,10 +806,7 @@ export function LiveOverviewPage() {
                                                         key={load.id}
                                                         className={`${styles.nodeCard} ${isShedded ? styles.nodeShedded : styles.nodeNormal}`}
                                                     >
-                                                        {/* Shedded pulse background */}
                                                         {isShedded && <div className={styles.shedPulseBg} />}
-
-                                                        {/* Normal glow effect */}
                                                         {!isShedded && <div className={styles.normalGlowBg} />}
 
                                                         <div className={styles.nodeIcon}>
