@@ -11,7 +11,11 @@ import {
     Users,
     LogOut,
     AlertTriangle,
-    Building2
+    Building2,
+    BarChart3,
+    LineChart,
+    PieChart,
+    Activity,
 } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
@@ -24,6 +28,12 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
     { label: "Live Overview", path: "/overview", icon: <Zap size={20} />, roles: ["Admin", "Operator", "Viewer"] },
+    {
+        label: "Dashboard Analytics",
+        path: "/dashboard",
+        icon: <BarChart3 size={20} />,
+        roles: ["Admin", "Operator"]
+    },
     { label: "Topology Config", path: "/topology", icon: <Network size={20} />, roles: ["Admin", "Operator", "Viewer"] },
     { label: "Rules Engine", path: "/rules", icon: <Sliders size={20} />, roles: ["Admin", "Operator"] },
     { label: "Simulator Panel", path: "/simulator", icon: <SlidersHorizontal size={20} />, roles: ["Admin"] },

@@ -29,6 +29,7 @@ import {
     Settings2,
     RefreshCw,
     Loader2,
+    X,
 } from "lucide-react";
 import styles from "./LiveOverviewPage.module.css";
 
@@ -36,7 +37,7 @@ interface AlarmLog {
     id: string;
     time: string;
     message: string;
-    type: "warning" | "critical" | "success";
+    type: "warning" | "critical" | "success" | "info";
 }
 
 interface LoadDto {
@@ -125,6 +126,17 @@ export function LiveOverviewPage() {
     const [simulatedFuelLevel, setSimulatedFuelLevel] = useState<number>(85);
     const [simulatedRuntime, setSimulatedRuntime] = useState<number>(12);
 
+    // ============================================
+    // Previous state tracking for alarm generation
+    // ============================================
+    const [prevGridStatus, setPrevGridStatus] = useState<boolean | null>(null);
+    const [prevSolarAvailable, setPrevSolarAvailable] = useState<boolean | null>(null);
+    const [prevGeneratorAvailable, setPrevGeneratorAvailable] = useState<boolean | null>(null);
+    const [prevLoadStatusMap, setPrevLoadStatusMap] = useState<Map<string, string>>(new Map());
+    const [prevFuelLevel, setPrevFuelLevel] = useState<number | null>(null);
+    const [prevRuntime, setPrevRuntime] = useState<number | null>(null);
+    const [prevEngineTemp, setPrevEngineTemp] = useState<number | null>(null);
+
     // Fetch Facility Data
     useEffect(() => {
         const fetchFacility = async () => {
@@ -181,7 +193,6 @@ export function LiveOverviewPage() {
 
     // ============================================
     // Simulate real-time decreasing fuel and runtime
-    // Only runs when Grid is OFF AND Generator exists
     // ============================================
     useEffect(() => {
         const isGridOnline = facility?.isGridOnline ?? true;
@@ -207,7 +218,7 @@ export function LiveOverviewPage() {
     }, [facility?.isGridOnline, facility?.generatorCapacityKw]);
 
     // ============================================
-    // Reset fuel and runtime when Grid turns ON or Generator is removed
+    // Reset fuel and runtime when Grid turns ON
     // ============================================
     useEffect(() => {
         const isGridOnline = facility?.isGridOnline ?? true;
@@ -235,47 +246,28 @@ export function LiveOverviewPage() {
         fetchZonesAndLoads();
     }, []);
 
-    // Telemetry Effects
-    useEffect(() => {
-        if (!telemetry) return;
-
-        setFreqHistory((prev) => [...prev.slice(-19), telemetry.frequency]);
-
-        if (telemetry.frequency < 49.5) {
-            const timeStr = new Date().toLocaleTimeString();
-            const alarmMsg = `⚠️ Low Frequency Warning: ${telemetry.frequency.toFixed(2)} Hz`;
-
-            setAlarms((prev) => {
-                if (prev[0]?.message === alarmMsg) return prev;
-                return [
-                    {
-                        id: `${Date.now()}-${Math.random()}`,
-                        time: timeStr,
-                        message: alarmMsg,
-                        type: "warning",
-                    },
-                    ...prev.slice(0, 4),
-                ];
-            });
-        }
-    }, [telemetry]);
-
-    useEffect(() => {
-        if (!latestDecision) return;
-
+    // ============================================
+    // Add Alarm Helper Function
+    // ============================================
+    const addAlarm = (message: string, type: "warning" | "critical" | "success" | "info") => {
         const timeStr = new Date().toLocaleTimeString();
         const newAlarm: AlarmLog = {
             id: `${Date.now()}-${Math.random()}`,
             time: timeStr,
-            message: `⚡ Load Shedding Executed: ${latestDecision.rationale}`,
-            type: "critical",
+            message,
+            type,
         };
 
-        setAlarms((prev) => [newAlarm, ...prev.slice(0, 4)]);
-    }, [latestDecision]);
+        setAlarms((prev) => {
+            // Prevent duplicate alarms
+            const isDuplicate = prev.some(a => a.message === message);
+            if (isDuplicate) return prev;
+            return [newAlarm, ...prev.slice(0, 19)];
+        });
+    };
 
     // ============================================
-    // Core Variables - All from DB
+    // Core Variables
     // ============================================
     const isUnderFrequency = telemetry ? telemetry.frequency < 49.5 : false;
     const isGridOnline = facility?.isGridOnline ?? true;
@@ -296,7 +288,7 @@ export function LiveOverviewPage() {
     }, [allLoads]);
 
     // ============================================
-    // Capacity Allocation Approach
+    // Capacity Allocation - MOVED BEFORE useEffects that use it
     // ============================================
     const loadStatusMap = useMemo(() => {
         const statusMap = new Map<string, "Normal" | "Shedded">();
@@ -367,7 +359,7 @@ export function LiveOverviewPage() {
     }, [allLoads, loadStatusMap]);
 
     // ============================================
-    // Generator Metrics - Based ONLY on DB Data
+    // Generator Metrics
     // ============================================
     const generatorMetrics = useMemo(() => {
         const shouldShowGeneratorMetrics = !isGridOnline && hasGenerator;
@@ -404,6 +396,148 @@ export function LiveOverviewPage() {
             isActive: true
         };
     }, [isGridOnline, hasGenerator, realTimeLoadKw, totalAvailableCapacity, simulatedFuelLevel]);
+
+    // ============================================
+    // Generate Alarms based on state changes
+    // ============================================
+    useEffect(() => {
+        if (!facility) return;
+
+        const isGridOnline = facility.isGridOnline;
+        const hasGenerator = facility.generatorCapacityKw > 0;
+        const hasSolar = facility.solarCapacityKw > 0;
+
+        // Grid Status Change
+        if (prevGridStatus !== null && prevGridStatus !== isGridOnline) {
+            if (isGridOnline) {
+                addAlarm("🔌 Grid POWER RESTORED", "success");
+            } else {
+                addAlarm("⚡ Grid POWER OUTAGE detected", "critical");
+            }
+        }
+        setPrevGridStatus(isGridOnline);
+
+        // Solar Availability
+        const solarAvailable = hasSolar && isGridOnline;
+        if (prevSolarAvailable !== null && prevSolarAvailable !== solarAvailable) {
+            if (solarAvailable) {
+                addAlarm("☀️ Solar power is AVAILABLE", "success");
+            } else {
+                addAlarm("☀️ Solar power is UNAVAILABLE", "warning");
+            }
+        }
+        setPrevSolarAvailable(solarAvailable);
+
+        // Generator Availability
+        const generatorAvailable = hasGenerator && !isGridOnline;
+        if (prevGeneratorAvailable !== null && prevGeneratorAvailable !== generatorAvailable) {
+            if (generatorAvailable) {
+                addAlarm("🔄 Generator is now RUNNING", "warning");
+            } else if (prevGeneratorAvailable === true) {
+                addAlarm("🛑 Generator has STOPPED", "info");
+            }
+        }
+        setPrevGeneratorAvailable(generatorAvailable);
+
+    }, [facility]);
+
+    // ============================================
+    // Load Status Change Alarms - FIXED: loadStatusMap is now defined
+    // ============================================
+    useEffect(() => {
+        // Skip if still loading or no zones
+        if (loadingDbData || zones.length === 0) return;
+        // Skip if loadStatusMap is empty (no loads)
+        if (loadStatusMap.size === 0) return;
+
+        const currentLoadStatusMap = new Map<string, string>();
+
+        allLoads.forEach((load) => {
+            const status = loadStatusMap.get(load.id) || "Shedded";
+            currentLoadStatusMap.set(load.id, status);
+        });
+
+        // Compare with previous status
+        if (prevLoadStatusMap.size > 0) {
+            currentLoadStatusMap.forEach((status, loadId) => {
+                const prevStatus = prevLoadStatusMap.get(loadId);
+                if (prevStatus && prevStatus !== status) {
+                    const load = allLoads.find(l => l.id === loadId);
+                    if (load) {
+                        if (status === "Normal") {
+                            addAlarm(`✅ Load "${load.name}" is now ACTIVE (${load.powerRatingKw}kW)`, "success");
+                        } else if (status === "Shedded") {
+                            addAlarm(`⛔ Load "${load.name}" has been SHEDDED (${load.powerRatingKw}kW)`, "warning");
+                        }
+                    }
+                }
+            });
+        }
+
+        setPrevLoadStatusMap(currentLoadStatusMap);
+    }, [loadStatusMap, zones, loadingDbData, allLoads]);
+
+    // ============================================
+    // Telemetry Alarms (Frequency)
+    // ============================================
+    useEffect(() => {
+        if (!telemetry) return;
+
+        setFreqHistory((prev) => [...prev.slice(-19), telemetry.frequency]);
+
+        if (telemetry.frequency < 49.5) {
+            addAlarm(`⚠️ Low Frequency Warning: ${telemetry.frequency.toFixed(2)} Hz`, "warning");
+        }
+    }, [telemetry]);
+
+    // ============================================
+    // Load Shedding Decision Alarms
+    // ============================================
+    useEffect(() => {
+        if (!latestDecision) return;
+
+        addAlarm(`⚡ Load Shedding Executed: ${latestDecision.rationale}`, "critical");
+    }, [latestDecision]);
+
+    // ============================================
+    // Generator Health Alarms
+    // ============================================
+    useEffect(() => {
+        const metrics = generatorMetrics;
+
+        // Fuel Level Alarm
+        if (metrics.fuelLevel !== null) {
+            if (prevFuelLevel !== null && prevFuelLevel > 20 && metrics.fuelLevel <= 20) {
+                addAlarm(`⛽ Fuel level LOW: ${metrics.fuelLevel.toFixed(1)}%`, "warning");
+            }
+            if (prevFuelLevel !== null && prevFuelLevel > 10 && metrics.fuelLevel <= 10) {
+                addAlarm(`⛽ Fuel level CRITICAL: ${metrics.fuelLevel.toFixed(1)}%`, "critical");
+            }
+            setPrevFuelLevel(metrics.fuelLevel);
+        }
+
+        // Runtime Alarm
+        if (metrics.runtimeRemaining !== null) {
+            if (prevRuntime !== null && prevRuntime > 1 && metrics.runtimeRemaining <= 1) {
+                addAlarm(`⏱️ Runtime remaining LOW: ${metrics.runtimeRemaining.toFixed(1)} hrs`, "warning");
+            }
+            if (prevRuntime !== null && prevRuntime > 0.5 && metrics.runtimeRemaining <= 0.5) {
+                addAlarm(`⏱️ Runtime remaining CRITICAL: ${metrics.runtimeRemaining.toFixed(1)} hrs`, "critical");
+            }
+            setPrevRuntime(metrics.runtimeRemaining);
+        }
+
+        // Engine Temperature Alarm
+        if (metrics.engineTemp !== null) {
+            if (prevEngineTemp !== null && prevEngineTemp <= 120 && metrics.engineTemp > 120) {
+                addAlarm(`🌡️ Engine temperature HIGH: ${metrics.engineTemp.toFixed(1)}°C`, "warning");
+            }
+            if (prevEngineTemp !== null && prevEngineTemp <= 140 && metrics.engineTemp > 140) {
+                addAlarm(`🌡️ Engine temperature CRITICAL: ${metrics.engineTemp.toFixed(1)}°C`, "critical");
+            }
+            setPrevEngineTemp(metrics.engineTemp);
+        }
+    }, [generatorMetrics]);
 
     // ============================================
     // System Mode
@@ -459,6 +593,13 @@ export function LiveOverviewPage() {
 
     const getLoadStatus = (load: LoadDto) => {
         return loadStatusMap.get(load.id) || "Shedded";
+    };
+
+    // ============================================
+    // Clear All Alarms
+    // ============================================
+    const clearAlarms = () => {
+        setAlarms([]);
     };
 
     // ============================================
@@ -823,8 +964,8 @@ export function LiveOverviewPage() {
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Engine Temp</h3>
                         <p className={`${styles.cardValue} ${generatorMetrics.engineTemp !== null
-                                ? generatorMetrics.engineTemp > 120 ? styles.valueDanger : styles.valueAmber
-                                : styles.valueMuted
+                            ? generatorMetrics.engineTemp > 120 ? styles.valueDanger : styles.valueAmber
+                            : styles.valueMuted
                             } ${styles.valuePulse}`}>
                             {generatorMetrics.engineTemp !== null
                                 ? `${generatorMetrics.engineTemp.toFixed(1)} °C`
@@ -852,8 +993,8 @@ export function LiveOverviewPage() {
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Fuel Level</h3>
                         <p className={`${styles.cardValue} ${generatorMetrics.fuelLevel !== null
-                                ? generatorMetrics.fuelLevel < 20 ? styles.valueDanger : styles.valueBlue
-                                : styles.valueMuted
+                            ? generatorMetrics.fuelLevel < 20 ? styles.valueDanger : styles.valueBlue
+                            : styles.valueMuted
                             } ${styles.valuePulse}`}>
                             {generatorMetrics.fuelLevel !== null
                                 ? `${generatorMetrics.fuelLevel.toFixed(0)} %`
@@ -881,8 +1022,8 @@ export function LiveOverviewPage() {
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Est. Runtime</h3>
                         <p className={`${styles.cardValue} ${generatorMetrics.runtimeRemaining !== null
-                                ? generatorMetrics.runtimeRemaining < 1 ? styles.valueDanger : styles.valueSuccess
-                                : styles.valueMuted
+                            ? generatorMetrics.runtimeRemaining < 1 ? styles.valueDanger : styles.valueSuccess
+                            : styles.valueMuted
                             } ${styles.valuePulse}`}>
                             {generatorMetrics.runtimeRemaining !== null
                                 ? `${generatorMetrics.runtimeRemaining.toFixed(1)} hrs`
@@ -1180,14 +1321,22 @@ export function LiveOverviewPage() {
                 </div>
             </div>
 
-            {/* Alarms */}
-            <div className={`${styles.sectionCard} ${styles.sectionAnimate}`}>
+            {/* ============================================ */}
+            {/* ALARMS & EVENTS - MOVED TO TOP */}
+            {/* ============================================ */}
+            <div className={`${styles.alarmsSection} ${styles.sectionAnimate}`}>
                 <div className={styles.sectionHeader}>
                     <div className={styles.sectionHeaderLeft}>
                         <Bell size={20} className={styles.sectionIcon} />
                         <h2 className={styles.sectionTitle}>Recent Alarms & Events</h2>
+                        <span className={styles.alarmCount}>{alarms.length} events</span>
                     </div>
-                    <span className={styles.alarmCount}>{alarms.length} events</span>
+                    {alarms.length > 0 && (
+                        <button className={styles.clearAlarmsBtn} onClick={clearAlarms}>
+                            <X size={16} />
+                            Clear All
+                        </button>
+                    )}
                 </div>
                 {alarms.length === 0 ? (
                     <div className={styles.noAlarms}>
@@ -1203,9 +1352,11 @@ export function LiveOverviewPage() {
                                     ? styles.alarmCritical
                                     : alarm.type === "warning"
                                         ? styles.alarmWarning
-                                        : styles.alarmSuccess
+                                        : alarm.type === "success"
+                                            ? styles.alarmSuccess
+                                            : styles.alarmInfo
                                     } ${styles.alarmAnimate}`}
-                                style={{ animationDelay: `${index * 0.1}s` }}
+                                style={{ animationDelay: `${index * 0.05}s` }}
                             >
                                 <span className={styles.alarmTime}>{alarm.time}</span>
                                 <span className={styles.alarmMessage}>{alarm.message}</span>
