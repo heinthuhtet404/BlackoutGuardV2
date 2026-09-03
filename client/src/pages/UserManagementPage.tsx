@@ -303,7 +303,6 @@ function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                             value={role}
                             onChange={(e) => setRole(e.target.value as UserRole)}
                         >
-                            <option value="Admin">🛡️ Admin</option>
                             <option value="Operator">⚙️ Operator</option>
                             <option value="Viewer">👁️ Viewer</option>
                         </select>
