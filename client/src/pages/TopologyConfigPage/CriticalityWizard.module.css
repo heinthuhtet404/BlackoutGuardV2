@@ -35,15 +35,19 @@
     --priority-p3: #34d399;
     --priority-p3-bg: rgba(52, 211, 153, 0.15);
     --priority-p3-border: rgba(52, 211, 153, 0.20);
-    /* Slider Colors */
+    /* Slider Colors - Modernized */
     --slider-q1: #f87171;
-    --slider-q1-bg: rgba(248, 113, 113, 0.15);
+    --slider-q1-bg: rgba(248, 113, 113, 0.12);
+    --slider-q1-glow: rgba(248, 113, 113, 0.35);
     --slider-q2: #60a5fa;
-    --slider-q2-bg: rgba(96, 165, 250, 0.15);
+    --slider-q2-bg: rgba(96, 165, 250, 0.12);
+    --slider-q2-glow: rgba(96, 165, 250, 0.35);
     --slider-q3: #fbbf24;
-    --slider-q3-bg: rgba(251, 191, 36, 0.15);
+    --slider-q3-bg: rgba(251, 191, 36, 0.12);
+    --slider-q3-glow: rgba(251, 191, 36, 0.35);
     --slider-q4: #34d399;
-    --slider-q4-bg: rgba(52, 211, 153, 0.15);
+    --slider-q4-bg: rgba(52, 211, 153, 0.12);
+    --slider-q4-glow: rgba(52, 211, 153, 0.35);
 }
 
 /* ========================================
@@ -62,9 +66,32 @@
     transition: all 0.25s ease;
 }
 
-    .wizard:hover {
-        border-color: rgba(255, 255, 255, 0.04);
-    }
+.wizard:hover {
+    border-color: rgba(255, 255, 255, 0.04);
+}
+
+/* ========================================
+   ✨ SLIDER ACCENT COLOR OVERRIDE ✨
+   ======================================== */
+
+/* Option 1: Use theme accent color */
+.wizard :global(.slider) {
+    accent-color: var(--accent-red, #f87171) !important;
+}
+
+/* Option 2: Remove accent-color completely */
+/*
+.wizard :global(.slider) {
+    accent-color: unset !important;
+}
+*/
+
+/* Option 3: Use a specific color */
+/*
+.wizard :global(.slider) {
+    accent-color: #f87171 !important;
+}
+*/
 
 /* ========================================
    WIZARD HEADER
@@ -116,13 +143,8 @@
 }
 
 @keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 /* ========================================
@@ -158,10 +180,10 @@
     position: relative;
 }
 
-    .mode:hover {
-        color: var(--text-primary, #e8edf5);
-        background: rgba(255, 255, 255, 0.04);
-    }
+.mode:hover {
+    color: var(--text-primary, #e8edf5);
+    background: rgba(255, 255, 255, 0.04);
+}
 
 .modeActive {
     background: var(--accent-soft, rgba(248, 113, 113, 0.12));
@@ -169,196 +191,277 @@
     box-shadow: 0 2px 8px var(--shadow, rgba(0, 0, 0, 0.30));
 }
 
-    .modeActive:hover {
-        background: rgba(248, 113, 113, 0.18);
-    }
+.modeActive:hover {
+    background: rgba(248, 113, 113, 0.18);
+}
 
-    .mode input[type="radio"],
-    .modeActive input[type="radio"] {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
-        pointer-events: none;
-    }
+.mode input[type="radio"],
+.modeActive input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
 
 /* ========================================
-   SLIDER OVERRIDES - MODERN GRADIENT
+   ✨ MODERN SLIDER OVERRIDES - ENHANCED ✨
    ======================================== */
 
-/* Q1 - Safety Risk (Red) */
-.wizard :global(.slider-q1) :global(.slider-fill) {
-    background: linear-gradient(90deg, rgba(248, 113, 113, 0.3), #f87171) !important;
-}
-
-.wizard :global(.slider-q1) :global(.slider-thumb) {
-    background: #f87171 !important;
-    box-shadow: 0 0 0 2px #f87171, 0 2px 12px rgba(248, 113, 113, 0.30) !important;
-}
-
-.wizard :global(.slider-q1) :global(.slider-track) {
-    background: rgba(248, 113, 113, 0.10) !important;
-}
-
-/* Q2 - Data/Financial Risk (Blue) */
-.wizard :global(.slider-q2) :global(.slider-fill) {
-    background: linear-gradient(90deg, rgba(96, 165, 250, 0.3), #60a5fa) !important;
-}
-
-.wizard :global(.slider-q2) :global(.slider-thumb) {
-    background: #60a5fa !important;
-    box-shadow: 0 0 0 2px #60a5fa, 0 2px 12px rgba(96, 165, 250, 0.30) !important;
-}
-
-.wizard :global(.slider-q2) :global(.slider-track) {
-    background: rgba(96, 165, 250, 0.10) !important;
-}
-
-/* Q3 - Operational Impact (Yellow) */
-.wizard :global(.slider-q3) :global(.slider-fill) {
-    background: linear-gradient(90deg, rgba(251, 191, 36, 0.3), #fbbf24) !important;
-}
-
-.wizard :global(.slider-q3) :global(.slider-thumb) {
-    background: #fbbf24 !important;
-    box-shadow: 0 0 0 2px #fbbf24, 0 2px 12px rgba(251, 191, 36, 0.30) !important;
-}
-
-.wizard :global(.slider-q3) :global(.slider-track) {
-    background: rgba(251, 191, 36, 0.10) !important;
-}
-
-/* Q4 - Comfort (Green) */
-.wizard :global(.slider-q4) :global(.slider-fill) {
-    background: linear-gradient(90deg, rgba(52, 211, 153, 0.3), #34d399) !important;
-}
-
-.wizard :global(.slider-q4) :global(.slider-thumb) {
-    background: #34d399 !important;
-    box-shadow: 0 0 0 2px #34d399, 0 2px 12px rgba(52, 211, 153, 0.30) !important;
-}
-
-.wizard :global(.slider-q4) :global(.slider-track) {
-    background: rgba(52, 211, 153, 0.10) !important;
-}
-
-/* Base Slider Styles */
-.wizard :global(.slider-wrapper) {
+/* Slider Wrapper - Sleek card-like */
+.sliderWrapper {
     background: rgba(255, 255, 255, 0.02) !important;
-    border-radius: 10px !important;
-    padding: 6px 4px !important;
-    transition: all 0.2s ease !important;
+    border-radius: 12px !important;
+    padding: 8px 14px 8px 16px !important;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
     border: 1px solid transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    position: relative !important;
 }
 
-    .wizard :global(.slider-wrapper):hover {
-        background: rgba(255, 255, 255, 0.04) !important;
-        border-color: rgba(255, 255, 255, 0.04) !important;
-    }
+.sliderWrapper:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    transform: translateY(-1px) !important;
+}
 
-.wizard :global(.slider-label) {
+/* Slider Label - Clean and modern */
+.sliderLabel {
     color: var(--text-secondary, #94a3b8) !important;
     font-size: 13px !important;
     font-weight: 500 !important;
     letter-spacing: 0.2px !important;
+    min-width: 140px !important;
+    flex-shrink: 0 !important;
 }
 
-.wizard :global(.slider-value) {
+/* Slider Value - Bold and crisp */
+.sliderValue {
     color: var(--text-primary, #e8edf5) !important;
     font-weight: 700 !important;
-    font-size: 14px !important;
-    min-width: 32px !important;
+    font-size: 15px !important;
+    min-width: 34px !important;
     text-align: center !important;
+    font-variant-numeric: tabular-nums !important;
+    flex-shrink: 0 !important;
 }
 
-.wizard :global(.slider-track) {
+/* Slider Track - Modern minimal */
+.sliderTrack {
     border-radius: 100px !important;
-    height: 6px !important;
+    height: 5px !important;
     border: none !important;
     position: relative !important;
     overflow: hidden !important;
+    flex: 1 !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 
-.wizard :global(.slider-fill) {
+/* Track shimmer line */
+.sliderTrack::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    border-radius: 100px !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent) !important;
+    animation: trackShimmer 3s ease-in-out infinite !important;
+    pointer-events: none !important;
+}
+
+@keyframes trackShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Slider Fill - Animated gradient */
+.sliderFill {
     border-radius: 100px !important;
     height: 100% !important;
-    transition: width 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
     position: relative !important;
+    min-width: 3px !important;
 }
 
-    /* Glow effect on fill */
-    .wizard :global(.slider-fill)::after {
-        content: '' !important;
-        position: absolute !important;
-        right: 0 !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 20px !important;
-        height: 20px !important;
-        border-radius: 50% !important;
-        filter: blur(10px) !important;
-        opacity: 0.4 !important;
-        pointer-events: none !important;
-    }
-
-.wizard :global(.slider-q1) :global(.slider-fill)::after {
-    background: #f87171 !important;
-}
-
-.wizard :global(.slider-q2) :global(.slider-fill)::after {
-    background: #60a5fa !important;
-}
-
-.wizard :global(.slider-q3) :global(.slider-fill)::after {
-    background: #fbbf24 !important;
-}
-
-.wizard :global(.slider-q4) :global(.slider-fill)::after {
-    background: #34d399 !important;
-}
-
-.wizard :global(.slider-thumb) {
-    width: 18px !important;
-    height: 18px !important;
+/* Glow effect on fill */
+.sliderFill::after {
+    content: '' !important;
+    position: absolute !important;
+    right: -3px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    height: 20px !important;
     border-radius: 50% !important;
-    border: 2px solid var(--bg-card, #1a1d24) !important;
-    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    filter: blur(12px) !important;
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    animation: fillGlowPulse 2.5s ease-in-out infinite !important;
+}
+
+@keyframes fillGlowPulse {
+    0%, 100% { opacity: 0.3; transform: translateY(-50%) scale(0.8); }
+    50% { opacity: 0.7; transform: translateY(-50%) scale(1.2); }
+}
+
+/* Slider Thumb - Premium with glow */
+.sliderThumb {
+    width: 19px !important;
+    height: 19px !important;
+    border-radius: 50% !important;
+    border: 2.5px solid var(--bg-card, #1a1d24) !important;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
     cursor: pointer !important;
     position: relative !important;
     z-index: 2 !important;
+    outline: none !important;
 }
 
-    .wizard :global(.slider-thumb):hover {
-        transform: scale(1.2) !important;
-    }
+.sliderThumb:hover {
+    transform: scale(1.15) !important;
+    border-width: 2px !important;
+}
 
-    .wizard :global(.slider-thumb):focus-visible {
-        outline: 2px solid var(--accent-red, #f87171) !important;
-        outline-offset: 2px !important;
-    }
+.sliderThumb:active {
+    transform: scale(0.92) !important;
+}
 
-/* Disabled Slider State */
-.wizard :global(.slider):has(:disabled) :global(.slider-fill) {
+.sliderThumb:focus-visible {
+    outline: 2.5px solid var(--accent-red, #f87171) !important;
+    outline-offset: 3px !important;
+}
+
+/* ========================================
+   🎨 INDIVIDUAL SLIDER COLORS - MODERN 🎨
+   ======================================== */
+
+/* ---------- Q1: Safety Risk (Red) ---------- */
+.sliderQ1 .sliderTrack {
+    background: var(--slider-q1-bg) !important;
+}
+
+.sliderQ1 .sliderFill {
+    background: linear-gradient(90deg, rgba(248, 113, 113, 0.25), #f87171, #ef4444) !important;
+}
+
+.sliderQ1 .sliderFill::after {
+    background: #f87171 !important;
+}
+
+.sliderQ1 .sliderThumb {
+    background: radial-gradient(circle at 35% 30%, #fca5a5, #f87171) !important;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.12), 0 0 24px rgba(248, 113, 113, 0.25) !important;
+}
+
+.sliderQ1 .sliderThumb:hover {
+    box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.20), 0 0 32px rgba(248, 113, 113, 0.35) !important;
+}
+
+/* ---------- Q2: Data/Financial Risk (Blue) ---------- */
+.sliderQ2 .sliderTrack {
+    background: var(--slider-q2-bg) !important;
+}
+
+.sliderQ2 .sliderFill {
+    background: linear-gradient(90deg, rgba(96, 165, 250, 0.25), #60a5fa, #3b82f6) !important;
+}
+
+.sliderQ2 .sliderFill::after {
+    background: #60a5fa !important;
+}
+
+.sliderQ2 .sliderThumb {
+    background: radial-gradient(circle at 35% 30%, #93c5fd, #60a5fa) !important;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12), 0 0 24px rgba(96, 165, 250, 0.25) !important;
+}
+
+.sliderQ2 .sliderThumb:hover {
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.20), 0 0 32px rgba(96, 165, 250, 0.35) !important;
+}
+
+/* ---------- Q3: Operational Impact (Yellow) ---------- */
+.sliderQ3 .sliderTrack {
+    background: var(--slider-q3-bg) !important;
+}
+
+.sliderQ3 .sliderFill {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.25), #fbbf24, #f59e0b) !important;
+}
+
+.sliderQ3 .sliderFill::after {
+    background: #fbbf24 !important;
+}
+
+.sliderQ3 .sliderThumb {
+    background: radial-gradient(circle at 35% 30%, #fcd34d, #fbbf24) !important;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12), 0 0 24px rgba(251, 191, 36, 0.25) !important;
+}
+
+.sliderQ3 .sliderThumb:hover {
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.20), 0 0 32px rgba(251, 191, 36, 0.35) !important;
+}
+
+/* ---------- Q4: Comfort (Green) ---------- */
+.sliderQ4 .sliderTrack {
+    background: var(--slider-q4-bg) !important;
+}
+
+.sliderQ4 .sliderFill {
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.25), #34d399, #10b981) !important;
+}
+
+.sliderQ4 .sliderFill::after {
+    background: #34d399 !important;
+}
+
+.sliderQ4 .sliderThumb {
+    background: radial-gradient(circle at 35% 30%, #6ee7b7, #34d399) !important;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12), 0 0 24px rgba(52, 211, 153, 0.25) !important;
+}
+
+.sliderQ4 .sliderThumb:hover {
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.20), 0 0 32px rgba(52, 211, 153, 0.35) !important;
+}
+
+/* ========================================
+   DISABLED SLIDER STATE
+   ======================================== */
+.sliderDisabled .sliderFill {
     opacity: 0.25 !important;
 }
 
-    .wizard :global(.slider):has(:disabled) :global(.slider-fill)::after {
-        opacity: 0 !important;
-    }
+.sliderDisabled .sliderFill::after {
+    opacity: 0 !important;
+}
 
-.wizard :global(.slider):has(:disabled) :global(.slider-thumb) {
+.sliderDisabled .sliderThumb {
     opacity: 0.35 !important;
     cursor: not-allowed !important;
     box-shadow: 0 0 0 2px var(--text-muted, #64748b) !important;
     background: var(--text-muted, #64748b) !important;
+    transform: none !important;
 }
 
-.wizard :global(.slider):has(:disabled) :global(.slider-track) {
+.sliderDisabled .sliderTrack {
     opacity: 0.4 !important;
 }
 
-.wizard :global(.slider):has(:disabled) :global(.slider-wrapper) {
+.sliderDisabled .sliderWrapper {
     opacity: 0.6 !important;
+}
+
+.sliderDisabled .sliderWrapper:hover {
+    transform: none !important;
+    border-color: transparent !important;
+}
+
+.sliderDisabled .sliderLabel {
+    opacity: 0.5 !important;
+}
+
+.sliderDisabled .sliderValue {
+    opacity: 0.5 !important;
 }
 
 /* ========================================
@@ -376,15 +479,8 @@
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-8px) scale(0.98);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .manualDropdown .label {
@@ -418,33 +514,33 @@
     outline: none;
 }
 
-    .manualDropdown select:hover {
-        border-color: rgba(255, 255, 255, 0.08);
-    }
+.manualDropdown select:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+}
 
-    .manualDropdown select:focus {
-        border-color: var(--accent-red, #f87171);
-        box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12));
-    }
+.manualDropdown select:focus {
+    border-color: var(--accent-red, #f87171);
+    box-shadow: 0 0 0 3px var(--accent-soft, rgba(248, 113, 113, 0.12));
+}
 
-    .manualDropdown select option {
-        background: var(--bg-card, #1a1d24);
-        color: var(--text-primary, #e8edf5);
-        padding: 6px;
-    }
+.manualDropdown select option {
+    background: var(--bg-card, #1a1d24);
+    color: var(--text-primary, #e8edf5);
+    padding: 6px;
+}
 
-        /* Priority options styling */
-        .manualDropdown select option[value="P1"] {
-            color: var(--priority-p1);
-        }
+/* Priority options styling */
+.manualDropdown select option[value="P1"] {
+    color: var(--priority-p1);
+}
 
-        .manualDropdown select option[value="P2"] {
-            color: var(--priority-p2);
-        }
+.manualDropdown select option[value="P2"] {
+    color: var(--priority-p2);
+}
 
-        .manualDropdown select option[value="P3"] {
-            color: var(--priority-p3);
-        }
+.manualDropdown select option[value="P3"] {
+    color: var(--priority-p3);
+}
 
 /* ========================================
    PRIORITY ROW
@@ -460,19 +556,19 @@
     transition: all 0.2s ease;
 }
 
-    .priorityRow:hover {
-        background: rgba(255, 255, 255, 0.03);
-        border-color: rgba(255, 255, 255, 0.06);
-    }
+.priorityRow:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+}
 
-    .priorityRow .label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-secondary, #94a3b8);
-    }
+.priorityRow .label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary, #94a3b8);
+}
 
 .priorityLabelIcon {
     display: flex;
@@ -486,9 +582,9 @@
 }
 
 /* ========================================
-   BADGE COMPONENT OVERRIDES
+   BADGE COMPONENT - Direct Classes
    ======================================== */
-.priorityRow :global(.badge) {
+.badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -503,48 +599,48 @@
     overflow: hidden;
 }
 
-    .priorityRow :global(.badge)::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 100px;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
+.badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 100px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
 
-    .priorityRow :global(.badge):hover::after {
-        opacity: 1;
-    }
+.badge:hover::after {
+    opacity: 1;
+}
 
-.priorityRow :global(.badge-p1) {
+.badgeP1 {
     background: var(--priority-p1-bg);
     color: var(--priority-p1);
     border: 1px solid var(--priority-p1-border);
 }
 
-    .priorityRow :global(.badge-p1)::after {
-        background: radial-gradient(circle at center, rgba(248, 113, 113, 0.10), transparent 70%);
-    }
+.badgeP1::after {
+    background: radial-gradient(circle at center, rgba(248, 113, 113, 0.10), transparent 70%);
+}
 
-.priorityRow :global(.badge-p2) {
+.badgeP2 {
     background: var(--priority-p2-bg);
     color: var(--priority-p2);
     border: 1px solid var(--priority-p2-border);
 }
 
-    .priorityRow :global(.badge-p2)::after {
-        background: radial-gradient(circle at center, rgba(251, 191, 36, 0.10), transparent 70%);
-    }
+.badgeP2::after {
+    background: radial-gradient(circle at center, rgba(251, 191, 36, 0.10), transparent 70%);
+}
 
-.priorityRow :global(.badge-p3) {
+.badgeP3 {
     background: var(--priority-p3-bg);
     color: var(--priority-p3);
     border: 1px solid var(--priority-p3-border);
 }
 
-    .priorityRow :global(.badge-p3)::after {
-        background: radial-gradient(circle at center, rgba(52, 211, 153, 0.10), transparent 70%);
-    }
+.badgeP3::after {
+    background: radial-gradient(circle at center, rgba(52, 211, 153, 0.10), transparent 70%);
+}
 
 /* Score badge inside priority badge */
 .scoreBadge {
@@ -579,10 +675,10 @@
     transition: all 0.2s ease;
 }
 
-    .formula:hover {
-        border-color: rgba(255, 255, 255, 0.06);
-        background: rgba(255, 255, 255, 0.03);
-    }
+.formula:hover {
+    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
+}
 
 .formulaIcon {
     color: var(--text-muted, #64748b);
@@ -607,15 +703,8 @@
 }
 
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .error svg {
@@ -629,6 +718,21 @@
     .wizard {
         padding: 16px 18px;
         gap: 14px;
+    }
+
+    .sliderLabel {
+        min-width: 120px !important;
+        font-size: 12px !important;
+    }
+
+    .sliderValue {
+        font-size: 14px !important;
+        min-width: 30px !important;
+    }
+
+    .sliderWrapper {
+        padding: 6px 10px 6px 14px !important;
+        gap: 10px !important;
     }
 }
 
@@ -648,10 +752,10 @@
         height: 28px;
     }
 
-        .wizardIconWrapper svg {
-            width: 16px;
-            height: 16px;
-        }
+    .wizardIconWrapper svg {
+        width: 16px;
+        height: 16px;
+    }
 
     .wizardTitle {
         font-size: 13px;
@@ -664,60 +768,78 @@
         border-radius: 6px;
     }
 
-        .mode svg,
-        .modeActive svg {
-            width: 14px;
-            height: 14px;
-        }
+    .mode svg,
+    .modeActive svg {
+        width: 14px;
+        height: 14px;
+    }
 
-    .wizard :global(.slider-label) {
+    .sliderWrapper {
+        padding: 6px 8px 6px 12px !important;
+        gap: 8px !important;
+        border-radius: 10px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .sliderLabel {
+        min-width: 100px !important;
         font-size: 12px !important;
     }
 
-    .wizard :global(.slider-value) {
+    .sliderValue {
         font-size: 13px !important;
         min-width: 28px !important;
     }
 
-    .wizard :global(.slider-thumb) {
-        width: 16px !important;
-        height: 16px !important;
+    .sliderTrack {
+        height: 4px !important;
+    }
+
+    .sliderThumb {
+        width: 17px !important;
+        height: 17px !important;
+    }
+
+    .sliderFill::after {
+        width: 18px !important;
+        height: 18px !important;
+        filter: blur(10px) !important;
     }
 
     .manualDropdown {
         padding: 10px 12px;
     }
 
-        .manualDropdown .label {
-            font-size: 12px;
-        }
+    .manualDropdown .label {
+        font-size: 12px;
+    }
 
-        .manualDropdown select {
-            padding: 6px 10px;
-            font-size: 13px;
-            border-radius: 6px;
-            background-position: right 10px center;
-        }
+    .manualDropdown select {
+        padding: 6px 10px;
+        font-size: 13px;
+        border-radius: 6px;
+        background-position: right 10px center;
+    }
 
     .priorityRow {
         padding: 10px 12px;
     }
 
-        .priorityRow .label {
-            font-size: 13px;
-        }
+    .priorityRow .label {
+        font-size: 13px;
+    }
 
-        .priorityRow :global(.badge) {
-            font-size: 13px;
-            padding: 3px 12px;
-            min-width: 40px;
-            gap: 6px;
-        }
+    .badge {
+        font-size: 13px;
+        padding: 3px 12px;
+        min-width: 40px;
+        gap: 6px;
+    }
 
-            .priorityRow :global(.badge) svg {
-                width: 14px;
-                height: 14px;
-            }
+    .badge svg {
+        width: 14px;
+        height: 14px;
+    }
 
     .scoreBadge {
         font-size: 9px;
@@ -728,20 +850,20 @@
         padding: 6px 12px;
     }
 
-        .formula svg {
-            width: 14px;
-            height: 14px;
-        }
+    .formula svg {
+        width: 14px;
+        height: 14px;
+    }
 
     .error {
         font-size: 12px;
         padding: 8px 12px;
     }
 
-        .error svg {
-            width: 16px;
-            height: 16px;
-        }
+    .error svg {
+        width: 16px;
+        height: 16px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -775,39 +897,54 @@
         border-radius: 6px;
     }
 
-    .wizard :global(.slider-label) {
+    .sliderWrapper {
+        padding: 4px 6px 4px 10px !important;
+        gap: 6px !important;
+        border-radius: 8px !important;
+    }
+
+    .sliderLabel {
+        min-width: 80px !important;
         font-size: 11px !important;
     }
 
-    .wizard :global(.slider-value) {
+    .sliderValue {
         font-size: 12px !important;
         min-width: 24px !important;
     }
 
-    .wizard :global(.slider-track) {
-        height: 5px !important;
+    .sliderTrack {
+        height: 4px !important;
     }
 
-    .wizard :global(.slider-thumb) {
-        width: 14px !important;
-        height: 14px !important;
+    .sliderThumb {
+        width: 15px !important;
+        height: 15px !important;
+        border-width: 2px !important;
+    }
+
+    .sliderFill::after {
+        width: 16px !important;
+        height: 16px !important;
+        filter: blur(8px) !important;
+        right: -2px !important;
     }
 
     .manualDropdown {
         padding: 8px 10px;
     }
 
-        .manualDropdown .label {
-            font-size: 11px;
-        }
+    .manualDropdown .label {
+        font-size: 11px;
+    }
 
-        .manualDropdown select {
-            padding: 5px 8px;
-            font-size: 12px;
-            border-radius: 6px;
-            background-position: right 8px center;
-            background-size: 8px;
-        }
+    .manualDropdown select {
+        padding: 5px 8px;
+        font-size: 12px;
+        border-radius: 6px;
+        background-position: right 8px center;
+        background-size: 8px;
+    }
 
     .priorityRow {
         padding: 8px 10px;
@@ -817,26 +954,26 @@
         text-align: center;
     }
 
-        .priorityRow .label {
-            justify-content: center;
-            font-size: 12px;
-        }
+    .priorityRow .label {
+        justify-content: center;
+        font-size: 12px;
+    }
 
     .priorityDisplay {
         justify-content: center;
     }
 
-    .priorityRow :global(.badge) {
+    .badge {
         font-size: 12px;
         padding: 3px 10px;
         min-width: 36px;
         gap: 4px;
     }
 
-        .priorityRow :global(.badge) svg {
-            width: 12px;
-            height: 12px;
-        }
+    .badge svg {
+        width: 12px;
+        height: 12px;
+    }
 
     .scoreBadge {
         font-size: 8px;
@@ -850,10 +987,10 @@
         border-radius: 6px;
     }
 
-        .formula svg {
-            width: 12px;
-            height: 12px;
-        }
+    .formula svg {
+        width: 12px;
+        height: 12px;
+    }
 
     .error {
         font-size: 11px;
@@ -863,10 +1000,10 @@
         border-left-width: 3px;
     }
 
-        .error svg {
-            width: 14px;
-            height: 14px;
-        }
+    .error svg {
+        width: 14px;
+        height: 14px;
+    }
 }
 
 /* ========================================
@@ -875,7 +1012,7 @@
 .mode:focus-visible,
 .modeActive:focus-visible,
 .manualDropdown select:focus-visible,
-.wizard :global(.slider-thumb):focus-visible {
+.sliderThumb:focus-visible {
     outline: 2px solid var(--accent-red, #f87171);
     outline-offset: 2px;
 }
@@ -896,25 +1033,25 @@
     border-radius: 100px;
 }
 
-    .manualDropdown select::-webkit-scrollbar-thumb:hover {
-        background: var(--border-card, #2a2f38);
-    }
+.manualDropdown select::-webkit-scrollbar-thumb:hover {
+    background: var(--border-card, #2a2f38);
+}
 
 /* ========================================
    HIGH CONTRAST - Priority Badge Text
    ======================================== */
 @media (prefers-contrast: high) {
-    .priorityRow :global(.badge-p1) {
+    .badgeP1 {
         background: var(--priority-p1);
         color: var(--text-inverse, #0f1117);
     }
 
-    .priorityRow :global(.badge-p2) {
+    .badgeP2 {
         background: var(--priority-p2);
         color: var(--text-inverse, #0f1117);
     }
 
-    .priorityRow :global(.badge-p3) {
+    .badgeP3 {
         background: var(--priority-p3);
         color: var(--text-inverse, #0f1117);
     }

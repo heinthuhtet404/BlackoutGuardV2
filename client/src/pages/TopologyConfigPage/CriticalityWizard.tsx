@@ -11,7 +11,6 @@ import {
     Brain,
     Settings2,
     Zap,
-    HelpCircle,
 } from "lucide-react";
 import styles from "./CriticalityWizard.module.css";
 
@@ -134,6 +133,28 @@ export function CriticalityWizard({
     const priorityLabel = getPriorityLabel(localCalc.priority);
     const priorityIcon = getPriorityIcon(localCalc.priority);
 
+    // Map badge class based on priority
+    const getBadgeClass = (priority: PriorityLevel): string => {
+        switch (priority) {
+            case "P1": return styles.badgeP1;
+            case "P2": return styles.badgeP2;
+            case "P3": return styles.badgeP3;
+            default: return styles.badgeP3;
+        }
+    };
+
+    // Get badge content
+    const getBadgeContent = (priority: PriorityLevel) => {
+        const icon = getPriorityIcon(priority);
+        const label = getPriorityLabel(priority);
+        return (
+            <>
+                {icon}
+                {priority} - {label}
+            </>
+        );
+    };
+
     return (
         <div className={styles.wizard} data-testid="criticality-wizard">
             {/* Header */}
@@ -181,7 +202,7 @@ export function CriticalityWizard({
             </div>
 
             {/* Sliders with color classes */}
-            <div className="slider-q1">
+            <div className={styles.sliderQ1}>
                 <Slider
                     label="Q1: Safety Risk (0.5)"
                     value={q1}
@@ -196,7 +217,7 @@ export function CriticalityWizard({
                 />
             </div>
 
-            <div className="slider-q2">
+            <div className={styles.sliderQ2}>
                 <Slider
                     label="Q2: Data/Financial Risk (0.3)"
                     value={q2}
@@ -211,7 +232,7 @@ export function CriticalityWizard({
                 />
             </div>
 
-            <div className="slider-q3">
+            <div className={styles.sliderQ3}>
                 <Slider
                     label="Q3: Operational Impact (0.2)"
                     value={q3}
@@ -226,7 +247,7 @@ export function CriticalityWizard({
                 />
             </div>
 
-            <div className="slider-q4">
+            <div className={styles.sliderQ4}>
                 <Slider
                     label="Q4: Comfort (display only)"
                     value={q4}
@@ -272,12 +293,11 @@ export function CriticalityWizard({
                 </span>
                 <div className={styles.priorityDisplay}>
                     {isManual ? (
-                        <Badge priority={manualPriority}>
-                            {getPriorityIcon(manualPriority)}
-                            {manualPriority} - {getPriorityLabel(manualPriority)}
-                        </Badge>
+                        <span className={`${styles.badge} ${getBadgeClass(manualPriority)}`}>
+                            {getBadgeContent(manualPriority)}
+                        </span>
                     ) : (
-                        <Badge priority={response?.priority ?? localCalc.priority}>
+                        <span className={`${styles.badge} ${getBadgeClass(response?.priority as PriorityLevel ?? localCalc.priority)}`}>
                             {response?.priority ? (
                                 <>
                                     {getPriorityIcon(response.priority as PriorityLevel)}
@@ -292,16 +312,10 @@ export function CriticalityWizard({
                                     </span>
                                 </>
                             )}
-                        </Badge>
+                        </span>
                     )}
                 </div>
             </div>
-
-            {/* Formula */}
-            {/* <div className={styles.formula} data-testid="formula-reference">
-                <HelpCircle size={12} className={styles.formulaIcon} />
-                Score = ((Q1 × 0.5) + (Q2 × 0.3) + (Q3 × 0.2)) × 10
-            </div> */}
 
             {/* Error */}
             {error && (

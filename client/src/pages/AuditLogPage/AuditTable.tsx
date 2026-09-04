@@ -5,13 +5,10 @@ import { useTelemetry, type DecisionExecutedPayload } from "../../context/Teleme
 import { get } from "../../api/apiClient";
 import { ExportButtons } from "./ExportButtons";
 import {
+    Clock,
     FileText,
     Search,
-    AlertTriangle,
     AlertCircle,
-    CheckCircle,
-    Activity,
-    Clock,
     Server,
     Database,
     ChevronLeft,
@@ -21,10 +18,6 @@ import {
     WifiOff,
     Zap,
     ZapOff,
-    RefreshCw,
-    ListChecks,
-    ShieldAlert,
-    ShieldCheck,
     Shield,
     Timer,
     Tag,
@@ -48,13 +41,25 @@ interface ZoneDto {
     children?: ZoneDto[];
 }
 
-function getAllLoadsFromZones(zones: ZoneDto[]): LoadDto[] {
-    const loads: LoadDto[] = [];
+interface ExtendedAuditEntry extends AuditEntry {
+    loadId?: string;
+    relayAddress?: number;
+    loadName?: string;
+}
+
+function getAllLoadsFromZones(zones: ZoneDto[]): { byRelay: Map<number, string>; byId: Map<string, string>; knownNames: string[] } {
+    const byRelay = new Map<number, string>();
+    const byId = new Map<string, string>();
+    const knownNames: string[] = [];
 
     function traverse(list: ZoneDto[]) {
         for (const zone of list) {
             if (zone.loads) {
-                loads.push(...zone.loads);
+                for (const l of zone.loads) {
+                    if (l.id) byId.set(String(l.id), l.name);
+                    if (l.relayAddress !== undefined) byRelay.set(l.relayAddress, l.name);
+                    if (l.name) knownNames.push(l.name);
+                }
             }
             const childZones = zone.children || zone.subZones || [];
             if (childZones.length > 0) {
@@ -64,10 +69,45 @@ function getAllLoadsFromZones(zones: ZoneDto[]): LoadDto[] {
     }
 
     traverse(zones);
-    return loads;
+    return { byRelay, byId, knownNames };
 }
 
-function mapDecisionToEntry(payload: DecisionExecutedPayload, loadMap: Map<number, string>): AuditEntry {
+function extractLoadNameFromRationale(rationale: string, knownNames: string[]): string | null {
+    if (!rationale) return null;
+
+    // 1. Check if any known Load Name exists directly inside rationale string
+    for (const name of knownNames) {
+        if (rationale.toLowerCase().includes(name.toLowerCase())) {
+            return name;
+        }
+    }
+
+    // 2. Common pattern extractions using Regex
+    // Matches: "Shedding [Load Name] due to..." or "Restoring [Load Name] ..."
+    const actionMatch = rationale.match(/(?:Shedding|Restoring|Executing|Restored|Shed)\s+([A-Za-z0-9\s_\-]+?)(?=\s+(?:due to|for|to|on|at)|$)/i);
+    if (actionMatch && actionMatch[1]) {
+        return actionMatch[1].trim();
+    }
+
+    // Matches: "Load [Load Name] ..." or "load: [Load Name]"
+    const loadMatch = rationale.match(/load[:\s]+([A-Za-z0-9\s_\-]+?)(?=\s+(?:due to|for|status|state)|$)/i);
+    if (loadMatch && loadMatch[1]) {
+        return loadMatch[1].trim();
+    }
+
+    // Matches quotes e.g. 'HVAC Unit 1' or "Water Pump"
+    const quoteMatch = rationale.match(/['"]([^'"]+)['"]/);
+    if (quoteMatch && quoteMatch[1]) {
+        return quoteMatch[1].trim();
+    }
+
+    return null;
+}
+
+function mapDecisionToEntry(
+    payload: DecisionExecutedPayload,
+    maps: { byRelay: Map<number, string>; byId: Map<string, string>; knownNames: string[] }
+): AuditEntry {
     const hasShed = payload.relayDecisions.some((d) => !d.energize);
     const hasRestore = payload.relayDecisions.some((d) => d.energize);
 
@@ -81,7 +121,7 @@ function mapDecisionToEntry(payload: DecisionExecutedPayload, loadMap: Map<numbe
     const affectedLoad =
         payload.relayDecisions.length > 0
             ? payload.relayDecisions
-                .map((d) => loadMap.get(d.relayAddress) || `Relay #${d.relayAddress}`)
+                .map((d) => maps.byRelay.get(d.relayAddress) || `Relay #${d.relayAddress}`)
                 .join(", ")
             : null;
 
@@ -104,7 +144,11 @@ export function AuditTable() {
     const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
     const [liveRows, setLiveRows] = useState<AuditEntry[]>([]);
-    const [loadsMap, setLoadsMap] = useState<Map<number, string>>(new Map());
+    const [loadMaps, setLoadMaps] = useState<{ byRelay: Map<number, string>; byId: Map<string, string>; knownNames: string[] }>({
+        byRelay: new Map(),
+        byId: new Map(),
+        knownNames: [],
+    });
 
     const queryClient = useQueryClient();
     const { latestDecision, connected } = useTelemetry();
@@ -144,14 +188,8 @@ export function AuditTable() {
             try {
                 const zones = await get<ZoneDto[]>("/zones");
                 if (zones && isMounted) {
-                    const allLoads = getAllLoadsFromZones(zones);
-                    const map = new Map<number, string>();
-                    allLoads.forEach((l) => {
-                        if (l.relayAddress !== undefined) {
-                            map.set(l.relayAddress, l.name);
-                        }
-                    });
-                    setLoadsMap(map);
+                    const maps = getAllLoadsFromZones(zones);
+                    setLoadMaps(maps);
                 }
             } catch (err) {
                 console.error("Failed to load zones for AuditTable mapping:", err);
@@ -166,10 +204,10 @@ export function AuditTable() {
 
     useEffect(() => {
         if (latestDecision) {
-            const entry = mapDecisionToEntry(latestDecision, loadsMap);
+            const entry = mapDecisionToEntry(latestDecision, loadMaps);
             setLiveRows((current) => [entry, ...current].slice(0, MAX_LIVE_ROWS));
         }
-    }, [latestDecision, loadsMap]);
+    }, [latestDecision, loadMaps]);
 
     useEffect(() => {
         if (!prevConnectedRef.current && connected) {
@@ -180,9 +218,43 @@ export function AuditTable() {
         prevConnectedRef.current = connected;
     }, [connected, queryClient]);
 
-    const items = data?.items ?? [];
+    const items = (data?.items ?? []) as ExtendedAuditEntry[];
     const totalCount = data?.totalCount ?? items.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+    // Resolve load name prioritizing ID lookup, then direct fallback, then rationale parsing
+    const resolveLoadName = useCallback(
+        (entry: ExtendedAuditEntry): string => {
+            if (entry.loadName) return entry.loadName;
+
+            const rawLoadId = entry.affectedLoadId || entry.loadId;
+
+            if (rawLoadId) {
+                // If rawLoadId is already a readable name (contains letters or spaces, not pure numbers/UUIDs)
+                if (typeof rawLoadId === "string" && /[a-zA-Z]/.test(rawLoadId) && !rawLoadId.startsWith("live-")) {
+                    return rawLoadId;
+                }
+
+                const nameById = loadMaps.byId.get(String(rawLoadId));
+                if (nameById) return nameById;
+
+                const numericId = Number(rawLoadId);
+                if (!isNaN(numericId)) {
+                    const nameByRelay = loadMaps.byRelay.get(numericId);
+                    if (nameByRelay) return nameByRelay;
+                }
+            }
+
+            // Extract directly from Rationale text if available
+            const extractedFromRationale = extractLoadNameFromRationale(entry.rationale, loadMaps.knownNames);
+            if (extractedFromRationale) {
+                return extractedFromRationale;
+            }
+
+            return "—";
+        },
+        [loadMaps]
+    );
 
     const displayRows = useMemo(() => {
         let combined = items;
@@ -194,16 +266,21 @@ export function AuditTable() {
             combined = [...filteredLiveRows, ...items];
         }
 
-        if (!searchQuery.trim()) return combined;
+        const mappedRows = combined.map((row) => ({
+            ...row,
+            resolvedLoadName: resolveLoadName(row),
+        }));
+
+        if (!searchQuery.trim()) return mappedRows;
 
         const q = searchQuery.toLowerCase();
-        return combined.filter(
+        return mappedRows.filter(
             (row) =>
                 row.eventType.toLowerCase().includes(q) ||
                 row.rationale.toLowerCase().includes(q) ||
-                (row.affectedLoadId && row.affectedLoadId.toLowerCase().includes(q))
+                row.resolvedLoadName.toLowerCase().includes(q)
         );
-    }, [page, liveRows, items, searchQuery]);
+    }, [page, liveRows, items, searchQuery, resolveLoadName]);
 
     if (isLoading) {
         return (
@@ -319,7 +396,7 @@ export function AuditTable() {
                                         </span>
                                     </td>
                                     <td className={styles.rationale}>{entry.rationale}</td>
-                                    <td className={styles.affectedLoad}>{entry.affectedLoadId ?? "—"}</td>
+                                    <td className={styles.affectedLoad}>{entry.resolvedLoadName}</td>
                                 </tr>
                             );
                         })}
