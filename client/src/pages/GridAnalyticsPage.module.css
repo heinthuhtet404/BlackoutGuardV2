@@ -1,0 +1,795 @@
+/* GridAnalyticsPage.module.css */
+
+.page {
+    padding: 24px;
+    background: var(--bg-primary);
+    min-height: 100vh;
+}
+
+/* ============================================
+   Header Styles
+   ============================================ */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.headerIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    color: var(--text-primary);
+}
+
+.heading {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.subHeading {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.headerControls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.timeRangeSelect {
+    padding: 6px 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+    .timeRangeSelect:hover {
+        border-color: var(--border-hover);
+    }
+
+    .timeRangeSelect:focus {
+        border-color: #3b82f6;
+    }
+
+.headerStatus {
+    display: flex;
+    align-items: center;
+}
+
+.statusLive {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.liveDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.statusOffline {
+    padding: 6px 14px;
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.4;
+        transform: scale(0.8);
+    }
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    gap: 12px;
+    color: var(--text-secondary);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    color: #3b82f6;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   KPI Grid / Metric Cards
+   ============================================ */
+.kpiGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metricCard {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: all 0.2s ease;
+}
+
+    .metricCard:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+.metricHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.metricIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+}
+
+    .metricIcon.blue {
+        background: rgba(59, 130, 246, 0.12);
+        color: #3b82f6;
+    }
+
+    .metricIcon.amber {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+    }
+
+    .metricIcon.green {
+        background: rgba(34, 197, 94, 0.12);
+        color: #22c55e;
+    }
+
+    .metricIcon.purple {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8b5cf6;
+    }
+
+.metricTitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.metricValue {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.metricSubtext {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+/* ============================================
+   Chart Cards
+   ============================================ */
+.chartCard {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+    .chartCard:hover {
+        border-color: var(--border-hover);
+    }
+
+.chartHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chartTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.chartBadge {
+    font-size: 11px;
+    padding: 2px 10px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.chartContainer {
+    height: 200px;
+    width: 100%;
+}
+
+/* ============================================
+   Two Column Grid
+   ============================================ */
+.twoColumnGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+/* ============================================
+   Substation Chart
+   ============================================ */
+.substationChart {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 0;
+}
+
+.substationBar {
+    display: grid;
+    grid-template-columns: 120px 1fr 140px;
+    align-items: center;
+    gap: 12px;
+}
+
+.substationLabel {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.substationTrack {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.substationFill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+    .substationFill.overloaded {
+        animation: pulseWarning 1s ease-in-out infinite;
+    }
+
+@keyframes pulseWarning {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.substationValue {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.substationPct {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+.overloadBadge {
+    margin-left: 4px;
+    font-size: 14px;
+}
+
+/* ============================================
+   Donut Chart
+   ============================================ */
+.donutContainer {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
+    flex-wrap: wrap;
+}
+
+.donutSvg {
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+}
+
+.donutSegment {
+    transition: stroke-dasharray 0.6s ease;
+}
+
+.donutCenter {
+    font-size: 20px;
+    font-weight: 700;
+    fill: var(--text-primary);
+    dominant-baseline: central;
+}
+
+.donutLabel {
+    font-size: 10px;
+    fill: var(--text-tertiary);
+    dominant-baseline: central;
+}
+
+.legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 140px;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.legendDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legendLabel {
+    flex: 1;
+    font-weight: 400;
+}
+
+.legendValue {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+/* ============================================
+   Outage Timeline
+   ============================================ */
+.outageTimeline {
+    padding: 8px 0;
+    width: 100%;
+}
+
+.outageBars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 140px;
+    width: 100%;
+}
+
+.outageBar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    min-width: 20px;
+    position: relative;
+}
+
+.outageFill {
+    width: 100%;
+    min-height: 4px;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.4s ease;
+}
+
+.outageLabel {
+    font-size: 8px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+    text-align: center;
+    transform: rotate(-45deg);
+    white-space: nowrap;
+    width: 30px;
+    transform-origin: top center;
+}
+
+.outageCount {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+/* ============================================
+   No Data State
+   ============================================ */
+.noData {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* ============================================
+   Summary Card
+   ============================================ */
+.summaryCard {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+}
+
+.summaryHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.summaryItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+    .summaryItem svg {
+        flex-shrink: 0;
+        color: var(--text-tertiary);
+    }
+
+.summaryValue {
+    margin-left: auto;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+    .summaryValue.success {
+        color: #22c55e;
+    }
+
+    .summaryValue.danger {
+        color: #ef4444;
+    }
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .twoColumnGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .kpiGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .page {
+        padding: 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .headerControls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .headerLeft {
+        gap: 12px;
+    }
+
+    .heading {
+        font-size: 20px;
+    }
+
+    .subHeading {
+        font-size: 13px;
+    }
+
+    .kpiGrid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .metricValue {
+        font-size: 22px;
+    }
+
+    .substationBar {
+        grid-template-columns: 80px 1fr 100px;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .substationLabel {
+        font-size: 12px;
+    }
+
+    .substationValue {
+        font-size: 11px;
+    }
+
+    .donutContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chartCard {
+        padding: 16px;
+    }
+
+    .chartContainer {
+        height: 160px;
+    }
+
+    .outageBars {
+        height: 120px;
+    }
+
+    .summaryGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .page {
+        padding: 12px;
+    }
+
+    .kpiGrid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .metricCard {
+        padding: 12px 14px;
+    }
+
+    .metricValue {
+        font-size: 18px;
+    }
+
+    .metricSubtext {
+        font-size: 10px;
+    }
+
+    .substationBar {
+        grid-template-columns: 60px 1fr 80px;
+        gap: 6px;
+        font-size: 10px;
+    }
+
+    .substationLabel {
+        font-size: 10px;
+    }
+
+    .substationValue {
+        font-size: 10px;
+    }
+
+    .chartHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .chartTitle {
+        font-size: 13px;
+    }
+
+    .chartBadge {
+        font-size: 10px;
+        padding: 1px 8px;
+    }
+
+    .twoColumnGrid {
+        gap: 12px;
+    }
+
+    .chartCard {
+        padding: 12px;
+    }
+
+    .chartContainer {
+        height: 140px;
+    }
+
+    .outageBars {
+        height: 100px;
+        gap: 2px;
+    }
+
+    .outageLabel {
+        font-size: 6px;
+        width: 20px;
+    }
+
+    .outageCount {
+        font-size: 8px;
+    }
+
+    .legend {
+        min-width: 100px;
+    }
+
+    .legendItem {
+        font-size: 11px;
+        gap: 6px;
+    }
+
+    .legendValue {
+        font-size: 11px;
+    }
+
+    .summaryGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .summaryItem {
+        font-size: 12px;
+    }
+
+    .donutSvg {
+        width: 100px;
+        height: 100px;
+    }
+
+    .donutCenter {
+        font-size: 16px;
+    }
+
+    .timeRangeSelect {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .statusLive, .statusOffline {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+}
+
+/* ============================================
+   Dark Mode Support (if using CSS variables)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    .metricCard:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .substationTrack {
+        background: var(--bg-tertiary);
+    }
+
+    .donutSvg circle:first-child {
+        stroke: #374151;
+    }
+}
+
+/* ============================================
+   Custom Scrollbar for the page
+   ============================================ */
+.page::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.page::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+}
+
+.page::-webkit-scrollbar-thumb {
+    background: var(--border-soft);
+    border-radius: 3px;
+}
+
+    .page::-webkit-scrollbar-thumb:hover {
+        background: var(--text-tertiary);
+    }

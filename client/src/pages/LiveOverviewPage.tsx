@@ -908,7 +908,7 @@ export function LiveOverviewPage() {
                     <div className={styles.cardContent}>
                         <h3 className={styles.cardLabel}>Power Source</h3>
                         <p className={`${styles.cardValue} ${facility?.isGridOnline ? styles.valueSuccess : styles.valueDanger} ${styles.valuePulse}`}>
-                            {loadingFacility ? "..." : facility?.isGridOnline ? "Grid Connected" : "Grid Disconnected"}
+                            {loadingFacility ? "..." : facility?.isGridOnline ? "Grid On" : "Grid Off"}
                         </p>
                         <span className={styles.cardSubText}>
                             {loadingFacility ? "Loading..." :
@@ -956,32 +956,21 @@ export function LiveOverviewPage() {
                     </div>
                 </div>
 
-                {/* Engine Temp */}
+                {/* ============================================ */}
+                {/* TOTAL LOAD - REPLACED ENGINE TEMPERATURE */}
+                {/* ============================================ */}
                 <div className={`${styles.card} ${styles.cardAnimate}`}>
                     <div className={styles.cardIcon}>
-                        <Thermometer size={24} />
+                        <Layers size={24} />
                     </div>
                     <div className={styles.cardContent}>
-                        <h3 className={styles.cardLabel}>Engine Temp</h3>
-                        <p className={`${styles.cardValue} ${generatorMetrics.engineTemp !== null
-                            ? generatorMetrics.engineTemp > 120 ? styles.valueDanger : styles.valueAmber
-                            : styles.valueMuted
-                            } ${styles.valuePulse}`}>
-                            {generatorMetrics.engineTemp !== null
-                                ? `${generatorMetrics.engineTemp.toFixed(1)} °C`
-                                : "—"}
+                        <h3 className={styles.cardLabel}>Total Load</h3>
+                        <p className={`${styles.cardValue} ${styles.valueBlue} ${styles.valuePulse}`}>
+                            {loadingDbData ? "..." : `${totalConfiguredKw.toFixed(1)} kW`}
                         </p>
-                        {generatorMetrics.engineTemp !== null && generatorMetrics.engineTemp > 120 && (
-                            <span className={styles.warning}>⚠️ Overheating!</span>
-                        )}
-                        {generatorMetrics.engineTemp !== null && generatorMetrics.engineTemp <= 120 && (
-                            <span className={styles.cardSubText}>Normal operating temp</span>
-                        )}
-                        {generatorMetrics.engineTemp === null && (
-                            <span className={styles.cardSubText}>
-                                {isGridOnline ? "Grid is ON" : "No generator available"}
-                            </span>
-                        )}
+                        <span className={styles.cardSubText}>
+                            {loadingDbData ? "Loading..." : `${allLoads.length} loads configured`}
+                        </span>
                     </div>
                 </div>
 
@@ -1322,7 +1311,7 @@ export function LiveOverviewPage() {
             </div>
 
             {/* ============================================ */}
-            {/* ALARMS & EVENTS - MOVED TO TOP */}
+            {/* ALARMS & EVENTS */}
             {/* ============================================ */}
             <div className={`${styles.alarmsSection} ${styles.sectionAnimate}`}>
                 <div className={styles.sectionHeader}>

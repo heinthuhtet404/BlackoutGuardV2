@@ -280,11 +280,19 @@ export function DashboardAnalyticsPage() {
     }, [connected, telemetry, isGridOnline, generatorCapacityKw, solarCapacityKw, activeLoadKw, totalAvailableCapacity]);
 
     // Power Distribution
+    // Power Distribution - ပြင်ဆင်ထားတဲ့အပိုင်း
     const powerDistribution = useMemo(() => {
+        // Grid ကို အမြဲတမ်းပြမယ် (Grid On ဆိုရင် totalAvailableCapacity ကိုပြမယ်)
         const grid = isGridOnline ? totalAvailableCapacity : 0;
+
+        // Solar ကို အမြဲတမ်းပြမယ်
         const solar = solarCapacityKw;
-        const generator = !isGridOnline ? generatorCapacityKw : 0;
+
+        // Generator ကို အမြဲတမ်းပြမယ် (Grid Off မှသာ သုံးတာဖြစ်ပေမယ့် Capacity ကိုတော့ ပြထားမယ်)
+        const generator = generatorCapacityKw;
+
         const total = grid + solar + generator || 1;
+
         return {
             grid: { kw: grid, pct: Math.round((grid / total) * 100) },
             solar: { kw: solar, pct: Math.round((solar / total) * 100) },
@@ -352,7 +360,7 @@ export function DashboardAnalyticsPage() {
             ) : (
                 <>
                     {/* KPI Cards */}
-                    <div className={styles.kpiGrid}>
+                    {/* <div className={styles.kpiGrid}>
                         {renderMetricCard(
                             "Total Capacity",
                             `${totalAvailableCapacity.toFixed(1)} kW`,
@@ -381,7 +389,7 @@ export function DashboardAnalyticsPage() {
                             activeAlarms > 0 ? "red" : "green",
                             activeAlarms > 0 ? `${activeAlarms} issue(s) detected` : "All systems normal"
                         )}
-                    </div>
+                    </div> */}
 
                     {/* Charts Grid */}
                     <div className={styles.chartsGrid}>
@@ -512,72 +520,7 @@ export function DashboardAnalyticsPage() {
                         </div>
 
                         {/* Frequency Chart */}
-                        <div className={`${styles.chartCard} ${styles.fullWidth}`}>
-                            <div className={styles.chartHeader}>
-                                <div className={styles.chartTitle}>
-                                    <LineChart size={18} />
-                                    Frequency Trend
-                                </div>
-                                <div className={styles.freqStats}>
-                                    <span className={styles.freqStat}>
-                                        Current: <strong>{frequencyStats.current.toFixed(2)} Hz</strong>
-                                    </span>
-                                    <span className={styles.freqStat}>
-                                        Min: <strong>{frequencyStats.min.toFixed(2)} Hz</strong>
-                                    </span>
-                                    <span className={styles.freqStat}>
-                                        Avg: <strong>{frequencyStats.avg.toFixed(2)} Hz</strong>
-                                    </span>
-                                </div>
-                            </div>
-                            <div className={styles.freqChart}>
-                                {freqHistory.length > 1 ? (
-                                    <svg width="100%" height="100%" viewBox="0 0 800 200" preserveAspectRatio="none">
-                                        <defs>
-                                            <linearGradient id="freqGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                                                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
-                                            </linearGradient>
-                                        </defs>
-                                        {/* Grid lines */}
-                                        <line x1="0" y1="40" x2="800" y2="40" stroke="#e5e7eb" strokeDasharray="4,4" opacity="0.3" />
-                                        <line x1="0" y1="100" x2="800" y2="100" stroke="#e5e7eb" strokeDasharray="4,4" opacity="0.3" />
-                                        <line x1="0" y1="160" x2="800" y2="160" stroke="#e5e7eb" strokeDasharray="4,4" opacity="0.3" />
-
-                                        {/* Area fill */}
-                                        <polygon
-                                            fill="url(#freqGradient)"
-                                            points={freqHistory.map((val, idx) => {
-                                                const x = (idx / (freqHistory.length - 1)) * 800;
-                                                const normalized = Math.max(0, Math.min(1, (val - 48) / 4));
-                                                const y = 200 - normalized * 160;
-                                                return `${x},${y}`;
-                                            }).join(" ") + ` ${800},200 0,200`}
-                                        />
-
-                                        {/* Line */}
-                                        <polyline
-                                            fill="none"
-                                            stroke={frequencyStats.current < 49.5 ? "#ef4444" : "#3b82f6"}
-                                            strokeWidth="2.5"
-                                            points={freqHistory.map((val, idx) => {
-                                                const x = (idx / (freqHistory.length - 1)) * 800;
-                                                const normalized = Math.max(0, Math.min(1, (val - 48) / 4));
-                                                const y = 200 - normalized * 160;
-                                                return `${x},${y}`;
-                                            }).join(" ")}
-                                        />
-
-                                        {/* Labels */}
-                                        <text x="10" y="20" fontSize="10" fill="#6b7280">52 Hz</text>
-                                        <text x="10" y="80" fontSize="10" fill="#6b7280">50 Hz</text>
-                                        <text x="10" y="140" fontSize="10" fill="#6b7280">48 Hz</text>
-                                    </svg>
-                                ) : (
-                                    <div className={styles.noData}>Waiting for frequency data...</div>
-                                )}
-                            </div>
-                        </div>
+                        
                     </div>
 
                     {/* System Status Summary */}
